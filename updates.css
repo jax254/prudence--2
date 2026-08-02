@@ -1,0 +1,74 @@
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#eef5ff;
+}
+
+header{
+background:#0066ff;
+padding:25px;
+text-align:center;
+color:white;
+}
+
+header h1{
+color:purple;
+}
+
+.container{
+width:95%;
+max-width:1000px;
+margin:25px auto;
+display:grid;
+gap:20px;
+}
+
+.current-version,
+.latest-version,
+.release-notes{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,.1);
+}
+
+.current-version h1,
+.latest-version h1{
+color:#0066ff;
+margin-top:10px;
+}
+
+#status{
+margin-top:15px;
+font-weight:bold;
+}
+
+button{
+margin-top:20px;
+padding:15px;
+width:100%;
+background:#0066ff;
+color:white;
+border:none;
+border-radius:8px;
+font-size:18px;
+cursor:pointer;
+}
+
+button:hover{
+background:purple;
+}
+
+.release-notes ul{
+padding-left:20px;
+margin-top:10px;
+}
+
+.release-notes li{
+margin-bottom:10px;
+}
