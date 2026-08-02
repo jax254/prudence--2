@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prudence 2 | Admin Management</title>
+
+<link rel="stylesheet" href="../css/admins.css">
+
+<script type="module" src="../js/admins.js" defer></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>ADMIN MANAGEMENT</h1>
+
+<p>Manage Administrators of Prudence 2</p>
+
+</header>
+
+<div class="container">
+
+<div class="add-admin">
+
+<h2>Add New Admin</h2>
+
+<input
+type="email"
+id="adminEmail"
+placeholder="Admin Email">
+
+<select id="adminRole">
+
+<option value="admin">Administrator</option>
+
+<option value="newsroom">News Room Admin</option>
+
+<option value="superadmin">Super Admin</option>
+
+</select>
+
+<button id="addAdmin">
+
+Send Invitation
+
+</button>
+
+</div>
+
+<div class="admin-list">
+
+<h2>Current Administrators</h2>
+
+<input
+type="text"
+id="searchAdmin"
+placeholder="Search administrator...">
+
+<div id="adminsContainer">
+
+Loading administrators...
+
+</div>
+
+</div>
+
+</div>
+
+<template id="adminTemplate">
+
+<div class="admin-card">
+
+<h3 class="name"></h3>
+
+<p class="email"></p>
+
+<p class="role"></p>
+
+<div class="buttons">
+
+<button class="promote">
+
+Promote
+
+</button>
+
+<button class="demote">
+
+Demote
+
+</button>
+
+<button class="remove">
+
+Remove
+
+</button>
+
+</div>
+
+</div>
+
+</template>
+
+</body>
+
+</html>
