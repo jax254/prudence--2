@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prudence 2 | News Room</title>
+
+<link rel="stylesheet" href="../css/newsroom.css">
+
+<script type="module" src="../js/newsroom.js" defer></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>PRUDENCE 2 NEWS ROOM</h1>
+
+<p>Create Christian News for Review</p>
+
+</header>
+
+<div class="container">
+
+<div class="editor">
+
+<h2>Write News Article</h2>
+
+<form id="newsForm">
+
+<input
+type="text"
+id="title"
+placeholder="News Title"
+required>
+
+<textarea
+id="content"
+rows="10"
+placeholder="Write your Christian news article..."
+required></textarea>
+
+<input
+type="url"
+id="image"
+placeholder="Image URL (Optional)">
+
+<input
+type="url"
+id="video"
+placeholder="Video URL (Optional)">
+
+<button type="submit">
+
+Submit for Approval
+
+</button>
+
+</form>
+
+</div>
+
+<div class="articles">
+
+<h2>My Submitted Articles</h2>
+
+<div id="myArticles">
+
+Loading...
+
+</div>
+
+</div>
+
+</div>
+
+<template id="articleTemplate">
+
+<div class="article-card">
+
+<h3 class="articleTitle"></h3>
+
+<p class="articleStatus"></p>
+
+<p class="articleDate"></p>
+
+<button class="editButton">
+
+Edit
+
+</button>
+
+</div>
+
+</template>
+
+</body>
+
+</html>
