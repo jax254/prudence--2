@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prudence 2 | My Profile</title>
+
+<link rel="stylesheet" href="css/profile.css">
+
+<script type="module" src="js/profile.js" defer></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>MY PROFILE</h1>
+
+<p>Manage your Prudence 2 account</p>
+
+</header>
+
+<div class="container">
+
+<div class="profile-card">
+
+<img
+id="profileImage"
+src="images/default-profile.png"
+alt="Profile Picture">
+
+<input
+type="file"
+id="imageInput"
+accept="image/*">
+
+<input
+type="text"
+id="username"
+placeholder="Username">
+
+<input
+type="text"
+id="admissionNumber"
+placeholder="Admission Number"
+readonly>
+
+<input
+type="text"
+id="church"
+placeholder="Church Name">
+
+<input
+type="text"
+id="bibleVerse"
+placeholder="Favorite Bible Verse">
+
+<textarea
+id="bio"
+rows="5"
+placeholder="Tell us about yourself..."></textarea>
+
+<button id="saveProfile">
+
+Save Profile
+
+</button>
+
+</div>
+
+<div class="statistics">
+
+<h2>Your Activity</h2>
+
+<div class="stat">
+
+<h3 id="newsCount">0</h3>
+
+<p>News Articles</p>
+
+</div>
+
+<div class="stat">
+
+<h3 id="prayerCount">0</h3>
+
+<p>Prayer Requests</p>
+
+</div>
+
+<div class="stat">
+
+<h3 id="chatCount">0</h3>
+
+<p>Chat Messages</p>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+
+</html>
