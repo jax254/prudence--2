@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Prudence 2 - Admin Dashboard</title>
+
+    <link rel="stylesheet" href="../css/admin-dashboard.css">
+
+    <script type="module" src="../js/admin-dashboard.js" defer></script>
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>PRUDENCE 2 ADMIN PANEL</h1>
+
+    <h3 id="adminName">Loading...</h3>
+
+    <p id="adminRole">Administrator</p>
+
+</header>
+
+<section class="statistics">
+
+    <div class="card">
+        <h2 id="usersCount">0</h2>
+        <p>Users</p>
+    </div>
+
+    <div class="card">
+        <h2 id="newsCount">0</h2>
+        <p>News Articles</p>
+    </div>
+
+    <div class="card">
+        <h2 id="liveCount">0</h2>
+        <p>Live Broadcasts</p>
+    </div>
+
+    <div class="card">
+        <h2 id="pendingCount">0</h2>
+        <p>Pending Approvals</p>
+    </div>
+
+</section>
+
+<section class="menu">
+
+    <button onclick="location.href='newsroom.html'">
+        NEWS ROOM
+    </button>
+
+    <button onclick="location.href='approvals.html'">
+        NEWS APPROVALS
+    </button>
+
+    <button onclick="location.href='chat.html'">
+        ADMIN CHAT
+    </button>
+
+    <button onclick="location.href='admins.html'">
+        ADD ADMINS
+    </button>
+
+    <button onclick="location.href='settings.html'">
+        WEBSITE SETTINGS
+    </button>
+
+    <button onclick="location.href='reports.html'">
+        REPORTS
+    </button>
+
+    <button onclick="logout()">
+        LOGOUT
+    </button>
+
+</section>
+
+<section class="recent">
+
+    <h2>Pending News</h2>
+
+    <div id="pendingNews">
+
+        No pending news.
+
+    </div>
+
+</section>
+
+</body>
+</html>
