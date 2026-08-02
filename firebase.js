@@ -19,7 +19,7 @@ import {
 
 const firebaseConfig = {
 
-  apiKey: "AIzaSyCKRcU62Ez3928rG_fRGk6hU0VYurSWjFw",
+  apiKey:
 
   authDomain: "prudence-kas.firebaseapp.com",
 
