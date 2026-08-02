@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prudence 2 | Content Moderation</title>
+
+<link rel="stylesheet" href="css/moderation.css">
+
+<script type="module" src="js/moderation.js" defer></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>AI CONTENT MODERATION</h1>
+
+<p>Protecting the Prudence 2 community.</p>
+
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Flagged Content</h2>
+
+<div id="flaggedContent">
+
+Loading...
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Security Alerts</h2>
+
+<div id="securityAlerts">
+
+Loading...
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Moderation Statistics</h2>
+
+<p>Total Flagged Content</p>
+
+<h1 id="flaggedCount">0</h1>
+
+<p>Total Removed Content</p>
+
+<h1 id="removedCount">0</h1>
+
+</div>
+
+</div>
+
+<template id="flaggedTemplate">
+
+<div class="flagged-card">
+
+<h3 class="type"></h3>
+
+<p class="message"></p>
+
+<p class="author"></p>
+
+<p class="date"></p>
+
+<div class="buttons">
+
+<button class="approve">
+
+Approve
+
+</button>
+
+<button class="delete">
+
+Delete
+
+</button>
+
+<button class="ban">
+
+Ban User
+
+</button>
+
+</div>
+
+</div>
+
+</template>
+
+</body>
+
+</html>
