@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prudence 2 | Live Broadcast Approval</title>
+
+<link rel="stylesheet" href="../css/admin-live.css">
+
+<script type="module" src="../js/admin-live.js" defer></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>LIVE BROADCAST APPROVAL</h1>
+
+<p>Super Admin Live Control Center</p>
+
+</header>
+
+<div class="container">
+
+<h2>Pending Live Broadcast Requests</h2>
+
+<div id="liveRequests">
+
+<p>Loading requests...</p>
+
+</div>
+
+</div>
+
+<template id="liveTemplate">
+
+<div class="live-card">
+
+<h3 class="title"></h3>
+
+<p class="preacher"></p>
+
+<p class="username"></p>
+
+<p class="description"></p>
+
+<a class="streamLink" target="_blank">
+Open Stream
+</a>
+
+<div class="buttons">
+
+<button class="approve">
+
+Approve
+
+</button>
+
+<button class="reject">
+
+Reject
+
+</button>
+
+<button class="stop">
+
+Stop Live
+
+</button>
+
+</div>
+
+</div>
+
+</template>
+
+</body>
+
+</html>
