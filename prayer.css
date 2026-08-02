@@ -1,0 +1,144 @@
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#eef5ff;
+color:#333;
+}
+
+header{
+background:#0066ff;
+color:white;
+text-align:center;
+padding:25px;
+}
+
+header h1{
+color:purple;
+font-size:32px;
+margin-bottom:10px;
+}
+
+header p{
+font-size:18px;
+}
+
+.container{
+width:95%;
+max-width:1200px;
+margin:25px auto;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.prayer-form,
+.prayer-wall{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 0 10px rgba(0,0,0,.1);
+}
+
+.prayer-form h2,
+.prayer-wall h2{
+color:#0066ff;
+margin-bottom:20px;
+}
+
+input,
+textarea{
+width:100%;
+padding:12px;
+margin-bottom:15px;
+border:1px solid #ccc;
+border-radius:8px;
+font-size:16px;
+}
+
+label{
+display:flex;
+align-items:center;
+gap:10px;
+margin-bottom:20px;
+font-size:16px;
+}
+
+label input{
+width:auto;
+margin:0;
+}
+
+button{
+width:100%;
+padding:14px;
+background:#0066ff;
+color:white;
+border:none;
+border-radius:8px;
+font-size:16px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+background:purple;
+}
+
+.prayer-card{
+background:#f8f9fa;
+padding:15px;
+border-radius:10px;
+margin-bottom:20px;
+border-left:5px solid #0066ff;
+}
+
+.prayer-card h3{
+color:#0066ff;
+margin-bottom:10px;
+}
+
+.prayerAuthor{
+font-weight:bold;
+margin-bottom:10px;
+}
+
+.prayerVerse{
+margin-top:10px;
+font-style:italic;
+color:purple;
+}
+
+.actions{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin-top:15px;
+}
+
+.actions button{
+flex:1;
+min-width:120px;
+}
+
+.comments{
+margin-top:15px;
+padding-top:15px;
+border-top:1px solid #ddd;
+}
+
+@media(max-width:768px){
+
+.container{
+grid-template-columns:1fr;
+}
+
+header h1{
+font-size:26px;
+}
+
+}
