@@ -106,4 +106,4 @@ async function loadDashboard() {
 
     admins.textContent = adminSnapshot.size;
 
-}
+    }            
