@@ -1,0 +1,96 @@
+/* ==============================
+   PRUDENCE 2 - STYLE SHEET
+   File: css/style.css
+   ============================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#0066ff;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container{
+    text-align:center;
+    width:90%;
+    max-width:500px;
+}
+
+.title{
+    color:purple;
+    font-size:40px;
+    font-weight:bold;
+    margin-bottom:60px;
+    text-transform:uppercase;
+    line-height:1.5;
+}
+
+.buttons{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.btn{
+    display:block;
+    text-decoration:none;
+    background:white;
+    color:#0066ff;
+    padding:18px;
+    border-radius:10px;
+    font-size:22px;
+    font-weight:bold;
+    transition:.3s;
+}
+
+.btn:hover{
+    background:#f1f1f1;
+    transform:scale(1.05);
+}
+
+.btn:active{
+    transform:scale(.98);
+}
+
+/* Mobile */
+@media(max-width:600px){
+
+.title{
+    font-size:28px;
+}
+
+.btn{
+    font-size:20px;
+    padding:16px;
+}
+
+}
+.form-box{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.form-box input{
+    padding:15px;
+    border:none;
+    border-radius:8px;
+    font-size:18px;
+    outline:none;
+}
+
+.form-box input:focus{
+    border:2px solid purple;
+}
+
+.form-box a{
+    font-weight:bold;
+}
