@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prudence 2 - News Approvals</title>
+
+<link rel="stylesheet" href="../css/approvals.css">
+
+<script type="module" src="../js/approvals.js" defer></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>NEWS APPROVAL CENTER</h1>
+
+<p>Super Admin Approval Panel</p>
+
+</header>
+
+<div class="container">
+
+<div id="pendingNews">
+
+<p>Loading pending news...</p>
+
+</div>
+
+</div>
+
+<template id="newsTemplate">
+
+<div class="news-card">
+
+<h2 class="title"></h2>
+
+<p class="author"></p>
+
+<p class="category"></p>
+
+<img class="image" style="display:none;">
+
+<video class="video" controls style="display:none;"></video>
+
+<p class="content"></p>
+
+<textarea
+class="feedback"
+placeholder="Write feedback to the News Room Admin..."></textarea>
+
+<div class="buttons">
+
+<button class="approve">
+Approve
+</button>
+
+<button class="reject">
+Reject
+</button>
+
+</div>
+
+</div>
+
+</template>
+
+</body>
+</html>
