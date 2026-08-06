@@ -1,4 +1,4 @@
-import supabase from "./firebase.js";
+import supabase from "./supabase.js";
 
 const signupBtn = document.getElementById("signupBtn");
 const googleBtn = document.getElementById("googleBtn");
