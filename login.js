@@ -1,25 +1,10 @@
-import { auth, db } from "./firebase.js";
-
-import {
-    signInWithEmailAndPassword,
-    GoogleAuthProvider,
-    signInWithPopup
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-import {
-    doc,
-    getDoc
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
+import supabase from "./firebase.js";
 
 // Form elements
 
 const loginForm = document.getElementById("loginForm");
-
 const emailInput = document.getElementById("email");
-
 const passwordInput = document.getElementById("password");
-
 const googleLogin = document.getElementById("googleLogin");
 
 
@@ -27,46 +12,27 @@ const googleLogin = document.getElementById("googleLogin");
 
 async function redirectUser(user){
 
-    const userRef = doc(db,"users",user.uid);
+    const role = user.user_metadata?.role || "user";
 
-    const userSnap = await getDoc(userRef);
+    if(role === "superadmin"){
 
-
-    if(!userSnap.exists()){
-
-        window.location.href="dashboard.html";
-
-        return;
+        window.location.href = "superadmin/dashboard.html";
 
     }
 
+    else if(role === "admin" || role === "newsroom"){
 
-    const data = userSnap.data();
-
-
-    if(data.role === "superadmin"){
-
-        window.location.href="superadmin/dashboard.html";
-
-    }
-
-    else if(
-        data.role === "admin" ||
-        data.role === "newsroom"
-    ){
-
-        window.location.href="admin/dashboard.html";
+        window.location.href = "admin/dashboard.html";
 
     }
 
     else{
 
-        window.location.href="dashboard.html";
+        window.location.href = "dashboard.html";
 
     }
 
 }
-
 
 
 // Email Login
@@ -77,49 +43,35 @@ loginForm.addEventListener("submit", async(e)=>{
 
 e.preventDefault();
 
+const { data, error } = await supabase.auth.signInWithPassword({
 
-try{
+email: emailInput.value,
 
+password: passwordInput.value
 
-const result =
-await signInWithEmailAndPassword(
+});
 
-auth,
+if(error){
 
-emailInput.value,
-
-passwordInput.value
-
-);
-
-
-const user = result.user;
-
-
-// Check email verification
-
-if(!user.emailVerified){
-
-alert(
-"Please verify your email before logging in."
-);
+alert(error.message);
 
 return;
 
 }
 
+const user = data.user;
+
+if(!user.email_confirmed_at){
+
+alert("Please verify your email before logging in.");
+
+await supabase.auth.signOut();
+
+return;
+
+}
 
 await redirectUser(user);
-
-
-}
-
-catch(error){
-
-alert(error.message);
-
-}
-
 
 });
 
@@ -131,40 +83,22 @@ alert(error.message);
 
 if(googleLogin){
 
-
 googleLogin.addEventListener("click", async()=>{
 
+const { error } = await supabase.auth.signInWithOAuth({
 
-try{
+provider: "google"
 
+});
 
-const provider =
-new GoogleAuthProvider();
-
-
-const result =
-await signInWithPopup(
-
-auth,
-
-provider
-
-);
-
-
-await redirectUser(result.user);
-
-
-}
-
-catch(error){
+if(error){
 
 alert(error.message);
 
 }
 
-
 });
 
+                             }
 
-}
+
