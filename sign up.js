@@ -1,179 +1,78 @@
-import { auth, db } from "./firebase.js";
-
-import {
-    createUserWithEmailAndPassword,
-    GoogleAuthProvider,
-    signInWithPopup,
-    sendEmailVerification
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-import {
-    doc,
-    setDoc,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
+import supabase from "./firebase.js";
 
 // Form elements
 
 const signupForm = document.getElementById("signupForm");
-
 const emailInput = document.getElementById("email");
-
 const passwordInput = document.getElementById("password");
-
 const usernameInput = document.getElementById("username");
-
 const admissionInput = document.getElementById("admissionNumber");
-
 const googleButton = document.getElementById("googleSignup");
-
 
 // Email Signup
 
-if(signupForm){
+if (signupForm) {
 
-signupForm.addEventListener("submit", async(e)=>{
+signupForm.addEventListener("submit", async (e) => {
 
 e.preventDefault();
 
+const { data, error } = await supabase.auth.signUp({
 
-try{
+email: emailInput.value,
 
+password: passwordInput.value,
 
-const userCredential =
-await createUserWithEmailAndPassword(
+options: {
 
-auth,
-
-emailInput.value,
-
-passwordInput.value
-
-);
-
-
-const user = userCredential.user;
-
-
-// Send verification email
-
-await sendEmailVerification(user);
-
-
-// Save user information
-
-await setDoc(
-
-doc(db,"users",user.uid),
-
-{
+data: {
 
 username: usernameInput.value,
 
-email:user.email,
-
 admissionNumber: admissionInput.value,
 
-role:"user",
-
-createdAt:serverTimestamp()
+role: "user"
 
 }
 
-);
-
-
-alert(
-"Account created. Please check your email for verification."
-);
-
-
-window.location.href="login.html";
-
-
 }
-
-catch(error){
-
-alert(error.message);
-
-}
-
 
 });
 
+if (error) {
+
+alert(error.message);
+
+return;
 
 }
 
+alert("Account created. Please check your email for verification.");
 
+window.location.href = "login.html";
+
+});
+
+}
 
 // Google Signup
 
-if(googleButton){
+if (googleButton) {
 
+googleButton.addEventListener("click", async () => {
 
-googleButton.addEventListener("click", async()=>{
+const { error } = await supabase.auth.signInWithOAuth({
 
+provider: "google"
 
-try{
+});
 
-
-const provider =
-new GoogleAuthProvider();
-
-
-const result =
-await signInWithPopup(
-
-auth,
-
-provider
-
-);
-
-
-const user=result.user;
-
-
-
-await setDoc(
-
-doc(db,"users",user.uid),
-
-{
-
-username:user.displayName,
-
-email:user.email,
-
-role: "user",
-photoURL: "",
-status: "active",
-createdAt: serverTimestamp()
-
-},
-
-{
-merge:true
-}
-
-);
-
-
-window.location.href="dashboard.html";
-
-
-}
-
-catch(error){
+if (error) {
 
 alert(error.message);
 
 }
 
-
 });
-
 
 }
