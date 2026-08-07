@@ -18,77 +18,129 @@
 
 <header>
 
+<div class="brand">
+    ✝ Prudence 2
+</div>
+
 <h1>Brothers and Sisters in Christ</h1>
 
-<p>Welcome to Prudence 2</p>
+<p>Welcome back to your community</p>
 
 </header>
 
-<div class="container">
 
-<div class="profile-card">
+<main class="container">
+
+
+<section class="profile-card">
+
+<div class="profile-icon">
+    ✝
+</div>
 
 <h2 id="username">Loading...</h2>
 
-<p><strong>Admission Number:</strong></p>
+<p class="prudence-id">
+    Prudence ID:
+    <strong id="prudenceId">Loading...</strong>
+</p>
 
-<p id="admissionNumber">Loading...</p>
+<p>
+    <strong>Admission Number:</strong>
+</p>
 
-</div>
+<p id="admissionNumber">
+    Loading...
+</p>
+
+<a href="profile.html" class="profile-link">
+    View My Profile →
+</a>
+
+</section>
+
+
+
+<section class="quick-access">
+
+<h2>Quick Access</h2>
 
 <div class="menu">
 
 <a href="news.html">
-<button id="newsBtn">NEWS</button>
+    <button>📰 News</button>
 </a>
 
 <a href="updates.html">
-<button id="updatesBtn">UPDATES</button>
+    <button>✨ Updates</button>
 </a>
 
 <a href="chat.html">
-<button id="chatBtn">CHAT</button>
+    <button>💬 Chat</button>
 </a>
 
 <a href="live.html">
-<button id="liveBtn">LIVE</button>
+    <button>🔴 Live</button>
 </a>
 
 <a href="prayer.html">
-<button id="prayerBtn">PRAYER</button>
+    <button>🙏 Prayer</button>
 </a>
 
 <a href="profile.html">
-<button id="profileBtn">MY PROFILE</button>
+    <button>👤 My Profile</button>
 </a>
 
 </div>
 
-<div class="comments">
+</section>
 
-<h2>Community Comment Section</h2>
+
+
+<section class="verse-card">
+
+<h2>📖 Verse of the Day</h2>
+
+<p>
+"Trust in the Lord with all your heart and lean not
+on your own understanding."
+</p>
+
+<span>Proverbs 3:5</span>
+
+</section>
+
+
+
+<section class="comments">
+
+<h2>💬 Community</h2>
+
+<p class="section-description">
+Share an encouraging message with your brothers
+and sisters in Christ.
+</p>
 
 <textarea
 id="comment"
-placeholder="Share a message with your brothers and sisters in Christ..."
+placeholder="Share something encouraging..."
 rows="5"></textarea>
 
 <button id="postComment">
-
-Post Comment
-
+    Post Comment
 </button>
 
 <div id="commentsContainer">
 
-<p>No comments yet.</p>
+<p>Loading community messages...</p>
 
 </div>
 
-</div>
+</section>
 
-</div>
+
+</main>
 
 </body>
 
-</html>
+  </html>
