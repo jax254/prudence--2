@@ -2,6 +2,7 @@ import supabase from "./supabase.js";
 
 const username = document.getElementById("username");
 const admissionNumber = document.getElementById("admissionNumber");
+const prudenceId = document.getElementById("prudenceId");
 const postComment = document.getElementById("postComment");
 const comment = document.getElementById("comment");
 const commentsContainer = document.getElementById("commentsContainer");
