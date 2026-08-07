@@ -42,6 +42,8 @@ async function loadUser() {
 
     admissionNumber.textContent =
         profile.admission_number || "Not Provided";
+    prudenceId.textContent =
+    profile.prudence_id || "Not Assigned";
 
     if (profile.status === "suspended") {
 
