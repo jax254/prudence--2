@@ -1,55 +1,48 @@
-import { auth, db } from "./firebase.js";
-
-import {
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-import {
-    doc,
-    getDoc,
-    collection,
-    addDoc,
-    serverTimestamp,
-    query,
-    orderBy,
-    onSnapshot
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import supabase from "./supabase.js";
 
 const username = document.getElementById("username");
 const admissionNumber = document.getElementById("admissionNumber");
-const comment = document.getElementById("comment");
 const postComment = document.getElementById("postComment");
+const comment = document.getElementById("comment");
 const commentsContainer = document.getElementById("commentsContainer");
 
 let currentUser = null;
 
-onAuthStateChanged(auth, async (user) => {
 
-    if (!user) {
+// Load logged-in user
+async function loadUser() {
 
+    const {
+        data: { user },
+        error
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
         window.location.href = "login.html";
         return;
-
     }
 
     currentUser = user;
 
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
+    const { data: profile, error: profileError } =
+        await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
 
-    if (!userSnap.exists()) {
-
+    if (profileError || !profile) {
+        console.error(profileError);
         alert("User profile not found.");
         return;
-
     }
 
-    const data = userSnap.data();
+    username.textContent = profile.username || "User";
 
-    username.textContent = data.username || "User";
-    admissionNumber.textContent = data.admissionNumber || "Not Provided";
+    admissionNumber.textContent =
+        profile.admission_number || "Not Provided";
 
-    if (data.suspended === true) {
+    if (profile.status === "suspended") {
 
         postComment.disabled = true;
         comment.disabled = true;
@@ -58,76 +51,125 @@ onAuthStateChanged(auth, async (user) => {
 
     }
 
-});
+}
 
-postComment.addEventListener("click", async () => {
 
-    if (!currentUser) return;
+// Post comment
+if (postComment) {
 
-    if (comment.value.trim() === "") {
+    postComment.addEventListener("click", async () => {
 
-        alert("Please write a comment.");
+        if (!currentUser) return;
+
+        const message = comment.value.trim();
+
+        if (!message) {
+
+            alert("Please write a comment.");
+            return;
+
+        }
+
+        const { error } = await supabase
+            .from("comments")
+            .insert({
+                user_id: currentUser.id,
+                message: message
+            });
+
+        if (error) {
+
+            console.error(error);
+            alert("Unable to post comment.");
+            return;
+
+        }
+
+        comment.value = "";
+
+        loadComments();
+
+    });
+
+}
+
+
+// Load comments
+async function loadComments() {
+
+    const { data, error } = await supabase
+        .from("comments")
+        .select(`
+            id,
+            message,
+            created_at,
+            profiles (
+                username,
+                prudence_id
+            )
+        `)
+        .order("created_at", {
+            ascending: false
+        });
+
+    if (error) {
+
+        console.error(error);
+
+        commentsContainer.innerHTML =
+            "<p>Unable to load comments.</p>";
 
         return;
 
     }
 
-    await addDoc(collection(db, "comments"), {
-
-        uid: currentUser.uid,
-
-        message: comment.value,
-
-        createdAt: serverTimestamp()
-
-    });
-
-    comment.value = "";
-
-});
-
-const commentsQuery = query(
-
-    collection(db, "comments"),
-
-    orderBy("createdAt", "desc")
-
-);
-
-onSnapshot(commentsQuery, async (snapshot) => {
-
     commentsContainer.innerHTML = "";
 
-    snapshot.forEach(async (docSnap) => {
+    if (!data || data.length === 0) {
 
-        const data = docSnap.data();
+        commentsContainer.innerHTML =
+            "<p>No comments yet.</p>";
 
-        let name = "Anonymous";
+        return;
 
-        try {
+    }
 
-            const profile = await getDoc(doc(db, "users", data.uid));
+    data.forEach(item => {
 
-            if (profile.exists()) {
+        const div = document.createElement("div");
 
-                name = profile.data().username;
+        div.className = "comment";
 
-            }
+        const name =
+            item.profiles?.username || "Anonymous";
 
-        } catch (e) {}
+        const message =
+            item.message || "";
 
-        commentsContainer.innerHTML += `
-
-        <div class="comment">
-
-            <strong>${name}</strong>
-
-            <p>${data.message}</p>
-
-        </div>
-
+        div.innerHTML = `
+            <strong>${escapeHTML(name)}</strong>
+            <p>${escapeHTML(message)}</p>
         `;
+
+        commentsContainer.appendChild(div);
 
     });
 
-});
+}
+
+
+// Basic protection against HTML injection
+function escapeHTML(text) {
+
+    const div = document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+}
+
+
+// Start
+loadUser();
+loadComments();        
