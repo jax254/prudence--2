@@ -4,117 +4,172 @@
 <head>
 
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<label>
-<input type="checkbox" id="terms" required>
-I agree to the Terms of Service and Privacy Policy.
-</label>
+
 <title>Prudence 2 | Sign Up</title>
 
-<link rel="stylesheet" href="css/signup.css">
+<link rel="stylesheet" href="signup.css">
 
-<script type="module" src="js/signup.js" defer></script>
+<script type="module" src="signup.js" defer></script>
 
 </head>
 
 
 <body>
 
-
 <div class="container">
 
+    <div class="signup-box">
 
-<h1>
-WELCOME TO PRUDENCE WHERE WE SHINE TOGETHER
-</h1>
+        <h1>
+            WELCOME TO PRUDENCE
+        </h1>
 
-
-<div class="signup-box">
-
-
-<h2>Create Account</h2>
-
-
-<form id="signupForm">
+        <p class="welcome">
+            WHERE WE SHINE TOGETHER
+        </p>
 
 
-<input
-type="text"
-id="username"
-placeholder="Full Name"
-required>
+        <h2>Create Account</h2>
 
 
-<input
-type="text"
-id="username"
-placeholder="Choose a Username"
-required>
-<input
-type="password"
-id="password"
-placeholder="Password"
-required>
-<input
-type="password"
-id="confirmPassword"
-placeholder="Confirm Password"
-required>
+        <form id="signupForm">
 
-<input
-type="text"
-id="church"
-placeholder="Church (Optional)">
-
-<input
-type="text"
-id="country"
-placeholder="Country (Optional)">
+            <!-- Full name -->
+            <input
+                type="text"
+                id="fullName"
+                placeholder="Full Name"
+                required
+            >
 
 
-<input
-type="email"
-id="email"
-placeholder="Email Address"
-required>
+            <!-- Username -->
+            <input
+                type="text"
+                id="username"
+                placeholder="Choose a Username"
+                required
+            >
 
 
+            <!-- Admission Number -->
+            <input
+                type="text"
+                id="admissionNumber"
+                placeholder="Admission Number"
+                required
+            >
 
 
-<button type="submit">
-
-SIGN UP
-
-</button>
-
-
-</form>
-
-
-<button id="googleSignup">
-
-Sign Up With Google
-
-</button>
+            <!-- Email -->
+            <input
+                type="email"
+                id="email"
+                placeholder="Email Address"
+                required
+            >
 
 
-<p>
+            <!-- Password -->
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                required
+                minlength="8"
+            >
 
-Already have an account?
 
-<a href="login.html">
-Login
-</a>
+            <!-- Confirm Password -->
+            <input
+                type="password"
+                id="confirmPassword"
+                placeholder="Confirm Password"
+                required
+                minlength="8"
+            >
 
-</p>
 
+            <!-- Church -->
+            <input
+                type="text"
+                id="church"
+                placeholder="Church (Optional)"
+            >
+
+
+            <!-- Country -->
+            <input
+                type="text"
+                id="country"
+                placeholder="Country (Optional)"
+            >
+
+
+            <!-- Terms -->
+            <label class="terms">
+
+                <input
+                    type="checkbox"
+                    id="terms"
+                    required
+                >
+
+                <span>
+                    I agree to the
+                    <a href="#" target="_blank">
+                        Terms of Service
+                    </a>
+                    and
+                    <a href="#" target="_blank">
+                        Privacy Policy
+                    </a>.
+                </span>
+
+            </label>
+
+
+            <!-- Sign up -->
+            <button
+                type="submit"
+                id="signupBtn"
+            >
+                CREATE ACCOUNT
+            </button>
+
+        </form>
+
+
+        <div class="divider">
+            OR
+        </div>
+
+
+        <!-- Google -->
+        <button
+            type="button"
+            id="googleSignup"
+        >
+            Continue with Google
+        </button>
+
+
+        <p class="login-link">
+
+            Already have an account?
+
+            <a href="login.html">
+                Login
+            </a>
+
+        </p>
+
+    </div>
 
 </div>
-
-
-</div>
-
 
 </body>
 
-</html>
+  </html>
