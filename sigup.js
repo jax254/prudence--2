@@ -1,4 +1,4 @@
-import supabase from "./supabase.js";
+ import supabase from "./supabase.js";
 
 const signupForm = document.getElementById("signupForm");
 
@@ -8,6 +8,8 @@ const confirmPasswordInput = document.getElementById("confirmPassword");
 
 const usernameInput = document.getElementById("username");
 const churchInput = document.getElementById("church");
+
+const termsInput = document.getElementById("terms");
 
 const googleButton = document.getElementById("googleSignup");
 
@@ -22,9 +24,13 @@ if (signupForm) {
 
         e.preventDefault();
 
+
         const username = usernameInput.value.trim();
+
         const email = emailInput.value.trim();
+
         const password = passwordInput.value;
+
         const confirmPassword = confirmPasswordInput.value;
 
         const church = churchInput
@@ -32,7 +38,23 @@ if (signupForm) {
             : "";
 
 
-        /* Check passwords */
+        /* =========================
+           CHECK TERMS
+        ========================= */
+
+        if (!termsInput || !termsInput.checked) {
+
+            alert(
+                "Please agree to the Terms of Service and Privacy Policy."
+            );
+
+            return;
+        }
+
+
+        /* =========================
+           CHECK PASSWORDS
+        ========================= */
 
         if (password !== confirmPassword) {
 
@@ -42,7 +64,9 @@ if (signupForm) {
         }
 
 
-        /* Password length */
+        /* =========================
+           PASSWORD LENGTH
+        ========================= */
 
         if (password.length < 6) {
 
@@ -51,6 +75,10 @@ if (signupForm) {
             return;
         }
 
+
+        /* =========================
+           CREATE ACCOUNT
+        ========================= */
 
         try {
 
@@ -76,6 +104,8 @@ if (signupForm) {
                 });
 
 
+            /* Supabase error */
+
             if (error) {
 
                 alert(error.message);
@@ -84,13 +114,21 @@ if (signupForm) {
             }
 
 
+            /* Account was not created */
+
             if (!data.user) {
 
-                alert("Account could not be created.");
+                alert(
+                    "Account could not be created."
+                );
 
                 return;
             }
 
+
+            /* =========================
+               SUCCESS
+            ========================= */
 
             alert(
                 "Account created successfully!\n\n" +
@@ -100,10 +138,15 @@ if (signupForm) {
 
             window.location.href = "login.html";
 
+        }
 
-        } catch (error) {
 
-            alert(error.message);
+        catch (error) {
+
+            alert(
+                error.message ||
+                "Something went wrong while creating your account."
+            );
 
         }
 
@@ -144,13 +187,17 @@ if (googleButton) {
 
             }
 
-        } catch (error) {
+        }
 
-            alert(error.message);
+        catch (error) {
+
+            alert(
+                error.message ||
+                "Google sign up failed."
+            );
 
         }
 
     });
 
-                    }
-        
+                           }                                   
