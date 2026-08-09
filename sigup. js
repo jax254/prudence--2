@@ -1,4 +1,5 @@
  import supabase from "./supabase.js";
+alert("Prudence signup JavaScript is working!");
 
 const signupForm = document.getElementById("signupForm");
 
