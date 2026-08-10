@@ -9,127 +9,124 @@
 
 <title>Prudence 2 | Sign Up</title>
 
-<link rel="stylesheet" href="css/signup.css">
-<script type="module" src="js/signup.js" defer></script>
+<link rel="stylesheet" href="signup.css">
+
+<script type="module" src="signup.js" defer></script>
 
 </head>
-
 
 <body>
 
 <div class="container">
 
-    <div class="signup-box">
+<div class="signup-box">
 
-        <h1>
-            WELCOME TO PRUDENCE
-        </h1>
+<h1>
+WELCOME TO PRUDENCE
+</h1>
 
-        <p class="welcome">
-            WHERE WE SHINE TOGETHER
-        </p>
+<p class="welcome">
+WHERE WE SHINE TOGETHER
+</p>
 
+<h2>Create Account</h2>
 
-        <h2>Create Account</h2>
+<form id="signupForm">
 
+<input
+type="text"
+id="username"
+placeholder="Choose a Username"
+required>
 
-        <form id="signupForm">
+<input
+type="password"
+id="password"
+placeholder="Password"
+required>
 
-            <input
-                type="text"
-                id="username"
-                placeholder="Choose a Username"
-                required
-            >
+<input
+type="password"
+id="confirmPassword"
+placeholder="Confirm Password"
+required>
 
-            <input
-                type="password"
-                id="password"
-                placeholder="Password"
-                required
-            >
+<input
+type="text"
+id="church"
+placeholder="Church (Optional)"
+>
 
-            <input
-                type="password"
-                id="confirmPassword"
-                placeholder="Confirm Password"
-                required
-            >
-
-            <input
-                type="text"
-                id="church"
-                placeholder="Church (Optional)"
-            >
-
-            <input
-                type="email"
-                id="email"
-                placeholder="Email Address"
-                required
-            >
+<input
+type="email"
+id="email"
+placeholder="Email Address"
+required>
 
 
-            <!-- Terms and Conditions -->
+<label class="terms">
 
-            <label class="terms">
+<input
+type="checkbox"
+id="terms"
+required>
 
-                <input
-                    type="checkbox"
-                    id="terms"
-                    required
-                >
+<span>
 
-                <span>
-                    I agree to the
-                    <a href="terms.html" target="_blank">
-                        Terms of Service
-                    </a>
-                    and
-                    <a href="privacy.html" target="_blank">
-                        Privacy Policy
-                    </a>.
-                </span>
+I agree to the
 
-            </label>
+<a href="terms.html" target="_blank">
+Terms of Service
+</a>
 
+and
 
-            <button type="submit">
-                SIGN UP
-            </button>
+<a href="privacy.html" target="_blank">
+Privacy Policy
+</a>.
 
-        </form>
+</span>
+
+</label>
 
 
-        <div class="divider">
-            OR
-        </div>
+<button type="submit">
+
+SIGN UP
+
+</button>
+
+</form>
 
 
-        <!-- Google -->
-
-        <button
-            type="button"
-            id="googleSignup"
-        >
-            Continue with Google
-        </button>
+<div class="divider">
+OR
+</div>
 
 
-        <p class="login-link">
+<button
+type="button"
+id="googleSignup">
 
-            Already have an account?
+Continue with Google
 
-            <a href="login.html">
-                Login
-            </a>
+</button>
 
-        </p>
 
-    </div>
+<p class="login-link">
+
+Already have an account?
+
+<a href="login.html">
+Login
+</a>
+
+</p>
+
+</div>
 
 </div>
 
 </body>
 
-            </html>
+    </html>
