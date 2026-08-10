@@ -15,13 +15,22 @@ if (error) {
 
     console.error("NEWS SUPABASE ERROR:", error);
 
-    alert(
-        "News error: " +
-        error.message
-    );
-
-    newsContainer.innerHTML =
-        "<p>Unable to load news.</p>";
+    newsContainer.innerHTML = `
+        <div style="
+            background:#ffe5e5;
+            color:#b00020;
+            padding:20px;
+            border-radius:10px;
+            margin:20px 0;
+            font-family:Arial,sans-serif;
+        ">
+            <h3>News Database Error</h3>
+            <p>${error.message}</p>
+            <p><strong>Code:</strong> ${error.code || "None"}</p>
+            <p><strong>Details:</strong> ${error.details || "None"}</p>
+            <p><strong>Hint:</strong> ${error.hint || "None"}</p>
+        </div>
+    `;
 
     return;
 }
