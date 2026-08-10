@@ -1,5 +1,5 @@
 import supabase from "./supabase.js";
-
+alert("Prudence login JavaScript is working!");
 // Form elements
 
 const loginForm = document.getElementById("loginForm");
