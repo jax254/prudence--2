@@ -11,15 +11,20 @@ async function loadNews() {
         .eq("approved", true)
         .order("created_at", { ascending: false });
 
-    if (error) {
+if (error) {
 
-        console.error("News error:", error);
+    console.error("NEWS SUPABASE ERROR:", error);
 
-        newsContainer.innerHTML =
-            "<p>Unable to load news.</p>";
+    alert(
+        "News error: " +
+        error.message
+    );
 
-        return;
-    }
+    newsContainer.innerHTML =
+        "<p>Unable to load news.</p>";
+
+    return;
+}
 
     newsContainer.innerHTML = "";
 
