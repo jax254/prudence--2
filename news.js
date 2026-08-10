@@ -30,7 +30,7 @@ async function loadNews() {
         .from("news")
         .select("*")
         .eq("approved", true)
-        .order("created_at", {
+        .order("Created_at", {
             ascending: false
         });
 
