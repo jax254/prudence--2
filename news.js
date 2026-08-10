@@ -1,164 +1,283 @@
-import { auth, db } from "./firebase.js";
-
-import {
-    collection,
-    query,
-    where,
-    orderBy,
-    onSnapshot,
-    doc,
-    updateDoc,
-    addDoc,
-    increment,
-    serverTimestamp,
-    getDoc
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+ import supabase from "./supabase.js";
 
 const newsContainer = document.getElementById("newsContainer");
 const newsTemplate = document.getElementById("newsTemplate");
 
-const newsQuery = query(
-    collection(db, "news"),
-    where("approved", "==", true),
-    orderBy("createdAt", "desc")
-);
 
-onSnapshot(newsQuery, (snapshot) => {
+// =========================
+// CHECK LOGIN
+// =========================
 
-    newsContainer.innerHTML = "";
+const {
+    data: { user },
+    error: authError
+} = await supabase.auth.getUser();
 
-    if (snapshot.empty) {
+if (authError || !user) {
+
+    window.location.href = "login.html";
+
+}
+
+
+// =========================
+// LOAD NEWS
+// =========================
+
+async function loadNews() {
+
+    const { data: newsList, error } = await supabase
+        .from("news")
+        .select("*")
+        .eq("approved", true)
+        .order("created_at", {
+            ascending: false
+        });
+
+
+    if (error) {
+
+        console.error(error);
 
         newsContainer.innerHTML =
-        "<p>No news available.</p>";
+            "<p>Unable to load news.</p>";
 
         return;
 
     }
 
-    snapshot.forEach((document) => {
 
-        const news = document.data();
+    newsContainer.innerHTML = "";
+
+
+    if (!newsList || newsList.length === 0) {
+
+        newsContainer.innerHTML =
+            "<p>No news available.</p>";
+
+        return;
+
+    }
+
+
+    newsList.forEach((news) => {
 
         const card =
-        newsTemplate.content.cloneNode(true);
+            newsTemplate.content.cloneNode(true);
+
+
+        // =========================
+        // NEWS INFORMATION
+        // =========================
 
         card.querySelector(".title").textContent =
-        news.title;
+            news.title || "Untitled News";
+
 
         card.querySelector(".author").textContent =
-        "Published by: " + (news.author || "News Room");
+            "Published by: " +
+            (news.author || "News Room");
+
 
         card.querySelector(".content").textContent =
-        news.content;
+            news.content || "";
+
+
+        // =========================
+        // IMAGE
+        // =========================
 
         const image =
-        card.querySelector(".image");
+            card.querySelector(".image");
 
-        if(news.image){
+
+        if (news.image) {
 
             image.src = news.image;
 
-        }else{
+        } else {
 
-            image.style.display="none";
+            image.style.display = "none";
 
         }
 
-        // Like Button
+
+        // =========================
+        // LIKE
+        // =========================
+
         card.querySelector(".likeBtn")
-        .addEventListener("click", async()=>{
+            .addEventListener("click", async () => {
 
-            await updateDoc(
-                doc(db,"news",document.id),
-                {
-                    likes:increment(1)
-                }
-            );
+                const newLikes =
+                    (news.likes || 0) + 1;
 
-            alert("You liked this news.");
 
-        });
+                const { error } = await supabase
+                    .from("news")
+                    .update({
+                        likes: newLikes
+                    })
+                    .eq("id", news.id);
 
-        // Comment Button
-        card.querySelector(".commentBtn")
-        .addEventListener("click", async()=>{
 
-            const text =
-            prompt("Write your comment");
+                if (error) {
 
-            if(!text) return;
+                    console.error(error);
 
-            await addDoc(
+                    alert("Unable to like this news.");
 
-                collection(db,"newsComments"),
-
-                {
-
-                    newsId:document.id,
-
-                    comment:text,
-
-                    createdAt:serverTimestamp()
+                    return;
 
                 }
 
-            );
 
-            alert("Comment posted.");
+                news.likes = newLikes;
 
-        });
 
-        // Save Button
-        card.querySelector(".saveBtn")
-        .addEventListener("click", ()=>{
-
-            alert(
-            "Saved feature will be completed in the profile module."
-            );
-
-        });
-
-        // Subscribe Button
-        card.querySelector(".subscribeBtn")
-        .addEventListener("click", ()=>{
-
-            alert(
-            "You have subscribed to Christian News."
-            );
-
-        });
-
-        // Share Button
-        card.querySelector(".shareBtn")
-        .addEventListener("click", async()=>{
-
-            if(navigator.share){
-
-                await navigator.share({
-
-                    title:news.title,
-
-                    text:news.content,
-
-                    url:window.location.href
-
-                });
-
-            }else{
-
-                navigator.clipboard.writeText(
-                    window.location.href
+                alert(
+                    "You liked this news. 👍"
                 );
 
-                alert("Link copied.");
+            });
 
-            }
 
-        });
+        // =========================
+        // COMMENT
+        // =========================
+
+        card.querySelector(".commentBtn")
+            .addEventListener("click", async () => {
+
+                const text =
+                    prompt("Write your comment");
+
+
+                if (!text || !text.trim()) {
+
+                    return;
+
+                }
+
+
+                const { error } = await supabase
+                    .from("news_comments")
+                    .insert({
+
+                        news_id: news.id,
+
+                        user_id: user.id,
+
+                        comment: text.trim()
+
+                    });
+
+
+                if (error) {
+
+                    console.error(error);
+
+                    alert(
+                        "Unable to post comment."
+                    );
+
+                    return;
+
+                }
+
+
+                alert(
+                    "Comment posted successfully."
+                );
+
+            });
+
+
+        // =========================
+        // SAVE
+        // =========================
+
+        card.querySelector(".saveBtn")
+            .addEventListener("click", () => {
+
+                alert(
+                    "Save feature will be completed in the profile module."
+                );
+
+            });
+
+
+        // =========================
+        // SUBSCRIBE
+        // =========================
+
+        card.querySelector(".subscribeBtn")
+            .addEventListener("click", () => {
+
+                alert(
+                    "You have subscribed to Christian News."
+                );
+
+            });
+
+
+        // =========================
+        // SHARE
+        // =========================
+
+        card.querySelector(".shareBtn")
+            .addEventListener("click", async () => {
+
+                try {
+
+                    if (navigator.share) {
+
+                        await navigator.share({
+
+                            title:
+                                news.title,
+
+                            text:
+                                news.content,
+
+                            url:
+                                window.location.href
+
+                        });
+
+                    } else {
+
+                        await navigator.clipboard.writeText(
+                            window.location.href
+                        );
+
+                        alert(
+                            "Link copied."
+                        );
+
+                    }
+
+                } catch (error) {
+
+                    console.log(
+                        "Share cancelled."
+                    );
+
+                }
+
+            });
+
 
         newsContainer.appendChild(card);
 
     });
 
-});
+}
+
+
+// =========================
+// START
+// =========================
+
+loadNews();       
+        
