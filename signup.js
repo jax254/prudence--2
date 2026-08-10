@@ -1,1 +1,196 @@
-alert("Prudence signup JavaScript is working!");                 
+import supabase from "./supabase.js";
+
+const signupForm = document.getElementById("signupForm");
+
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const confirmPasswordInput = document.getElementById("confirmPassword");
+
+const usernameInput = document.getElementById("username");
+const churchInput = document.getElementById("church");
+
+const termsInput = document.getElementById("terms");
+
+const googleButton = document.getElementById("googleSignup");
+
+
+/* =========================
+   EMAIL SIGN UP
+========================= */
+
+if (signupForm) {
+
+    signupForm.addEventListener("submit", async (e) => {
+
+        e.preventDefault();
+
+        const username = usernameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        const church = churchInput
+            ? churchInput.value.trim()
+            : "";
+
+
+        /* Check Terms */
+
+        if (!termsInput || !termsInput.checked) {
+
+            alert(
+                "Please agree to the Terms of Service and Privacy Policy."
+            );
+
+            return;
+        }
+
+
+        /* Check passwords */
+
+        if (password !== confirmPassword) {
+
+            alert("Passwords do not match.");
+
+            return;
+        }
+
+
+        /* Check password length */
+
+        if (password.length < 6) {
+
+            alert("Password must be at least 6 characters.");
+
+            return;
+        }
+
+
+        /* Create account */
+
+        try {
+
+            const { data, error } =
+                await supabase.auth.signUp({
+
+                    email: email,
+
+                    password: password,
+
+                    options: {
+
+                        data: {
+
+                            username: username,
+
+                            church: church
+
+                        }
+
+                    }
+
+                });
+
+
+            /* Supabase error */
+
+            if (error) {
+
+                console.error(error);
+
+                alert(error.message);
+
+                return;
+            }
+
+
+            /* Check account */
+
+            if (!data.user) {
+
+                alert(
+                    "Account could not be created."
+                );
+
+                return;
+            }
+
+
+            /* Success */
+
+            alert(
+                "Account created successfully!\n\n" +
+                "Please check your email and verify your account before logging in."
+            );
+
+
+            window.location.href = "login.html";
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                error.message ||
+                "Something went wrong while creating your account."
+            );
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   GOOGLE SIGN UP
+========================= */
+
+if (googleButton) {
+
+    googleButton.addEventListener("click", async () => {
+
+        try {
+
+            const { error } =
+                await supabase.auth.signInWithOAuth({
+
+                    provider: "google",
+
+                    options: {
+
+                        redirectTo:
+                            window.location.origin +
+                            "/dashboard.html"
+
+                    }
+
+                });
+
+
+            if (error) {
+
+                console.error(error);
+
+                alert(error.message);
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                error.message ||
+                "Google sign up failed."
+            );
+
+        }
+
+    });
+
+}
