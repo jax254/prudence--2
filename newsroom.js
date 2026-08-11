@@ -71,7 +71,7 @@ async function checkUser(){
     if(error || !user){
 
         window.location.href =
-            "login.html";
+            "../login.html";
 
         return false;
 
@@ -111,120 +111,162 @@ document
 });
 
 
-/* LINK */
+/* =========================
+   LINK TOOL
+========================= */
 
-linkButton.addEventListener(
-"click",
-() => {
+if(linkButton){
 
-    const url =
-        prompt(
-            "Enter the website link:"
+    linkButton.addEventListener(
+    "click",
+    () => {
+
+        const url =
+            prompt(
+                "Enter the website link:"
+            );
+
+        if(!url) return;
+
+
+        document.execCommand(
+            "createLink",
+            false,
+            url
         );
 
-    if(!url) return;
 
-    document.execCommand(
-        "createLink",
-        false,
-        url
-    );
+        contentEditor.focus();
 
-    contentEditor.focus();
+    });
 
-});
+}
 
 
-/* UNDO */
+/* =========================
+   UNDO
+========================= */
 
-undoButton.addEventListener(
-"click",
-() => {
+if(undoButton){
 
-    document.execCommand(
-        "undo",
-        false,
-        null
-    );
+    undoButton.addEventListener(
+    "click",
+    () => {
 
-});
+        document.execCommand(
+            "undo",
+            false,
+            null
+        );
+
+        contentEditor.focus();
+
+    });
+
+}
 
 
-/* REDO */
+/* =========================
+   REDO
+========================= */
 
-redoButton.addEventListener(
-"click",
-() => {
+if(redoButton){
 
-    document.execCommand(
-        "redo",
-        false,
-        null
-    );
+    redoButton.addEventListener(
+    "click",
+    () => {
 
-});
+        document.execCommand(
+            "redo",
+            false,
+            null
+        );
+
+        contentEditor.focus();
+
+    });
+
+}
 
 
 /* =========================
    IMAGE PREVIEW
 ========================= */
 
-imageFile.addEventListener(
-"change",
-() => {
+if(imageFile){
 
-    const file =
-        imageFile.files[0];
+    imageFile.addEventListener(
+    "change",
+    () => {
 
-    imagePreview.innerHTML = "";
+        const file =
+            imageFile.files[0];
 
-    if(!file) return;
+        imagePreview.innerHTML = "";
 
-
-    const url =
-        URL.createObjectURL(file);
+        if(!file) return;
 
 
-    const img =
-        document.createElement("img");
+        const url =
+            URL.createObjectURL(file);
 
-    img.src = url;
 
-    imagePreview.appendChild(img);
+        const img =
+            document.createElement("img");
 
-});
+        img.src = url;
+
+        img.style.maxWidth = "100%";
+
+        img.style.borderRadius = "10px";
+
+
+        imagePreview.appendChild(img);
+
+    });
+
+}
 
 
 /* =========================
    VIDEO PREVIEW
 ========================= */
 
-videoFile.addEventListener(
-"change",
-() => {
+if(videoFile){
 
-    const file =
-        videoFile.files[0];
+    videoFile.addEventListener(
+    "change",
+    () => {
 
-    videoPreview.innerHTML = "";
+        const file =
+            videoFile.files[0];
 
-    if(!file) return;
+        videoPreview.innerHTML = "";
 
-
-    const url =
-        URL.createObjectURL(file);
+        if(!file) return;
 
 
-    const video =
-        document.createElement("video");
+        const url =
+            URL.createObjectURL(file);
 
-    video.src = url;
 
-    video.controls = true;
+        const video =
+            document.createElement("video");
 
-    videoPreview.appendChild(video);
+        video.src = url;
 
-});
+        video.controls = true;
+
+        video.style.maxWidth = "100%";
+
+        video.style.borderRadius = "10px";
+
+
+        videoPreview.appendChild(video);
+
+    });
+
+}
 
 
 /* =========================
@@ -232,8 +274,8 @@ videoFile.addEventListener(
 ========================= */
 
 async function uploadMedia(
-file,
-folder
+    file,
+    folder
 ){
 
     if(!file){
@@ -246,11 +288,14 @@ folder
     const extension =
         file.name
         .split(".")
-        .pop();
+        .pop()
+        .toLowerCase();
 
 
     const fileName =
-        `${currentUser.id}/${Date.now()}.${extension}`;
+        `${currentUser.id}/${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}.${extension}`;
 
 
     const path =
@@ -281,7 +326,7 @@ folder
     const {
         data
     } =
-        supabase
+    supabase
         .storage
         .from("news-media")
         .getPublicUrl(path);
@@ -296,9 +341,7 @@ folder
    SAVE ARTICLE
 ========================= */
 
-async function saveArticle(
-status
-){
+async function saveArticle(status){
 
     if(!currentUser){
 
@@ -349,9 +392,12 @@ status
             existingVideo;
 
 
-        /* Upload image */
+        /* =====================
+           UPLOAD IMAGE
+        ===================== */
 
-        if(imageFile.files[0]){
+        if(imageFile &&
+           imageFile.files[0]){
 
             imageURL =
                 await uploadMedia(
@@ -362,9 +408,12 @@ status
         }
 
 
-        /* Upload video */
+        /* =====================
+           UPLOAD VIDEO
+        ===================== */
 
-        if(videoFile.files[0]){
+        if(videoFile &&
+           videoFile.files[0]){
 
             videoURL =
                 await uploadMedia(
@@ -398,16 +447,16 @@ status
 
                 status:status,
 
-                approved:
-                    status ===
-                    "Pending Approval"
-                    ? false
-                    : false
+                approved:false
 
             })
             .eq(
                 "id",
                 editingArticleId
+            )
+            .eq(
+                "uid",
+                currentUser.id
             );
 
 
@@ -418,19 +467,25 @@ status
             }
 
 
-            alert(
-                status === "Draft"
-                ?
-                "Draft updated successfully."
-                :
-                "Article updated and submitted for approval."
-            );
+            if(status === "Draft"){
+
+                alert(
+                    "Draft updated successfully."
+                );
+
+            }else{
+
+                alert(
+                    "Article updated and submitted for approval."
+                );
+
+            }
 
         }
 
 
         /* =====================
-           NEW ARTICLE
+           CREATE NEW ARTICLE
         ===================== */
 
         else{
@@ -472,22 +527,29 @@ status
             }
 
 
-            alert(
-                status === "Draft"
-                ?
-                "Draft saved successfully."
-                :
-                "News submitted for approval."
-            );
+            if(status === "Draft"){
+
+                alert(
+                    "Draft saved successfully."
+                );
+
+            }else{
+
+                alert(
+                    "News submitted for approval."
+                );
+
+            }
 
         }
 
 
         resetEditor();
 
-        loadArticles();
+        await loadArticles();
 
     }
+
 
     catch(error){
 
@@ -495,6 +557,7 @@ status
             "NEWSROOM ERROR:",
             error
         );
+
 
         alert(
             "Unable to save article:\n" +
@@ -510,19 +573,23 @@ status
    SAVE DRAFT
 ========================= */
 
-saveDraftButton.addEventListener(
-"click",
-async () => {
+if(saveDraftButton){
 
-    await saveArticle(
-        "Draft"
-    );
+    saveDraftButton.addEventListener(
+    "click",
+    async () => {
 
-});
+        await saveArticle(
+            "Draft"
+        );
+
+    });
+
+}
 
 
 /* =========================
-   SUBMIT
+   SUBMIT FOR APPROVAL
 ========================= */
 
 form.addEventListener(
@@ -568,7 +635,11 @@ async function loadArticles(){
 
     if(error){
 
-        console.error(error);
+        console.error(
+            "LOAD ARTICLES ERROR:",
+            error
+        );
+
 
         myArticles.innerHTML =
             "<p>Unable to load your articles.</p>";
@@ -599,6 +670,8 @@ async function loadArticles(){
             .cloneNode(true);
 
 
+        /* TITLE */
+
         card.querySelector(
             ".articleTitle"
         ).textContent =
@@ -606,12 +679,16 @@ async function loadArticles(){
             "Untitled";
 
 
+        /* STATUS */
+
         card.querySelector(
             ".articleStatus"
         ).textContent =
             news.status ||
             "Draft";
 
+
+        /* DATE */
 
         card.querySelector(
             ".articleDate"
@@ -625,34 +702,52 @@ async function loadArticles(){
             "Just now";
 
 
-        /* EDIT */
+        /* =====================
+           EDIT
+        ===================== */
 
-        card.querySelector(
-            ".editButton"
-        ).addEventListener(
+        const editButton =
+            card.querySelector(
+                ".editButton"
+            );
+
+
+        if(editButton){
+
+            editButton.addEventListener(
             "click",
             () => {
 
                 editArticle(news);
 
-            }
-        );
+            });
+
+        }
 
 
-        /* DELETE */
+        /* =====================
+           DELETE
+        ===================== */
 
-        card.querySelector(
-            ".deleteButton"
-        ).addEventListener(
+        const deleteButton =
+            card.querySelector(
+                ".deleteButton"
+            );
+
+
+        if(deleteButton){
+
+            deleteButton.addEventListener(
             "click",
             async() => {
 
-                deleteArticle(
+                await deleteArticle(
                     news.id
                 );
 
-            }
-        );
+            });
+
+        }
 
 
         myArticles.appendChild(card);
@@ -692,36 +787,62 @@ function editArticle(news){
         "✏️ Edit Article";
 
 
-    cancelEditButton.style.display =
-        "block";
+    if(cancelEditButton){
+
+        cancelEditButton.style.display =
+            "block";
+
+    }
+
+
+    /* IMAGE */
+
+    if(imagePreview){
+
+        imagePreview.innerHTML =
+            existingImage
+            ?
+            `<img
+                src="${existingImage}"
+                style="max-width:100%;border-radius:10px;"
+            >`
+            :
+            "";
+
+    }
+
+
+    /* VIDEO */
+
+    if(videoPreview){
+
+        videoPreview.innerHTML =
+            existingVideo
+            ?
+            `<video
+                src="${existingVideo}"
+                controls
+                style="max-width:100%;border-radius:10px;"
+            ></video>`
+            :
+            "";
+
+    }
 
 
     window.scrollTo({
+
         top:0,
+
         behavior:"smooth"
+
     });
-
-
-    imagePreview.innerHTML =
-        existingImage
-        ?
-        `<img src="${existingImage}">`
-        :
-        "";
-
-
-    videoPreview.innerHTML =
-        existingVideo
-        ?
-        `<video src="${existingVideo}" controls></video>`
-        :
-        "";
 
 }
 
 
 /* =========================
-   DELETE
+   DELETE ARTICLE
 ========================= */
 
 async function deleteArticle(id){
@@ -748,10 +869,17 @@ async function deleteArticle(id){
     .eq(
         "id",
         id
+    )
+    .eq(
+        "uid",
+        currentUser.id
     );
 
 
     if(error){
+
+        console.error(error);
+
 
         alert(
             "Unable to delete article:\n" +
@@ -764,11 +892,11 @@ async function deleteArticle(id){
 
 
     alert(
-        "Article deleted."
+        "Article deleted successfully."
     );
 
 
-    loadArticles();
+    await loadArticles();
 
 }
 
@@ -777,46 +905,70 @@ async function deleteArticle(id){
    CANCEL EDIT
 ========================= */
 
-cancelEditButton.addEventListener(
-"click",
-() => {
+if(cancelEditButton){
 
-    resetEditor();
+    cancelEditButton.addEventListener(
+    "click",
+    () => {
 
-});
+        resetEditor();
+
+    });
+
+}
 
 
 /* =========================
-   RESET
+   RESET EDITOR
 ========================= */
 
 function resetEditor(){
 
     form.reset();
 
+
     contentEditor.innerHTML =
         "";
 
-    imagePreview.innerHTML =
-        "";
 
-    videoPreview.innerHTML =
-        "";
+    if(imagePreview){
+
+        imagePreview.innerHTML =
+            "";
+
+    }
+
+
+    if(videoPreview){
+
+        videoPreview.innerHTML =
+            "";
+
+    }
+
 
     editingArticleId =
         null;
 
+
     existingImage =
         null;
+
 
     existingVideo =
         null;
 
+
     editorHeading.textContent =
         "Write News Article";
 
-    cancelEditButton.style.display =
-        "none";
+
+    if(cancelEditButton){
+
+        cancelEditButton.style.display =
+            "none";
+
+    }
 
 }
 
@@ -830,12 +982,11 @@ function resetEditor(){
     const loggedIn =
         await checkUser();
 
+
     if(!loggedIn) return;
+
 
     await loadArticles();
 
-})();        
-
-        
-            
-                    
+})();
+    
