@@ -18,55 +18,158 @@
 
 <header>
 
+<div class="brand">
+    ✝ Prudence 2
+</div>
+
 <h1>PRUDENCE 2 NEWS ROOM</h1>
 
 <p>Create Christian News for Review</p>
 
 </header>
 
+
 <div class="container">
 
-<div class="editor">
 
-<h2>Write News Article</h2>
+<!-- =========================
+     ARTICLE EDITOR
+========================= -->
+
+<section class="editor">
+
+<h2 id="editorTitle">
+Write News Article
+</h2>
+
 
 <form id="newsForm">
+
 
 <input
 type="text"
 id="title"
 placeholder="News Title"
-required>
+required
+>
 
-<textarea
+
+<!-- TOOLBAR -->
+
+<div class="toolbar">
+
+<button type="button" data-command="bold">
+    <b>B</b>
+</button>
+
+<button type="button" data-command="italic">
+    <i>I</i>
+</button>
+
+<button type="button" data-command="underline">
+    <u>U</u>
+</button>
+
+<button type="button" data-command="formatBlock" data-value="h2">
+    H
+</button>
+
+<button type="button" data-command="insertUnorderedList">
+    • List
+</button>
+
+<button type="button" data-command="insertOrderedList">
+    1. List
+</button>
+
+<button type="button" data-command="createLink">
+    🔗 Link
+</button>
+
+<button type="button" data-command="undo">
+    ↶
+</button>
+
+<button type="button" data-command="redo">
+    ↷
+</button>
+
+</div>
+
+
+<!-- RICH TEXT EDITOR -->
+
+<div
 id="content"
-rows="10"
-placeholder="Write your Christian news article..."
-required></textarea>
+class="content-editor"
+contenteditable="true"
+data-placeholder="Write your Christian news article..."
+>
+</div>
+
 
 <input
 type="url"
 id="image"
-placeholder="Image URL (Optional)">
+placeholder="Image URL (Optional)"
+>
+
 
 <input
 type="url"
 id="video"
-placeholder="Video URL (Optional)">
+placeholder="Video URL (Optional)"
+>
 
-<button type="submit">
 
-Submit for Approval
+<div class="editor-buttons">
 
+<button
+type="button"
+id="saveDraft"
+class="draft-button"
+>
+💾 Save Draft
 </button>
 
-</form>
+
+<button
+type="button"
+id="submitApproval"
+class="submit-button"
+>
+📤 Submit for Approval
+</button>
+
+
+<button
+type="button"
+id="cancelEdit"
+class="cancel-button"
+style="display:none;"
+>
+Cancel Edit
+</button>
 
 </div>
 
-<div class="articles">
 
-<h2>My Submitted Articles</h2>
+</form>
+
+</section>
+
+
+
+<!-- =========================
+     MY ARTICLES
+========================= -->
+
+<section class="articles">
+
+<h2>
+My Articles
+</h2>
+
 
 <div id="myArticles">
 
@@ -74,30 +177,64 @@ Loading...
 
 </div>
 
-</div>
+</section>
+
 
 </div>
+
+
+
+<!-- =========================
+     ARTICLE TEMPLATE
+========================= -->
 
 <template id="articleTemplate">
 
 <div class="article-card">
 
-<h3 class="articleTitle"></h3>
 
-<p class="articleStatus"></p>
+<h3 class="articleTitle">
+</h3>
 
-<p class="articleDate"></p>
 
-<button class="editButton">
+<p class="articleStatus">
+</p>
 
-Edit
 
+<p class="articleDate">
+</p>
+
+
+<div class="article-actions">
+
+<button
+class="editButton"
+>
+📝 Edit
 </button>
+
+
+<button
+class="deleteButton"
+>
+🗑️ Delete
+</button>
+
+
+<button
+class="submitButton"
+>
+📤 Submit
+</button>
+
+</div>
+
 
 </div>
 
 </template>
 
+
 </body>
 
-</html>
+  </html>
