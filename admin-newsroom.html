@@ -4,7 +4,6 @@
 <head>
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Prudence 2 | News Room</title>
@@ -14,28 +13,32 @@
 <script type="module" src="newsroom.js" defer></script>
 
 </head>
-     
+
 <body>
 
 <header>
 
-<h1>PRUDENCE 2 NEWS ROOM</h1>
+<div class="brand">✝ PRUDENCE 2</div>
 
-<p>Create Christian News for Review</p>
+<h1>NEWS ROOM</h1>
+
+<p>Create, edit and publish Christian news</p>
 
 </header>
 
 
-<div class="container">
+<main class="container">
 
 
 <!-- =========================
-     NEWS EDITOR
+     EDITOR
 ========================= -->
 
-<div class="editor">
+<section class="editor">
 
-<h2>Write News Article</h2>
+<h2 id="editorHeading">
+Write News Article
+</h2>
 
 
 <form id="newsForm">
@@ -49,16 +52,60 @@ required
 >
 
 
-<textarea
+<!-- TOOLBAR -->
+
+<div class="toolbar">
+
+<button type="button" data-command="bold">
+<b>B</b>
+</button>
+
+<button type="button" data-command="italic">
+<i>I</i>
+</button>
+
+<button type="button" data-command="underline">
+<u>U</u>
+</button>
+
+<button type="button" data-command="insertUnorderedList">
+☷ List
+</button>
+
+<button type="button" data-command="insertOrderedList">
+1. List
+</button>
+
+<button type="button" id="linkButton">
+🔗 Link
+</button>
+
+<button type="button" id="undoButton">
+↶
+</button>
+
+<button type="button" id="redoButton">
+↷
+</button>
+
+</div>
+
+
+<!-- ARTICLE EDITOR -->
+
+<div
 id="content"
-rows="12"
-placeholder="Write your Christian news article..."
-required></textarea>
+class="content-editor"
+contenteditable="true"
+data-placeholder="Write your Christian news article..."
+></div>
 
 
-<label>
-News Image
-</label>
+<!-- IMAGE -->
+
+<label class="upload-label">
+
+📷 News Image
 
 <input
 type="file"
@@ -66,10 +113,16 @@ id="imageFile"
 accept="image/*"
 >
 
-
-<label>
-News Video
 </label>
+
+<div id="imagePreview"></div>
+
+
+<!-- VIDEO -->
+
+<label class="upload-label">
+
+🎥 News Video
 
 <input
 type="file"
@@ -77,15 +130,19 @@ id="videoFile"
 accept="video/*"
 >
 
+</label>
 
-<div id="uploadStatus"></div>
+<div id="videoPreview"></div>
 
 
-<div class="editor-buttons">
+<!-- ACTIONS -->
+
+<div class="editor-actions">
 
 <button
 type="button"
 id="saveDraft"
+class="draft-button"
 >
 💾 Save Draft
 </button>
@@ -94,8 +151,19 @@ id="saveDraft"
 <button
 type="submit"
 id="submitNews"
+class="submit-button"
 >
 📤 Submit for Approval
+</button>
+
+
+<button
+type="button"
+id="cancelEdit"
+class="cancel-button"
+style="display:none;"
+>
+Cancel Edit
 </button>
 
 </div>
@@ -103,7 +171,7 @@ id="submitNews"
 
 </form>
 
-</div>
+</section>
 
 
 
@@ -111,22 +179,20 @@ id="submitNews"
      MY ARTICLES
 ========================= -->
 
-<div class="articles">
+<section class="articles">
 
 <h2>My Articles</h2>
 
-
 <div id="myArticles">
 
-<p>Loading...</p>
+Loading...
 
 </div>
 
-</div>
+</section>
 
 
-</div>
-
+</main>
 
 
 <!-- =========================
@@ -137,33 +203,23 @@ id="submitNews"
 
 <div class="article-card">
 
-
 <h3 class="articleTitle"></h3>
 
+<div class="articleStatus"></div>
 
-<p class="articleStatus"></p>
-
-
-<p class="articleDate"></p>
-
+<div class="articleDate"></div>
 
 <div class="article-actions">
 
-<button
-class="editButton"
->
+<button class="editButton">
 ✏️ Edit
 </button>
 
-
-<button
-class="deleteButton"
->
+<button class="deleteButton">
 🗑️ Delete
 </button>
 
 </div>
-
 
 </div>
 
@@ -172,4 +228,4 @@ class="deleteButton"
 
 </body>
 
-</html>
+     </html>
