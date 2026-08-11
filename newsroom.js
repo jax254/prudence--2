@@ -1,20 +1,4 @@
-import { auth, db, storage } from "./firebase.js";
-
-import {
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-import {
-    collection,
-    addDoc,
-    query,
-    where,
-    orderBy,
-    onSnapshot,
-    serverTimestamp,
-    doc,
-    getDoc
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import supabase from "./supabase.js";
 
 const form = document.getElementById("newsForm");
 const myArticles = document.getElementById("myArticles");
@@ -22,157 +6,271 @@ const template = document.getElementById("articleTemplate");
 
 let currentUser = null;
 
-onAuthStateChanged(auth, async (user) => {
 
-    if (!user) {
+// =========================
+// CHECK LOGIN
+// =========================
 
-        location.href = "../login.html";
-        return;
+async function checkUser() {
 
+    const {
+        data: { user },
+        error
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+
+        window.location.href = "../login.html";
+
+        return false;
     }
 
     currentUser = user;
 
-    const profile = await getDoc(doc(db, "users", user.uid));
+    return true;
+}
 
-    if (!profile.exists()) {
 
-        location.href = "../dashboard.html";
-        return;
-
-    }
-
-    const role = profile.data().role;
-
-    if (
-        role !== "newsroom" &&
-        role !== "admin" &&
-        role !== "superadmin"
-    ) {
-
-        alert("Access denied.");
-
-        location.href = "../dashboard.html";
-
-        return;
-
-    }
-
-    loadArticles();
-
-});
+// =========================
+// SUBMIT NEWS
+// =========================
 
 form.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
-    const title = document.getElementById("title").value;
 
-    const content = document.getElementById("content").value;
+    if (!currentUser) {
 
-    const image = document.getElementById("image").value;
+        const loggedIn =
+            await checkUser();
 
-    const video = document.getElementById("video").value;
+        if (!loggedIn) return;
+
+    }
+
+
+    const title =
+        document.getElementById("title")
+        .value
+        .trim();
+
+
+    const content =
+        document.getElementById("content")
+        .value
+        .trim();
+
+
+    const image =
+        document.getElementById("image")
+        .value
+        .trim();
+
+
+    const video =
+        document.getElementById("video")
+        .value
+        .trim();
+
+
+    if (!title || !content) {
+
+        alert(
+            "Please enter a news title and article content."
+        );
+
+        return;
+
+    }
+
 
     try {
 
-        await addDoc(collection(db, "news"), {
+        const { error } =
+            await supabase
+                .from("news")
+                .insert({
 
-            title,
+                    title: title,
 
-            content,
+                    content: content,
 
-            image,
+                    image: image || null,
 
-            video,
+                    video: video || null,
 
-            author: currentUser.email,
+                    author:
+                        currentUser.email,
 
-            uid: currentUser.uid,
+                    uid:
+                        currentUser.id,
 
-            approved: false,
+                    approved: false,
 
-            status: "Pending Approval",
+                    status:
+                        "Pending Approval",
 
-            likes: 0,
+                    likes: 0
 
-            createdAt: serverTimestamp()
+                });
 
-        });
 
-        alert("News submitted successfully.");
+        if (error) {
 
-        form.reset();
+            console.error(
+                "NEWSROOM ERROR:",
+                error
+            );
 
-    }
-
-    catch (error) {
-
-        alert(error.message);
-
-    }
-
-});
-
-function loadArticles() {
-
-    const q = query(
-
-        collection(db, "news"),
-
-        where("uid", "==", currentUser.uid),
-
-        orderBy("createdAt", "desc")
-
-    );
-
-    onSnapshot(q, (snapshot) => {
-
-        myArticles.innerHTML = "";
-
-        if (snapshot.empty) {
-
-            myArticles.innerHTML =
-            "<p>No submitted articles.</p>";
+            alert(
+                "Unable to submit news: " +
+                error.message
+            );
 
             return;
 
         }
 
-        snapshot.forEach((item) => {
 
-            const news = item.data();
+        alert(
+            "News submitted successfully for approval."
+        );
 
-            const card =
-            template.content.cloneNode(true);
 
-            card.querySelector(".articleTitle").textContent =
-            news.title;
+        form.reset();
 
-            card.querySelector(".articleStatus").textContent =
-            news.status;
 
-            card.querySelector(".articleDate").textContent =
-            news.createdAt
-            ?
-            news.createdAt.toDate().toLocaleString()
-            :
-            "Just now";
+        loadArticles();
 
-            card.querySelector(".editButton")
-            .addEventListener("click", () => {
+    }
 
-                alert(
-                "Editing will be enabled in the next version."
-                );
+    catch (error) {
 
+        console.error(error);
+
+        alert(
+            "Something went wrong while submitting the article."
+        );
+
+    }
+
+});
+
+
+// =========================
+// LOAD MY ARTICLES
+// =========================
+
+async function loadArticles() {
+
+    if (!currentUser) return;
+
+
+    const { data, error } =
+        await supabase
+            .from("news")
+            .select("*")
+            .eq("uid", currentUser.id)
+            .order("Created_at", {
+                ascending: false
             });
 
-            myArticles.appendChild(card);
 
-        });
+    if (error) {
+
+        console.error(
+            "LOAD ARTICLES ERROR:",
+            error
+        );
+
+        myArticles.innerHTML =
+            "<p>Unable to load your articles.</p>";
+
+        return;
+
+    }
+
+
+    myArticles.innerHTML = "";
+
+
+    if (!data || data.length === 0) {
+
+        myArticles.innerHTML =
+            "<p>No submitted articles.</p>";
+
+        return;
+
+    }
+
+
+    data.forEach((news) => {
+
+        const card =
+            template.content.cloneNode(true);
+
+
+        card.querySelector(
+            ".articleTitle"
+        ).textContent =
+            news.title || "Untitled";
+
+
+        card.querySelector(
+            ".articleStatus"
+        ).textContent =
+            news.status ||
+            (
+                news.approved
+                    ? "Approved"
+                    : "Pending Approval"
+            );
+
+
+        card.querySelector(
+            ".articleDate"
+        ).textContent =
+            news.Created_at
+                ? new Date(
+                    news.Created_at
+                ).toLocaleString()
+                : "Just now";
+
+
+        card.querySelector(
+            ".editButton"
+        ).addEventListener(
+            "click",
+            () => {
+
+                alert(
+                    "Editing will be enabled in the next version."
+                );
+
+            }
+        );
+
+
+        myArticles.appendChild(card);
 
     });
 
 }
-                
+
+
+// =========================
+// START
+// =========================
+
+(async () => {
+
+    const loggedIn =
+        await checkUser();
+
+    if (!loggedIn) return;
+
+    await loadArticles();
+
+})();
+    
