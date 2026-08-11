@@ -8,19 +8,15 @@
 
 <title>Prudence 2 | News Room</title>
 
-<link rel="stylesheet" href="newsroom.css">
+<link rel="stylesheet" href="../css/newsroom.css">
 
-<script type="module" src="newsroom.js" defer></script>
+<script type="module" src="../js/newsroom.js" defer></script>
 
 </head>
 
 <body>
 
 <header>
-
-<div class="brand">
-    ✝ Prudence 2
-</div>
 
 <h1>PRUDENCE 2 NEWS ROOM</h1>
 
@@ -33,14 +29,12 @@
 
 
 <!-- =========================
-     ARTICLE EDITOR
+     NEWS EDITOR
 ========================= -->
 
-<section class="editor">
+<div class="editor">
 
-<h2 id="editorTitle">
-Write News Article
-</h2>
+<h2>Write News Article</h2>
 
 
 <form id="newsForm">
@@ -54,72 +48,36 @@ required
 >
 
 
-<!-- TOOLBAR -->
-
-<div class="toolbar">
-
-<button type="button" data-command="bold">
-    <b>B</b>
-</button>
-
-<button type="button" data-command="italic">
-    <i>I</i>
-</button>
-
-<button type="button" data-command="underline">
-    <u>U</u>
-</button>
-
-<button type="button" data-command="formatBlock" data-value="h2">
-    H
-</button>
-
-<button type="button" data-command="insertUnorderedList">
-    • List
-</button>
-
-<button type="button" data-command="insertOrderedList">
-    1. List
-</button>
-
-<button type="button" data-command="createLink">
-    🔗 Link
-</button>
-
-<button type="button" data-command="undo">
-    ↶
-</button>
-
-<button type="button" data-command="redo">
-    ↷
-</button>
-
-</div>
-
-
-<!-- RICH TEXT EDITOR -->
-
-<div
+<textarea
 id="content"
-class="content-editor"
-contenteditable="true"
-data-placeholder="Write your Christian news article..."
->
-</div>
+rows="12"
+placeholder="Write your Christian news article..."
+required></textarea>
 
 
-<input
-type="url"
-id="image"
-placeholder="Image URL (Optional)"
->
-
+<label>
+News Image
+</label>
 
 <input
-type="url"
-id="video"
-placeholder="Video URL (Optional)"
+type="file"
+id="imageFile"
+accept="image/*"
 >
+
+
+<label>
+News Video
+</label>
+
+<input
+type="file"
+id="videoFile"
+accept="video/*"
+>
+
+
+<div id="uploadStatus"></div>
 
 
 <div class="editor-buttons">
@@ -127,28 +85,16 @@ placeholder="Video URL (Optional)"
 <button
 type="button"
 id="saveDraft"
-class="draft-button"
 >
 💾 Save Draft
 </button>
 
 
 <button
-type="button"
-id="submitApproval"
-class="submit-button"
+type="submit"
+id="submitNews"
 >
 📤 Submit for Approval
-</button>
-
-
-<button
-type="button"
-id="cancelEdit"
-class="cancel-button"
-style="display:none;"
->
-Cancel Edit
 </button>
 
 </div>
@@ -156,7 +102,7 @@ Cancel Edit
 
 </form>
 
-</section>
+</div>
 
 
 
@@ -164,20 +110,18 @@ Cancel Edit
      MY ARTICLES
 ========================= -->
 
-<section class="articles">
+<div class="articles">
 
-<h2>
-My Articles
-</h2>
+<h2>My Articles</h2>
 
 
 <div id="myArticles">
 
-Loading...
+<p>Loading...</p>
 
 </div>
 
-</section>
+</div>
 
 
 </div>
@@ -193,16 +137,13 @@ Loading...
 <div class="article-card">
 
 
-<h3 class="articleTitle">
-</h3>
+<h3 class="articleTitle"></h3>
 
 
-<p class="articleStatus">
-</p>
+<p class="articleStatus"></p>
 
 
-<p class="articleDate">
-</p>
+<p class="articleDate"></p>
 
 
 <div class="article-actions">
@@ -210,7 +151,7 @@ Loading...
 <button
 class="editButton"
 >
-📝 Edit
+✏️ Edit
 </button>
 
 
@@ -218,13 +159,6 @@ class="editButton"
 class="deleteButton"
 >
 🗑️ Delete
-</button>
-
-
-<button
-class="submitButton"
->
-📤 Submit
 </button>
 
 </div>
@@ -237,4 +171,4 @@ class="submitButton"
 
 </body>
 
-  </html>
+</html>
