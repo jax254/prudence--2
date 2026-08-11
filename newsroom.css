@@ -5,9 +5,14 @@ box-sizing:border-box;
 font-family:Arial,Helvetica,sans-serif;
 }
 
+
 body{
 background:#eef5ff;
+color:#222;
 }
+
+
+/* HEADER */
 
 header{
 background:#0066ff;
@@ -16,9 +21,22 @@ text-align:center;
 padding:25px;
 }
 
+
+header .brand{
+font-size:20px;
+font-weight:bold;
+margin-bottom:10px;
+}
+
+
 header h1{
 color:purple;
+font-size:32px;
+margin-bottom:10px;
 }
+
+
+/* MAIN */
 
 .container{
 width:95%;
@@ -29,6 +47,9 @@ grid-template-columns:1fr 1fr;
 gap:20px;
 }
 
+
+/* BOXES */
+
 .editor,
 .articles{
 background:white;
@@ -37,35 +58,174 @@ border-radius:12px;
 box-shadow:0 0 10px rgba(0,0,0,.1);
 }
 
-input,
-textarea{
+
+.editor h2,
+.articles h2{
+color:#0066ff;
+margin-bottom:20px;
+}
+
+
+/* INPUTS */
+
+input{
 width:100%;
-padding:12px;
+padding:14px;
 margin-bottom:15px;
 border:1px solid #ccc;
 border-radius:8px;
+font-size:16px;
 }
 
-button{
+
+/* TOOLBAR */
+
+.toolbar{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+background:#f1f4f9;
+border:1px solid #ddd;
+border-bottom:none;
+padding:10px;
+border-radius:8px 8px 0 0;
+}
+
+
+.toolbar button{
+width:auto;
+padding:9px 12px;
+margin:0;
+background:white;
+color:#333;
+border:1px solid #ccc;
+border-radius:6px;
+font-size:14px;
+cursor:pointer;
+}
+
+
+.toolbar button:hover{
+background:#0066ff;
+color:white;
+}
+
+
+/* EDITOR */
+
+.content-editor{
 width:100%;
+min-height:300px;
 padding:15px;
+border:1px solid #ccc;
+border-radius:0 0 8px 8px;
+margin-bottom:15px;
+font-size:16px;
+line-height:1.6;
+outline:none;
+background:white;
+}
+
+
+.content-editor:focus{
+border-color:#0066ff;
+box-shadow:0 0 0 2px rgba(0,102,255,.1);
+}
+
+
+.content-editor:empty:before{
+content:attr(data-placeholder);
+color:#999;
+}
+
+
+.content-editor h2{
+color:#0066ff;
+margin:10px 0;
+}
+
+
+.content-editor ul,
+.content-editor ol{
+padding-left:30px;
+}
+
+
+.content-editor a{
+color:#0066ff;
+}
+
+
+/* BUTTON GROUP */
+
+.editor-buttons{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+
+/* GENERAL BUTTON */
+
+button{
+padding:14px;
 background:#0066ff;
 color:white;
 border:none;
 border-radius:8px;
 cursor:pointer;
+font-size:16px;
 }
+
 
 button:hover{
 background:purple;
 }
+
+
+/* EDITOR BUTTONS */
+
+.editor-buttons button{
+flex:1;
+}
+
+
+.draft-button{
+background:#555;
+}
+
+
+.draft-button:hover{
+background:#333;
+}
+
+
+.submit-button{
+background:#0066ff;
+}
+
+
+.cancel-button{
+background:#999;
+}
+
+
+/* ARTICLE CARD */
 
 .article-card{
 background:#f5f5f5;
 padding:15px;
 border-radius:8px;
 margin-bottom:15px;
+border-left:5px solid #0066ff;
 }
+
+
+.articleTitle{
+color:#0066ff;
+margin-bottom:8px;
+}
+
 
 .articleStatus{
 font-weight:bold;
@@ -73,12 +233,67 @@ color:#0066ff;
 margin:10px 0;
 }
 
+
+.articleDate{
+font-size:14px;
+color:#777;
+margin-bottom:12px;
+}
+
+
+.article-actions{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+
+.article-actions button{
+flex:1;
+min-width:100px;
+padding:10px;
+font-size:14px;
+}
+
+
+.deleteButton{
+background:#c62828;
+}
+
+
+.deleteButton:hover{
+background:#8e0000;
+}
+
+
+.submitButton{
+background:#008a45;
+}
+
+
+.submitButton:hover{
+background:#006b35;
+}
+
+
+/* MOBILE */
+
 @media(max-width:768px){
 
 .container{
-
 grid-template-columns:1fr;
-
 }
 
+header h1{
+font-size:26px;
 }
+
+.editor-buttons{
+flex-direction:column;
+}
+
+.article-actions{
+flex-direction:column;
+}
+
+  }
