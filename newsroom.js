@@ -1,359 +1,504 @@
 import supabase from "./supabase.js";
 
-const form = document.getElementById("newsForm");
-const myArticles = document.getElementById("myArticles");
-const template = document.getElementById("articleTemplate");
 
-const imageFile = document.getElementById("imageFile");
-const videoFile = document.getElementById("videoFile");
+const form =
+    document.getElementById("newsForm");
 
-const saveDraftButton = document.getElementById("saveDraft");
-const submitNewsButton = document.getElementById("submitNews");
+const titleInput =
+    document.getElementById("title");
 
-const uploadStatus = document.getElementById("uploadStatus");
+const contentEditor =
+    document.getElementById("content");
+
+const imageFile =
+    document.getElementById("imageFile");
+
+const videoFile =
+    document.getElementById("videoFile");
+
+const imagePreview =
+    document.getElementById("imagePreview");
+
+const videoPreview =
+    document.getElementById("videoPreview");
+
+const myArticles =
+    document.getElementById("myArticles");
+
+const template =
+    document.getElementById("articleTemplate");
+
+const editorHeading =
+    document.getElementById("editorHeading");
+
+const saveDraftButton =
+    document.getElementById("saveDraft");
+
+const cancelEditButton =
+    document.getElementById("cancelEdit");
+
+const linkButton =
+    document.getElementById("linkButton");
+
+const undoButton =
+    document.getElementById("undoButton");
+
+const redoButton =
+    document.getElementById("redoButton");
+
 
 let currentUser = null;
-let editingId = null;
-let editingImage = null;
-let editingVideo = null;
+
+let editingArticleId = null;
+
+let existingImage = null;
+
+let existingVideo = null;
 
 
-// =========================
-// CHECK LOGIN
-// =========================
+/* =========================
+   CHECK LOGIN
+========================= */
 
-async function checkUser() {
+async function checkUser(){
 
     const {
         data: { user },
         error
     } = await supabase.auth.getUser();
 
-    if (error || !user) {
 
-        window.location.href = "../login.html";
+    if(error || !user){
+
+        window.location.href =
+            "login.html";
 
         return false;
+
     }
+
 
     currentUser = user;
 
     return true;
+
 }
 
 
-// =========================
-// CHECK NEWSROOM ACCESS
-// =========================
+/* =========================
+   RICH TEXT TOOLS
+========================= */
 
-async function checkAccess() {
+document
+.querySelectorAll(".toolbar button[data-command]")
+.forEach(button => {
 
-    const { data, error } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", currentUser.id)
-        .single();
+    button.addEventListener("click", () => {
 
-    if (error) {
+        const command =
+            button.dataset.command;
 
-        console.error(error);
+        document.execCommand(
+            command,
+            false,
+            null
+        );
 
-        alert("Unable to verify your account role.");
+        contentEditor.focus();
 
-        return false;
+    });
+
+});
+
+
+/* LINK */
+
+linkButton.addEventListener(
+"click",
+() => {
+
+    const url =
+        prompt(
+            "Enter the website link:"
+        );
+
+    if(!url) return;
+
+    document.execCommand(
+        "createLink",
+        false,
+        url
+    );
+
+    contentEditor.focus();
+
+});
+
+
+/* UNDO */
+
+undoButton.addEventListener(
+"click",
+() => {
+
+    document.execCommand(
+        "undo",
+        false,
+        null
+    );
+
+});
+
+
+/* REDO */
+
+redoButton.addEventListener(
+"click",
+() => {
+
+    document.execCommand(
+        "redo",
+        false,
+        null
+    );
+
+});
+
+
+/* =========================
+   IMAGE PREVIEW
+========================= */
+
+imageFile.addEventListener(
+"change",
+() => {
+
+    const file =
+        imageFile.files[0];
+
+    imagePreview.innerHTML = "";
+
+    if(!file) return;
+
+
+    const url =
+        URL.createObjectURL(file);
+
+
+    const img =
+        document.createElement("img");
+
+    img.src = url;
+
+    imagePreview.appendChild(img);
+
+});
+
+
+/* =========================
+   VIDEO PREVIEW
+========================= */
+
+videoFile.addEventListener(
+"change",
+() => {
+
+    const file =
+        videoFile.files[0];
+
+    videoPreview.innerHTML = "";
+
+    if(!file) return;
+
+
+    const url =
+        URL.createObjectURL(file);
+
+
+    const video =
+        document.createElement("video");
+
+    video.src = url;
+
+    video.controls = true;
+
+    videoPreview.appendChild(video);
+
+});
+
+
+/* =========================
+   UPLOAD MEDIA
+========================= */
+
+async function uploadMedia(
+file,
+folder
+){
+
+    if(!file){
+
+        return null;
+
     }
 
-    const role = data?.role;
 
-    if (
-        role !== "newsroom" &&
-        role !== "admin" &&
-        role !== "superadmin"
-    ) {
-
-        alert("Access denied.");
-
-        window.location.href = "../dashboard.html";
-
-        return false;
-    }
-
-    return true;
-}
-
-
-// =========================
-// UPLOAD MEDIA
-// =========================
-
-async function uploadMedia(file, folder) {
-
-    if (!file) return null;
-
-
-    uploadStatus.textContent =
-        "Uploading " + folder + "...";
-
-
-    const fileExtension =
-        file.name.split(".").pop();
-
-
-    const safeName =
+    const extension =
         file.name
-            .replace(/[^a-zA-Z0-9.-]/g, "_");
+        .split(".")
+        .pop();
 
 
-    const filePath =
-        currentUser.id +
-        "/" +
-        folder +
-        "/" +
-        Date.now() +
-        "_" +
-        safeName;
+    const fileName =
+        `${currentUser.id}/${Date.now()}.${extension}`;
 
 
-    const { error } = await supabase
+    const path =
+        `${folder}/${fileName}`;
+
+
+    const {
+        error
+    } = await supabase
         .storage
         .from("news-media")
         .upload(
-            filePath,
+            path,
             file,
             {
-                cacheControl: "3600",
-                upsert: false
+                upsert:false
             }
         );
 
 
-    if (error) {
-
-        console.error(
-            "MEDIA UPLOAD ERROR:",
-            error
-        );
+    if(error){
 
         throw error;
+
     }
 
 
-    const { data } =
+    const {
+        data
+    } =
         supabase
-            .storage
-            .from("news-media")
-            .getPublicUrl(filePath);
+        .storage
+        .from("news-media")
+        .getPublicUrl(path);
 
-
-    uploadStatus.textContent =
-        "Upload complete.";
 
     return data.publicUrl;
+
 }
 
 
-// =========================
-// SAVE ARTICLE
-// =========================
+/* =========================
+   SAVE ARTICLE
+========================= */
 
-async function saveArticle(status) {
+async function saveArticle(
+status
+){
 
-    if (!currentUser) {
+    if(!currentUser){
 
         const loggedIn =
             await checkUser();
 
-        if (!loggedIn) return;
+        if(!loggedIn) return;
+
     }
 
 
     const title =
-        document.getElementById("title")
-            .value
-            .trim();
+        titleInput.value.trim();
 
 
     const content =
-        document.getElementById("content")
-            .value
-            .trim();
+        contentEditor.innerHTML.trim();
 
 
-    if (!title || !content) {
+    if(!title){
 
         alert(
-            "Please enter a news title and article content."
+            "Please enter a news title."
         );
 
         return;
+
     }
 
 
-    try {
+    if(!content){
 
-        uploadStatus.textContent =
-            "Preparing article...";
+        alert(
+            "Please write the article."
+        );
+
+        return;
+
+    }
 
 
-        let imageURL = editingImage;
-        let videoURL = editingVideo;
+    try{
+
+        let imageURL =
+            existingImage;
+
+        let videoURL =
+            existingVideo;
 
 
-        // Upload new image
+        /* Upload image */
 
-        if (imageFile.files.length > 0) {
+        if(imageFile.files[0]){
 
             imageURL =
                 await uploadMedia(
                     imageFile.files[0],
                     "images"
                 );
+
         }
 
 
-        // Upload new video
+        /* Upload video */
 
-        if (videoFile.files.length > 0) {
+        if(videoFile.files[0]){
 
             videoURL =
                 await uploadMedia(
                     videoFile.files[0],
                     "videos"
                 );
+
         }
 
 
-        // =========================
-        // EDIT EXISTING ARTICLE
-        // =========================
+        /* =====================
+           EDIT EXISTING ARTICLE
+        ===================== */
 
-        if (editingId) {
+        if(editingArticleId){
 
-            const { error } =
-                await supabase
-                    .from("news")
-                    .update({
+            const {
+                error
+            } =
+            await supabase
+            .from("news")
+            .update({
 
-                        title: title,
+                title:title,
 
-                        content: content,
+                content:content,
 
-                        image: imageURL,
+                image:imageURL,
 
-                        video: videoURL,
+                video:videoURL,
 
-                        status: status,
+                status:status,
 
-                        approved:
-                            status === "Approved"
+                approved:
+                    status ===
+                    "Pending Approval"
+                    ? false
+                    : false
 
-                    })
-                    .eq(
-                        "id",
-                        editingId
-                    )
-                    .eq(
-                        "uid",
-                        currentUser.id
-                    );
+            })
+            .eq(
+                "id",
+                editingArticleId
+            );
 
 
-            if (error) {
+            if(error){
 
-                console.error(error);
+                throw error;
 
-                alert(
-                    "Unable to update article: " +
-                    error.message
-                );
-
-                return;
             }
 
 
             alert(
                 status === "Draft"
-                    ? "Draft updated successfully."
-                    : "Article updated and submitted for approval."
+                ?
+                "Draft updated successfully."
+                :
+                "Article updated and submitted for approval."
             );
 
         }
 
 
-        // =========================
-        // CREATE NEW ARTICLE
-        // =========================
+        /* =====================
+           NEW ARTICLE
+        ===================== */
 
-        else {
+        else{
 
-            const { error } =
-                await supabase
-                    .from("news")
-                    .insert({
+            const {
+                error
+            } =
+            await supabase
+            .from("news")
+            .insert({
 
-                        title: title,
+                title:title,
 
-                        content: content,
+                content:content,
 
-                        image: imageURL,
+                image:imageURL,
 
-                        video: videoURL,
+                video:videoURL,
 
-                        author:
-                            currentUser.email,
+                author:
+                    currentUser.email,
 
-                        uid:
-                            currentUser.id,
+                uid:
+                    currentUser.id,
 
-                        approved: false,
+                approved:false,
 
-                        status: status,
+                status:status,
 
-                        likes: 0
+                likes:0
 
-                    });
+            });
 
 
-            if (error) {
+            if(error){
 
-                console.error(
-                    "NEWS INSERT ERROR:",
-                    error
-                );
+                throw error;
 
-                alert(
-                    "Unable to save article: " +
-                    error.message
-                );
-
-                return;
             }
 
 
             alert(
                 status === "Draft"
-                    ? "Draft saved successfully."
-                    : "News submitted successfully for approval."
+                ?
+                "Draft saved successfully."
+                :
+                "News submitted for approval."
             );
 
         }
 
-
-        // Reset editor
 
         resetEditor();
 
-        await loadArticles();
+        loadArticles();
 
     }
 
-    catch (error) {
+    catch(error){
 
-        console.error(error);
+        console.error(
+            "NEWSROOM ERROR:",
+            error
+        );
 
         alert(
-            error.message ||
-            "Something went wrong."
+            "Unable to save article:\n" +
+            error.message
         );
 
     }
@@ -361,96 +506,98 @@ async function saveArticle(status) {
 }
 
 
-// =========================
-// SAVE DRAFT
-// =========================
+/* =========================
+   SAVE DRAFT
+========================= */
 
 saveDraftButton.addEventListener(
-    "click",
-    async () => {
+"click",
+async () => {
 
-        await saveArticle("Draft");
+    await saveArticle(
+        "Draft"
+    );
 
-    }
-);
+});
 
 
-// =========================
-// SUBMIT FOR APPROVAL
-// =========================
+/* =========================
+   SUBMIT
+========================= */
 
 form.addEventListener(
-    "submit",
-    async (e) => {
+"submit",
+async(e) => {
 
-        e.preventDefault();
+    e.preventDefault();
 
-        await saveArticle(
-            "Pending Approval"
-        );
+    await saveArticle(
+        "Pending Approval"
+    );
 
-    }
-);
-
-
-// =========================
-// LOAD MY ARTICLES
-// =========================
-
-async function loadArticles() {
-
-    if (!currentUser) return;
+});
 
 
-    const { data, error } =
-        await supabase
-            .from("news")
-            .select("*")
-            .eq(
-                "uid",
-                currentUser.id
-            )
-            .order(
-                "Created_at",
-                {
-                    ascending: false
-                }
-            );
+/* =========================
+   LOAD ARTICLES
+========================= */
+
+async function loadArticles(){
+
+    if(!currentUser) return;
 
 
-    if (error) {
+    const {
+        data,
+        error
+    } =
+    await supabase
+    .from("news")
+    .select("*")
+    .eq(
+        "uid",
+        currentUser.id
+    )
+    .order(
+        "Created_at",
+        {
+            ascending:false
+        }
+    );
 
-        console.error(
-            "LOAD ARTICLES ERROR:",
-            error
-        );
+
+    if(error){
+
+        console.error(error);
 
         myArticles.innerHTML =
             "<p>Unable to load your articles.</p>";
 
         return;
+
     }
 
 
     myArticles.innerHTML = "";
 
 
-    if (!data || data.length === 0) {
+    if(!data ||
+       data.length === 0){
 
         myArticles.innerHTML =
             "<p>No articles yet.</p>";
 
         return;
+
     }
 
 
-    data.forEach((news) => {
+    data.forEach(news => {
 
         const card =
-            template.content.cloneNode(true);
+            template.content
+            .cloneNode(true);
 
-
-        // Title
 
         card.querySelector(
             ".articleTitle"
@@ -459,8 +606,6 @@ async function loadArticles() {
             "Untitled";
 
 
-        // Status
-
         card.querySelector(
             ".articleStatus"
         ).textContent =
@@ -468,21 +613,19 @@ async function loadArticles() {
             "Draft";
 
 
-        // Date
-
         card.querySelector(
             ".articleDate"
         ).textContent =
             news.Created_at
-                ? new Date(
-                    news.Created_at
-                ).toLocaleString()
-                : "Just now";
+            ?
+            new Date(
+                news.Created_at
+            ).toLocaleString()
+            :
+            "Just now";
 
 
-        // =========================
-        // EDIT
-        // =========================
+        /* EDIT */
 
         card.querySelector(
             ".editButton"
@@ -490,64 +633,23 @@ async function loadArticles() {
             "click",
             () => {
 
-                startEditing(news);
+                editArticle(news);
 
             }
         );
 
 
-        // =========================
-        // DELETE
-        // =========================
+        /* DELETE */
 
         card.querySelector(
             ".deleteButton"
         ).addEventListener(
             "click",
-            async () => {
+            async() => {
 
-                const confirmed =
-                    confirm(
-                        "Are you sure you want to delete this article?"
-                    );
-
-
-                if (!confirmed) return;
-
-
-                const { error } =
-                    await supabase
-                        .from("news")
-                        .delete()
-                        .eq(
-                            "id",
-                            news.id
-                        )
-                        .eq(
-                            "uid",
-                            currentUser.id
-                        );
-
-
-                if (error) {
-
-                    console.error(error);
-
-                    alert(
-                        "Unable to delete article: " +
-                        error.message
-                    );
-
-                    return;
-                }
-
-
-                alert(
-                    "Article deleted successfully."
+                deleteArticle(
+                    news.id
                 );
-
-
-                loadArticles();
 
             }
         );
@@ -560,108 +662,180 @@ async function loadArticles() {
 }
 
 
-// =========================
-// START EDITING
-// =========================
+/* =========================
+   EDIT ARTICLE
+========================= */
 
-function startEditing(news) {
+function editArticle(news){
 
-    editingId =
+    editingArticleId =
         news.id;
 
-    editingImage =
+
+    existingImage =
         news.image || null;
 
-    editingVideo =
+
+    existingVideo =
         news.video || null;
 
 
-    document.getElementById(
-        "title"
-    ).value =
+    titleInput.value =
         news.title || "";
 
 
-    document.getElementById(
-        "content"
-    ).value =
+    contentEditor.innerHTML =
         news.content || "";
 
 
-    imageFile.value = "";
-
-    videoFile.value = "";
-
-
-    saveDraftButton.textContent =
-        "💾 Update Draft";
+    editorHeading.textContent =
+        "✏️ Edit Article";
 
 
-    submitNewsButton.textContent =
-        "📤 Update & Submit";
-
-
-    uploadStatus.textContent =
-        "Editing: " +
-        (news.status || "Article");
+    cancelEditButton.style.display =
+        "block";
 
 
     window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+        top:0,
+        behavior:"smooth"
     });
+
+
+    imagePreview.innerHTML =
+        existingImage
+        ?
+        `<img src="${existingImage}">`
+        :
+        "";
+
+
+    videoPreview.innerHTML =
+        existingVideo
+        ?
+        `<video src="${existingVideo}" controls></video>`
+        :
+        "";
 
 }
 
 
-// =========================
-// RESET EDITOR
-// =========================
+/* =========================
+   DELETE
+========================= */
 
-function resetEditor() {
+async function deleteArticle(id){
+
+    const confirmDelete =
+        confirm(
+            "Are you sure you want to delete this article?"
+        );
+
+
+    if(!confirmDelete){
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+    await supabase
+    .from("news")
+    .delete()
+    .eq(
+        "id",
+        id
+    );
+
+
+    if(error){
+
+        alert(
+            "Unable to delete article:\n" +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        "Article deleted."
+    );
+
+
+    loadArticles();
+
+}
+
+
+/* =========================
+   CANCEL EDIT
+========================= */
+
+cancelEditButton.addEventListener(
+"click",
+() => {
+
+    resetEditor();
+
+});
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetEditor(){
 
     form.reset();
 
-    editingId = null;
+    contentEditor.innerHTML =
+        "";
 
-    editingImage = null;
+    imagePreview.innerHTML =
+        "";
 
-    editingVideo = null;
+    videoPreview.innerHTML =
+        "";
 
-    uploadStatus.textContent = "";
+    editingArticleId =
+        null;
 
+    existingImage =
+        null;
 
-    saveDraftButton.textContent =
-        "💾 Save Draft";
+    existingVideo =
+        null;
 
+    editorHeading.textContent =
+        "Write News Article";
 
-    submitNewsButton.textContent =
-        "📤 Submit for Approval";
+    cancelEditButton.style.display =
+        "none";
 
 }
 
 
-// =========================
-// START
-// =========================
+/* =========================
+   START
+========================= */
 
-(async () => {
+(async() => {
 
     const loggedIn =
         await checkUser();
 
-    if (!loggedIn) return;
-
-
-    const allowed =
-        await checkAccess();
-
-    if (!allowed) return;
-
+    if(!loggedIn) return;
 
     await loadArticles();
 
-})();
-                        
-                                        
-                                
+})();        
+
+        
+            
+                    
