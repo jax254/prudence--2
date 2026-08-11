@@ -303,3 +303,14 @@ flex-direction:column;
 }
 
   }
+.error-box{
+background:#ffe5e5;
+color:#b00020;
+padding:15px;
+border-radius:8px;
+margin-top:10px;
+}
+
+.error-box p{
+margin-top:8px;
+   }
