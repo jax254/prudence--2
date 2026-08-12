@@ -1,17 +1,14 @@
 import supabase from "./supabase.js";
 
-const newsList =
-    document.getElementById("newsList");
-
-const template =
-    document.getElementById("newsTemplate");
+const newsList = document.getElementById("newsList");
+const template = document.getElementById("newsTemplate");
 
 let currentUser = null;
 
 
-// =========================
-// CHECK SUPER ADMIN
-// =========================
+/* =========================
+   CHECK SUPER ADMIN LOGIN
+========================= */
 
 async function checkUser() {
 
@@ -20,21 +17,18 @@ async function checkUser() {
         error
     } = await supabase.auth.getUser();
 
-
     if (error || !user) {
 
-        window.location.href =
-            "../login.html";
+        window.location.href = "../login.html";
 
         return false;
-
     }
-
 
     currentUser = user;
 
 
-    // Check profile/role
+    /* Get user's profile */
+
     const {
         data: profile,
         error: profileError
@@ -49,36 +43,31 @@ async function checkUser() {
 
         alert("Unable to verify your account.");
 
-        window.location.href =
-            "../dashboard.html";
+        window.location.href = "../dashboard.html";
 
         return false;
-
     }
 
 
+    /* Check role */
+
     if (profile.role !== "superadmin") {
 
-        alert(
-            "Only the Super Admin can access the News Approval Center."
-        );
+        alert("Access denied. Super Admin only.");
 
-        window.location.href =
-            "../dashboard.html";
+        window.location.href = "../dashboard.html";
 
         return false;
-
     }
 
 
     return true;
-
 }
 
 
-// =========================
-// LOAD PENDING NEWS
-// =========================
+/* =========================
+   LOAD PENDING NEWS
+========================= */
 
 async function loadPendingNews() {
 
@@ -93,7 +82,6 @@ async function loadPendingNews() {
         .from("news")
         .select("*")
         .eq("status", "Pending Approval")
-        .eq("approved", false)
         .order("Created_at", {
             ascending: false
         });
@@ -102,19 +90,14 @@ async function loadPendingNews() {
     if (error) {
 
         console.error(
-            "APPROVAL LOAD ERROR:",
+            "APPROVAL ERROR:",
             error
         );
 
-        newsList.innerHTML = `
-            <div class="error-box">
-                <h3>Unable to load news</h3>
-                <p>${error.message}</p>
-            </div>
-        `;
+        newsList.innerHTML =
+            "<p>Unable to load pending articles.</p>";
 
         return;
-
     }
 
 
@@ -123,15 +106,10 @@ async function loadPendingNews() {
 
     if (!data || data.length === 0) {
 
-        newsList.innerHTML = `
-            <div class="empty-box">
-                <h3>✅ No pending news</h3>
-                <p>There are currently no articles waiting for approval.</p>
-            </div>
-        `;
+        newsList.innerHTML =
+            "<h3>No pending news.</h3>";
 
         return;
-
     }
 
 
@@ -141,66 +119,77 @@ async function loadPendingNews() {
             template.content.cloneNode(true);
 
 
-        // =========================
-        // TEXT
-        // =========================
+        /* TITLE */
 
-        card.querySelector(".title")
-            .textContent =
+        card.querySelector(
+            ".title"
+        ).textContent =
             news.title || "Untitled";
 
 
-        card.querySelector(".author")
-            .textContent =
+        /* AUTHOR */
+
+        card.querySelector(
+            ".author"
+        ).textContent =
             "Author: " +
             (news.author || "Unknown");
 
 
-        card.querySelector(".date")
-            .textContent =
-            news.Created_at
-                ? new Date(
-                    news.Created_at
-                ).toLocaleString()
-                : "Just now";
+        /* DATE */
+
+        const dateElement =
+            card.querySelector(".date");
+
+        if (dateElement) {
+
+            dateElement.textContent =
+                news.Created_at
+                    ?
+                    new Date(
+                        news.Created_at
+                    ).toLocaleString()
+                    :
+                    "Just now";
+        }
 
 
-        card.querySelector(".content")
-            .innerHTML =
+        /* CONTENT */
+
+        const contentElement =
+            card.querySelector(".content");
+
+        contentElement.innerHTML =
             news.content || "";
 
 
-        // =========================
-        // IMAGE
-        // =========================
+        /* IMAGE */
 
         const image =
             card.querySelector(".image");
 
+        if (image) {
 
-        if (news.image) {
+            if (news.image) {
 
-            image.src =
-                news.image;
+                image.src =
+                    news.image;
 
-            image.style.display =
-                "block";
+                image.style.display =
+                    "block";
 
-        } else {
+            } else {
 
-            image.style.display =
-                "none";
-
+                image.style.display =
+                    "none";
+            }
         }
 
 
-        // =========================
-        // VIDEO
-        // =========================
+        /* VIDEO */
 
         const video =
             card.querySelector(".video");
-
 
         if (video) {
 
@@ -216,54 +205,51 @@ async function loadPendingNews() {
 
                 video.style.display =
                     "none";
-
             }
-
         }
 
 
-        // =========================
-        // FEEDBACK
-        // =========================
+        /* =====================
+           APPROVE
+        ===================== */
 
-        const feedback =
-            card.querySelector(".feedback");
+        const approveButton =
+            card.querySelector(
+                ".approveBtn"
+            );
 
 
-        // =========================
-        // APPROVE
-        // =========================
+        if (approveButton) {
 
-        card.querySelector(".approveBtn")
-            .addEventListener(
-                "click",
+            approveButton.onclick =
                 async () => {
 
-                    const message =
-                        feedback
-                            ? feedback.value.trim()
-                            : "";
+                    const confirmed =
+                        confirm(
+                            "Approve this article for publication?"
+                        );
+
+                    if (!confirmed)
+                        return;
 
 
                     const {
                         error
-                    } = await supabase
+                    } =
+                    await supabase
                         .from("news")
                         .update({
 
                             approved: true,
 
-                            status:
-                                "Published",
-
-                            feedback:
-                                message || null,
+                            status: "Published",
 
                             approvedBy:
                                 currentUser.email,
 
                             approvedAt:
-                                new Date().toISOString()
+                                new Date()
+                                .toISOString()
 
                         })
                         .eq(
@@ -280,61 +266,68 @@ async function loadPendingNews() {
                         );
 
                         return;
-
                     }
 
 
-                    await logAction(
-                        "Approved news: " +
-                        news.title
-                    );
-
-
                     alert(
-                        "News approved and published successfully."
+                        "News approved successfully."
                     );
 
 
                     loadPendingNews();
+                };
+        }
 
-                }
+
+        /* =====================
+           REJECT
+        ===================== */
+
+        const rejectButton =
+            card.querySelector(
+                ".rejectBtn"
             );
 
 
-        // =========================
-        // REJECT
-        // =========================
+        if (rejectButton) {
 
-        card.querySelector(".rejectBtn")
-            .addEventListener(
-                "click",
+            rejectButton.onclick =
                 async () => {
 
-                    const message =
-                        feedback
-                            ? feedback.value.trim()
-                            : "";
+                    const feedback =
+                        prompt(
+                            "Reason for rejecting this article:"
+                        );
+
+
+                    if (
+                        feedback === null
+                    ) {
+
+                        return;
+                    }
 
 
                     const {
                         error
-                    } = await supabase
+                    } =
+                    await supabase
                         .from("news")
                         .update({
 
                             approved: false,
 
-                            status:
-                                "Rejected",
+                            status: "Rejected",
 
                             feedback:
-                                message || null,
+                                feedback,
 
                             approvedBy:
                                 currentUser.email,
 
                             approvedAt:
-                                new Date().toISOString()
+                                new Date()
+                                .toISOString()
 
                         })
                         .eq(
@@ -351,14 +344,7 @@ async function loadPendingNews() {
                         );
 
                         return;
-
                     }
-
-
-                    await logAction(
-                        "Rejected news: " +
-                        news.title
-                    );
 
 
                     alert(
@@ -367,18 +353,23 @@ async function loadPendingNews() {
 
 
                     loadPendingNews();
+                };
+        }
 
-                }
+
+        /* =====================
+           DELETE
+        ===================== */
+
+        const deleteButton =
+            card.querySelector(
+                ".deleteBtn"
             );
 
 
-        // =========================
-        // DELETE
-        // =========================
+        if (deleteButton) {
 
-        card.querySelector(".deleteBtn")
-            .addEventListener(
-                "click",
+            deleteButton.onclick =
                 async () => {
 
                     const confirmed =
@@ -387,12 +378,14 @@ async function loadPendingNews() {
                         );
 
 
-                    if (!confirmed) return;
+                    if (!confirmed)
+                        return;
 
 
                     const {
                         error
-                    } = await supabase
+                    } =
+                    await supabase
                         .from("news")
                         .delete()
                         .eq(
@@ -409,14 +402,7 @@ async function loadPendingNews() {
                         );
 
                         return;
-
                     }
-
-
-                    await logAction(
-                        "Deleted news: " +
-                        news.title
-                    );
 
 
                     alert(
@@ -425,87 +411,57 @@ async function loadPendingNews() {
 
 
                     loadPendingNews();
+                };
+        }
 
-                }
+
+        /* =====================
+           EDIT
+        ===================== */
+
+        const editButton =
+            card.querySelector(
+                ".editBtn"
             );
 
 
-        // =========================
-        // EDIT
-        // =========================
+        if (editButton) {
 
-        card.querySelector(".editBtn")
-            .addEventListener(
-                "click",
+            editButton.onclick =
                 () => {
 
-                    localStorage.setItem(
-                        "editNewsId",
-                        news.id
-                    );
-
+                    /*
+                     * For now we open the
+                     * Newsroom editor with
+                     * the article ID.
+                     */
 
                     window.location.href =
-                        "admin-newsroom.html";
-
-                }
-            );
+                        `admin-newsroom.html?edit=${news.id}`;
+                };
+        }
 
 
         newsList.appendChild(card);
 
     });
-
 }
 
 
-// =========================
-// ADMIN LOG
-// =========================
-
-async function logAction(action) {
-
-    const {
-        error
-    } = await supabase
-        .from("adminLogs")
-        .insert({
-
-            admin:
-                currentUser.id,
-
-            action:
-                action
-
-        });
-
-
-    if (error) {
-
-        console.error(
-            "ADMIN LOG ERROR:",
-            error
-        );
-
-    }
-
-}
-
-
-// =========================
-// START
-// =========================
+/* =========================
+   START
+========================= */
 
 (async () => {
 
-    const allowed =
+    const loggedIn =
         await checkUser();
 
 
-    if (!allowed) return;
+    if (!loggedIn)
+        return;
 
 
     await loadPendingNews();
 
-})();            
-                
+})();
