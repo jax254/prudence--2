@@ -1,67 +1,112 @@
 import supabase from "./supabase.js";
 
-const newsList = document.getElementById("newsList");
-const template = document.getElementById("newsTemplate");
+
+const newsList =
+    document.getElementById("newsList");
+
+const template =
+    document.getElementById("newsTemplate");
+
 
 let currentUser = null;
 
 
 /* =========================
-   CHECK SUPER ADMIN LOGIN
+   CHECK SUPER ADMIN
 ========================= */
 
-async function checkUser() {
+async function checkSuperAdmin() {
 
     const {
         data: { user },
         error
     } = await supabase.auth.getUser();
 
+
     if (error || !user) {
 
-        window.location.href = "../login.html";
+        window.location.href =
+            "login.html";
 
         return false;
+
     }
+
 
     currentUser = user;
 
 
-    /* Get user's profile */
+    /* Get profile */
 
     const {
         data: profile,
         error: profileError
     } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
+        .from("profiles")
+        .select(
+            "id, email, role, status, username"
+        )
+        .eq(
+            "id",
+            user.id
+        )
         .single();
 
 
     if (profileError || !profile) {
 
-        alert("Unable to verify your account.");
+        console.error(
+            "PROFILE ERROR:",
+            profileError
+        );
 
-        window.location.href = "../dashboard.html";
+        alert(
+            "Unable to verify your account."
+        );
 
         return false;
+
     }
 
 
     /* Check role */
 
-    if (profile.role !== "superadmin") {
+    if (
+        profile.role !==
+        "superadmin"
+    ) {
 
-        alert("Access denied. Super Admin only.");
+        alert(
+            "Access denied. Super Admin only."
+        );
 
-        window.location.href = "../dashboard.html";
+        window.location.href =
+            "dashboard.html";
 
         return false;
+
+    }
+
+
+    /* Check status */
+
+    if (
+        profile.status &&
+        profile.status !==
+        "active"
+    ) {
+
+        alert(
+            "Your Super Admin account is not active."
+        );
+
+        return false;
+
     }
 
 
     return true;
+
 }
 
 
@@ -81,94 +126,159 @@ async function loadPendingNews() {
     } = await supabase
         .from("news")
         .select("*")
-        .eq("status", "Pending Approval")
-        .order("Created_at", {
-            ascending: false
-        });
+        .eq(
+            "status",
+            "Pending Approval"
+        )
+        .order(
+            "Created_at",
+            {
+                ascending: false
+            }
+        );
 
 
     if (error) {
 
         console.error(
-            "APPROVAL ERROR:",
+            "NEWS LOAD ERROR:",
             error
         );
 
-        newsList.innerHTML =
-            "<p>Unable to load pending articles.</p>";
+
+        newsList.innerHTML = `
+
+            <div class="error-box">
+
+                <h3>
+                    Unable to load pending news
+                </h3>
+
+                <p>
+                    ${error.message}
+                </p>
+
+                <p>
+                    Code:
+                    ${error.code || "None"}
+                </p>
+
+            </div>
+
+        `;
 
         return;
+
     }
 
 
     newsList.innerHTML = "";
 
 
-    if (!data || data.length === 0) {
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
-        newsList.innerHTML =
-            "<h3>No pending news.</h3>";
+        newsList.innerHTML = `
+
+            <div class="empty-state">
+
+                <h3>
+                    No pending news.
+                </h3>
+
+                <p>
+                    There are currently no
+                    articles waiting for approval.
+                </p>
+
+            </div>
+
+        `;
 
         return;
+
     }
 
 
-    data.forEach(news => {
+    data.forEach(
+        (news) => {
 
-        const card =
-            template.content.cloneNode(true);
-
-
-        /* TITLE */
-
-        card.querySelector(
-            ".title"
-        ).textContent =
-            news.title || "Untitled";
+            const card =
+                template.content
+                    .cloneNode(true);
 
 
-        /* AUTHOR */
+            /* =====================
+               TITLE
+            ===================== */
 
-        card.querySelector(
-            ".author"
-        ).textContent =
-            "Author: " +
-            (news.author || "Unknown");
+            card.querySelector(
+                ".title"
+            ).textContent =
+                news.title ||
+                "Untitled";
 
 
-        /* DATE */
+            /* =====================
+               AUTHOR
+            ===================== */
 
-        const dateElement =
-            card.querySelector(".date");
+            card.querySelector(
+                ".author"
+            ).textContent =
+                "Author: " +
+                (
+                    news.author ||
+                    "News Room"
+                );
 
-        if (dateElement) {
 
-            dateElement.textContent =
-                news.Created_at
+            /* =====================
+               DATE
+            ===================== */
+
+            const date =
+                card.querySelector(
+                    ".date"
+                );
+
+
+            if (date) {
+
+                date.textContent =
+                    news.Created_at
                     ?
                     new Date(
                         news.Created_at
                     ).toLocaleString()
                     :
-                    "Just now";
-        }
+                    "Date unavailable";
+
+            }
 
 
-        /* CONTENT */
+            /* =====================
+               CONTENT
+            ===================== */
 
-        const contentElement =
-            card.querySelector(".content");
+            card.querySelector(
+                ".content"
+            ).innerHTML =
+                news.content ||
+                "";
 
-        contentElement.innerHTML =
-            news.content || "";
 
+            /* =====================
+               IMAGE
+            ===================== */
 
-        /* IMAGE */
+            const image =
+                card.querySelector(
+                    ".image"
+                );
 
-        const image =
-            card.querySelector(".image");
-
-        if (image) {
 
             if (news.image) {
 
@@ -182,55 +292,66 @@ async function loadPendingNews() {
 
                 image.style.display =
                     "none";
+
             }
-        }
 
 
-        /* VIDEO */
+            /* =====================
+               VIDEO
+            ===================== */
 
-        const video =
-            card.querySelector(".video");
+            const video =
+                card.querySelector(
+                    ".video"
+                );
 
-        if (video) {
 
-            if (news.video) {
+            if (video) {
 
-                video.src =
-                    news.video;
+                if (news.video) {
 
-                video.style.display =
-                    "block";
+                    video.src =
+                        news.video;
 
-            } else {
+                    video.style.display =
+                        "block";
 
-                video.style.display =
-                    "none";
+                } else {
+
+                    video.style.display =
+                        "none";
+
+                }
+
             }
-        }
 
 
-        /* =====================
-           APPROVE
-        ===================== */
+            /* =====================
+               APPROVE
+            ===================== */
 
-        const approveButton =
-            card.querySelector(
-                ".approveBtn"
-            );
+            const approveButton =
+                card.querySelector(
+                    ".approveBtn"
+                );
 
 
-        if (approveButton) {
+            if (approveButton) {
 
-            approveButton.onclick =
+                approveButton.onclick =
                 async () => {
 
                     const confirmed =
                         confirm(
-                            "Approve this article for publication?"
+                            "Approve this article and publish it?"
                         );
 
-                    if (!confirmed)
+
+                    if (!confirmed) {
+
                         return;
+
+                    }
 
 
                     const {
@@ -242,7 +363,8 @@ async function loadPendingNews() {
 
                             approved: true,
 
-                            status: "Published",
+                            status:
+                                "Published",
 
                             approvedBy:
                                 currentUser.email,
@@ -260,51 +382,60 @@ async function loadPendingNews() {
 
                     if (error) {
 
+                        console.error(
+                            error
+                        );
+
                         alert(
                             "Unable to approve article:\n" +
                             error.message
                         );
 
                         return;
+
                     }
 
 
                     alert(
-                        "News approved successfully."
+                        "News approved and published successfully."
                     );
 
 
                     loadPendingNews();
+
                 };
-        }
+
+            }
 
 
-        /* =====================
-           REJECT
-        ===================== */
+            /* =====================
+               REJECT
+            ===================== */
 
-        const rejectButton =
-            card.querySelector(
-                ".rejectBtn"
-            );
+            const rejectButton =
+                card.querySelector(
+                    ".rejectBtn"
+                );
 
 
-        if (rejectButton) {
+            if (rejectButton) {
 
-            rejectButton.onclick =
+                rejectButton.onclick =
                 async () => {
 
                     const feedback =
                         prompt(
-                            "Reason for rejecting this article:"
+                            "Why are you rejecting this article?"
                         );
 
 
                     if (
-                        feedback === null
+                        feedback ===
+                        null
                     ) {
 
                         return;
+
                     }
 
 
@@ -317,17 +448,11 @@ async function loadPendingNews() {
 
                             approved: false,
 
-                            status: "Rejected",
+                            status:
+                                "Rejected",
 
                             feedback:
-                                feedback,
-
-                            approvedBy:
-                                currentUser.email,
-
-                            approvedAt:
-                                new Date()
-                                .toISOString()
+                                feedback
 
                         })
                         .eq(
@@ -338,38 +463,45 @@ async function loadPendingNews() {
 
                     if (error) {
 
+                        console.error(
+                            error
+                        );
+
                         alert(
                             "Unable to reject article:\n" +
                             error.message
                         );
 
                         return;
+
                     }
 
 
                     alert(
-                        "News rejected."
+                        "News rejected successfully."
                     );
 
 
                     loadPendingNews();
+
                 };
-        }
+
+            }
 
 
-        /* =====================
-           DELETE
-        ===================== */
+            /* =====================
+               DELETE
+            ===================== */
 
-        const deleteButton =
-            card.querySelector(
-                ".deleteBtn"
-            );
+            const deleteButton =
+                card.querySelector(
+                    ".deleteBtn"
+                );
 
 
-        if (deleteButton) {
+            if (deleteButton) {
 
-            deleteButton.onclick =
+                deleteButton.onclick =
                 async () => {
 
                     const confirmed =
@@ -378,8 +510,11 @@ async function loadPendingNews() {
                         );
 
 
-                    if (!confirmed)
+                    if (!confirmed) {
+
                         return;
+
+                    }
 
 
                     const {
@@ -396,12 +531,17 @@ async function loadPendingNews() {
 
                     if (error) {
 
+                        console.error(
+                            error
+                        );
+
                         alert(
                             "Unable to delete article:\n" +
                             error.message
                         );
 
                         return;
+
                     }
 
 
@@ -411,40 +551,54 @@ async function loadPendingNews() {
 
 
                     loadPendingNews();
+
                 };
-        }
+
+            }
 
 
-        /* =====================
-           EDIT
-        ===================== */
+            /* =====================
+               EDIT
+            ===================== */
 
-        const editButton =
-            card.querySelector(
-                ".editBtn"
-            );
+            const editButton =
+                card.querySelector(
+                    ".editBtn"
+                );
 
 
-        if (editButton) {
+            if (editButton) {
 
-            editButton.onclick =
+                editButton.onclick =
                 () => {
 
                     /*
-                     * For now we open the
-                     * Newsroom editor with
-                     * the article ID.
-                     */
+                       Save the article ID
+                       so the Newsroom can
+                       open this article.
+                    */
+
+                    localStorage.setItem(
+                        "editNewsId",
+                        news.id
+                    );
+
 
                     window.location.href =
-                        `admin-newsroom.html?edit=${news.id}`;
+                        "admin-newsroom.html";
+
                 };
+
+            }
+
+
+            newsList.appendChild(
+                card
+            );
+
         }
+    );
 
-
-        newsList.appendChild(card);
-
-    });
 }
 
 
@@ -454,14 +608,17 @@ async function loadPendingNews() {
 
 (async () => {
 
-    const loggedIn =
-        await checkUser();
+    const verified =
+        await checkSuperAdmin();
 
 
-    if (!loggedIn)
+    if (!verified) {
+
         return;
+
+    }
 
 
     await loadPendingNews();
 
-})();
+})();                                       
