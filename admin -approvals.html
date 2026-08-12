@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Prudence 2 - News Approvals</title>
+<title>Prudence 2 | News Approval Center</title>
 
 <link rel="stylesheet" href="../css/approvals.css">
 
@@ -17,13 +18,27 @@
 
 <header>
 
-<h1>NEWS APPROVAL CENTER</h1>
+<h1>✝ PRUDENCE 2</h1>
 
-<p>Super Admin Approval Panel</p>
+<h2>NEWS APPROVAL CENTER</h2>
+
+<p>Review and manage submitted Christian news</p>
 
 </header>
 
-<div class="container">
+
+<main class="container">
+
+<div class="top-bar">
+
+<h2>Articles Awaiting Review</h2>
+
+<button id="refreshButton">
+🔄 Refresh
+</button>
+
+</div>
+
 
 <div id="pendingNews">
 
@@ -31,43 +46,75 @@
 
 </div>
 
-</div>
+</main>
+
 
 <template id="newsTemplate">
 
-<div class="news-card">
+<article class="news-card">
+
+<div class="article-header">
 
 <h2 class="title"></h2>
 
+<span class="status"></span>
+
+</div>
+
+
 <p class="author"></p>
 
-<p class="category"></p>
+<p class="date"></p>
 
-<img class="image" style="display:none;">
 
-<video class="video" controls style="display:none;"></video>
+<img
+class="image"
+style="display:none;"
+alt="News image"
+>
 
-<p class="content"></p>
+
+<video
+class="video"
+controls
+style="display:none;"
+></video>
+
+
+<div class="content"></div>
+
 
 <textarea
 class="feedback"
-placeholder="Write feedback to the News Room Admin..."></textarea>
+placeholder="Write feedback to the News Room provider..."
+rows="4"
+></textarea>
+
 
 <div class="buttons">
 
-<button class="approve">
-Approve
+<button class="editBtn">
+✏️ Edit
 </button>
 
-<button class="reject">
-Reject
+<button class="approveBtn">
+✅ Approve
+</button>
+
+<button class="rejectBtn">
+❌ Reject
+</button>
+
+<button class="deleteBtn">
+🗑️ Delete
 </button>
 
 </div>
 
-</div>
+</article>
 
 </template>
 
 </body>
-</html>
+
+  </html>
