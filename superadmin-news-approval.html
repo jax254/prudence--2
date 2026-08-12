@@ -5,13 +5,19 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>Prudence 2 | News Approval</title>
 
-<link rel="stylesheet" href="../css/news-approval.css">
+<link rel="stylesheet"
+href="../css/news-approval.css">
 
-<script type="module" src="../js/news-approval.js" defer></script>
+<script
+type="module"
+src="../js/news-approval.js"
+defer>
+</script>
 
 </head>
 
@@ -19,11 +25,16 @@
 
 <header>
 
-<h1>SUPER ADMIN NEWS APPROVAL</h1>
+<h1>
+SUPER ADMIN NEWS APPROVAL
+</h1>
 
-<p>Review and approve Christian news before publishing.</p>
+<p>
+Review and approve Christian news before publishing.
+</p>
 
 </header>
+
 
 <div class="container">
 
@@ -35,6 +46,7 @@ Loading pending articles...
 
 </div>
 
+
 <template id="newsTemplate">
 
 <div class="news-card">
@@ -45,34 +57,49 @@ Loading pending articles...
 
 <p class="date"></p>
 
-<img class="image" src="" alt="News Image">
 
-<p class="content"></p>
+<img
+class="image"
+src=""
+alt="News Image"
+style="display:none;">
+
+
+<video
+class="video"
+controls
+style="display:none;">
+</video>
+
+
+<div class="content"></div>
+
+
+<textarea
+class="feedback"
+placeholder="Write feedback to the News Room provider...">
+</textarea>
+
 
 <div class="buttons">
 
 <button class="approveBtn">
-
-Approve
-
+✅ Approve
 </button>
+
 
 <button class="rejectBtn">
-
-Reject
-
+↩️ Reject
 </button>
+
 
 <button class="deleteBtn">
-
-Delete
-
+🗑️ Delete
 </button>
 
+
 <button class="editBtn">
-
-Edit
-
+✏️ Edit
 </button>
 
 </div>
@@ -83,4 +110,4 @@ Edit
 
 </body>
 
-</html>
+  </html>
