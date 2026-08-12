@@ -1,79 +1,141 @@
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,Helvetica,sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-body{
-background:#eef5ff;
+body {
+    background: #eef5ff;
+    color: #222;
 }
 
-header{
-background:#0066ff;
-color:white;
-padding:25px;
-text-align:center;
+header {
+    background: #0066ff;
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
 }
 
-header h1{
-color:purple;
+header h1 {
+    color: purple;
+    margin-bottom: 10px;
 }
 
-.container{
-width:95%;
-max-width:1200px;
-margin:20px auto;
+header p {
+    font-size: 16px;
 }
 
-.news-card{
-background:white;
-padding:20px;
-margin-bottom:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,.1);
+.container {
+    width: 95%;
+    max-width: 1200px;
+    margin: 25px auto;
 }
 
-.news-card img{
-width:100%;
-max-height:350px;
-object-fit:cover;
-border-radius:8px;
-margin:15px 0;
+.news-card {
+    background: white;
+    padding: 22px;
+    margin-bottom: 25px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.1);
 }
 
-.buttons{
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-margin-top:20px;
+.news-card h2 {
+    margin-bottom: 10px;
 }
 
-.buttons button{
-flex:1;
-padding:12px;
-border:none;
-border-radius:8px;
-color:white;
-cursor:pointer;
+.author,
+.date {
+    color: #666;
+    margin-bottom: 8px;
 }
 
-.approveBtn{
-background:green;
+.content {
+    margin-top: 18px;
+    line-height: 1.7;
+    white-space: normal;
 }
 
-.rejectBtn{
-background:#ff9800;
+.news-card img,
+.news-card video {
+    width: 100%;
+    max-height: 450px;
+    object-fit: contain;
+    margin-top: 18px;
+    border-radius: 10px;
+    background: #000;
 }
 
-.deleteBtn{
-background:red;
+.feedback {
+    width: 100%;
+    min-height: 120px;
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    resize: vertical;
 }
 
-.editBtn{
-background:#0066ff;
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 20px;
 }
 
-.buttons button:hover{
-opacity:0.9;
+.buttons button {
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
 }
+
+.approveBtn {
+    background: #198754;
+}
+
+.rejectBtn {
+    background: #ff9800;
+}
+
+.deleteBtn {
+    background: #dc3545;
+}
+
+.editBtn {
+    background: #0066ff;
+}
+
+.buttons button:hover {
+    opacity: .85;
+}
+
+.empty-box,
+.error-box {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.error-box {
+    color: #b00020;
+}
+
+@media (max-width: 700px) {
+
+    .buttons {
+        grid-template-columns: 1fr 1fr;
+    }
+
+}
+
+@media (max-width: 450px) {
+
+    .buttons {
+        grid-template-columns: 1fr;
+    }
+
+  }
