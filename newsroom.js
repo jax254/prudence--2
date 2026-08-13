@@ -367,7 +367,179 @@ async function getAuthorName() {
         "Prudence 2 User"
     );
 
-                                           }
+      /* =========================
+   SPELLING & GRAMMAR CHECK
+========================= */
+
+checkWritingBtn.addEventListener(
+    "click",
+    async () => {
+
+        const text =
+            contentEditor.innerText.trim();
+
+        if (!text) {
+
+            alert(
+                "Please write your article first."
+            );
+
+            return;
+        }
+
+        writingResults.style.display =
+            "block";
+
+        writingResults.innerHTML = `
+            <h3>🔍 Checking article...</h3>
+            <p>Please wait.</p>
+        `;
+
+
+        /*
+         * Basic local checks.
+         * We are deliberately not changing
+         * the article automatically.
+         */
+
+        const warnings = [];
+
+
+        // Repeated spaces
+
+        if (/\s{2,}/.test(text)) {
+
+            warnings.push(
+                "There are repeated spaces in the article."
+            );
+
+        }
+
+
+        // Repeated words
+
+        const words =
+            text
+                .toLowerCase()
+                .replace(/[.,!?;:"'()]/g, "")
+                .split(/\s+/);
+
+        for (
+            let i = 1;
+            i < words.length;
+            i++
+        ) {
+
+            if (
+                words[i] &&
+                words[i] === words[i - 1]
+            ) {
+
+                warnings.push(
+                    `Repeated word detected: "${words[i]}"`
+                );
+
+            }
+
+        }
+
+
+        // Space before punctuation
+
+        if (/\s+[,.!?]/.test(text)) {
+
+            warnings.push(
+                "There appears to be a space before punctuation."
+            );
+
+        }
+
+
+        // Missing space after punctuation
+
+        if (/[,.!?][A-Za-z]/.test(text)) {
+
+            warnings.push(
+                "Check whether spaces are missing after punctuation."
+            );
+
+        }
+
+
+        // Very short article
+
+        if (words.length < 10) {
+
+            warnings.push(
+                "This article is very short. Consider adding more context."
+            );
+
+        }
+
+
+        // Capitalization
+
+        if (
+            text.length > 0 &&
+            /^[a-z]/.test(text)
+        ) {
+
+            warnings.push(
+                "The article appears to begin with a lowercase letter."
+            );
+
+        }
+
+
+        /* RESULTS */
+
+        if (warnings.length === 0) {
+
+            writingResults.innerHTML = `
+                <div class="writing-success">
+                    <strong>✅ No obvious writing problems found.</strong>
+                    <p>
+                        This is a basic writing check.
+                        It does not guarantee perfect grammar or originality.
+                    </p>
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        let html = `
+            <h3>⚠️ Writing suggestions</h3>
+        `;
+
+
+        warnings.forEach(
+            warning => {
+
+                html += `
+                    <div class="writing-error">
+                        ⚠️ ${warning}
+                    </div>
+                `;
+
+            }
+        );
+
+
+        html += `
+            <p style="margin-top:10px;">
+                Review these suggestions before submitting.
+            </p>
+        `;
+
+
+        writingResults.innerHTML =
+            html;
+
+    }
+);                                     }
 /* =========================
    SAVE ARTICLE
 ========================= */
