@@ -506,10 +506,10 @@ async function saveArticle(status){
                 video:videoURL,
 
                 author:
-                    currentUser.email,
+                  await getAuthorName(),
 
                 uid:
-                    currentUser.id,
+                  currentUser.id,
 
                 approved:false,
 
