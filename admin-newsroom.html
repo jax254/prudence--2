@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -18,11 +18,11 @@
 
 <header>
 
-<div class="brand">✝ PRUDENCE 2</div>
+    <div class="brand">✝ PRUDENCE 2</div>
 
-<h1>NEWS ROOM</h1>
+    <h1>NEWS ROOM</h1>
 
-<p>Create, edit and publish Christian news</p>
+    <p>Create, edit and publish Christian news</p>
 
 </header>
 
@@ -36,161 +36,188 @@
 
 <section class="editor">
 
-<h2 id="editorHeading">
-Write News Article
-</h2>
+    <h2 id="editorHeading">
+        Write News Article
+    </h2>
 
 
-<form id="newsForm">
+    <form id="newsForm">
 
 
-<input
-type="text"
-id="title"
-placeholder="News Title"
-required
->
+        <!-- NEWS TITLE -->
+
+        <input
+            type="text"
+            id="title"
+            placeholder="News Title"
+            required
+        >
 
 
-<!-- TOOLBAR -->
+        <!-- =========================
+             TOOLBAR
+        ========================= -->
 
-<div class="toolbar">
+        <div class="toolbar">
 
-<button type="button" data-command="bold">
-<b>B</b>
-</button>
+            <button
+                type="button"
+                data-command="bold">
+                <b>B</b>
+            </button>
 
-<button type="button" data-command="italic">
-<i>I</i>
-</button>
+            <button
+                type="button"
+                data-command="italic">
+                <i>I</i>
+            </button>
 
-<button type="button" data-command="underline">
-<u>U</u>
-</button>
+            <button
+                type="button"
+                data-command="underline">
+                <u>U</u>
+            </button>
 
-<button type="button" data-command="insertUnorderedList">
-☷ List
-</button>
+            <button
+                type="button"
+                data-command="insertUnorderedList">
+                ☷ List
+            </button>
 
-<button type="button" data-command="insertOrderedList">
-1. List
-</button>
+            <button
+                type="button"
+                data-command="insertOrderedList">
+                1. List
+            </button>
 
-<button type="button" id="linkButton">
-🔗 Link
-</button>
+            <button
+                type="button"
+                id="linkButton">
+                🔗 Link
+            </button>
 
-<button type="button" id="undoButton">
-↶
-</button>
+            <button
+                type="button"
+                id="undoButton">
+                ↶
+            </button>
 
-<button type="button" id="redoButton">
-↷
-</button>
+            <button
+                type="button"
+                id="redoButton">
+                ↷
+            </button>
 
-</div>
-
-
-<!-- ARTICLE EDITOR -->
-
-<div
-    id="contentEditor"
-    contenteditable="true"
-    data-placeholder="Write your Christian news article..."
-></div>
-
-
-<!-- SPELLING CHECKER -->
-
-<div class="writing-checker">
-
-    <button
-        type="button"
-        id="checkWritingBtn">
-        ✨ Check Spelling & Grammar
-    </button>
-
-    <div
-        id="writingResults"
-        class="writing-results"
-        style="display:none;">
-    </div>
-
-</div>
+        </div>
 
 
-<!-- IMAGE -->
+        <!-- =========================
+             ARTICLE WRITING AREA
+        ========================= -->
 
-<label class="upload-label">
-
-📷 News Image
-
-<input
-type="file"
-id="imageFile"
-accept="image/*"
->
-
-</label>
-
-<div id="imagePreview"></div>
+        <div
+            id="contentEditor"
+            class="content-editor"
+            contenteditable="true"
+            data-placeholder="Write your Christian news article..."
+        ></div>
 
 
-<!-- VIDEO -->
+        <!-- =========================
+             SPELLING & GRAMMAR CHECKER
+        ========================= -->
 
-<label class="upload-label">
+        <div class="writing-checker">
 
-🎥 News Video
+            <button
+                type="button"
+                id="checkWritingBtn">
+                ✨ Check Spelling & Grammar
+            </button>
 
-<input
-type="file"
-id="videoFile"
-accept="video/*"
->
+            <div
+                id="writingResults"
+                class="writing-results"
+                style="display:none;">
+            </div>
 
-</label>
-
-<div id="videoPreview"></div>
-
-
-<!-- ACTIONS -->
-
-<div class="editor-actions">
-
-<button
-type="button"
-id="saveDraft"
-class="draft-button"
->
-💾 Save Draft
-</button>
+        </div>
 
 
-<button
-type="submit"
-id="submitNews"
-class="submit-button"
->
-📤 Submit for Approval
-</button>
+        <!-- =========================
+             NEWS IMAGE
+        ========================= -->
+
+        <label class="upload-label">
+
+            📷 News Image
+
+            <input
+                type="file"
+                id="imageFile"
+                accept="image/*"
+            >
+
+        </label>
+
+        <div id="imagePreview"></div>
 
 
-<button
-type="button"
-id="cancelEdit"
-class="cancel-button"
-style="display:none;"
->
-Cancel Edit
-</button>
+        <!-- =========================
+             NEWS VIDEO
+        ========================= -->
 
-</div>
+        <label class="upload-label">
+
+            🎥 News Video
+
+            <input
+                type="file"
+                id="videoFile"
+                accept="video/*"
+            >
+
+        </label>
+
+        <div id="videoPreview"></div>
 
 
-</form>
+        <!-- =========================
+             ACTION BUTTONS
+        ========================= -->
+
+        <div class="editor-actions">
+
+            <button
+                type="button"
+                id="saveDraft"
+                class="draft-button">
+                💾 Save Draft
+            </button>
+
+
+            <button
+                type="submit"
+                id="submitNews"
+                class="submit-button">
+                📤 Submit for Approval
+            </button>
+
+
+            <button
+                type="button"
+                id="cancelEdit"
+                class="cancel-button"
+                style="display:none;">
+                Cancel Edit
+            </button>
+
+        </div>
+
+
+    </form>
 
 </section>
-
 
 
 <!-- =========================
@@ -199,13 +226,13 @@ Cancel Edit
 
 <section class="articles">
 
-<h2>My Articles</h2>
+    <h2>My Articles</h2>
 
-<div id="myArticles">
+    <div id="myArticles">
 
-Loading...
+        Loading...
 
-</div>
+    </div>
 
 </section>
 
@@ -250,4 +277,4 @@ Loading...
 
 </body>
 
-     </html>
+     </html>   
