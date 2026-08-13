@@ -26,7 +26,7 @@ async function checkSuperAdmin() {
     if (authError || !user) {
 
         window.location.href =
-            "login.html";
+            "../login.html";
 
         return false;
 
@@ -37,7 +37,7 @@ async function checkSuperAdmin() {
 
 
     const {
-        data: profiles,
+        data: profile,
         error: profileError
     } = await supabase
         .from("profiles")
@@ -47,7 +47,8 @@ async function checkSuperAdmin() {
         .eq(
             "id",
             user.id
-        );
+        )
+        .maybeSingle();
 
 
     if (profileError) {
@@ -67,15 +68,7 @@ async function checkSuperAdmin() {
     }
 
 
-    if (
-        !profiles ||
-        profiles.length !== 1
-    ) {
-
-        console.error(
-            "PROFILE RESULT:",
-            profiles
-        );
+    if (!profile) {
 
         alert(
             "Unable to verify your Super Admin profile."
@@ -84,10 +77,6 @@ async function checkSuperAdmin() {
         return false;
 
     }
-
-
-    const profile =
-        profiles[0];
 
 
     if (
@@ -101,7 +90,7 @@ async function checkSuperAdmin() {
         );
 
         window.location.href =
-            "dashboard.html";
+            "../dashboard.html";
 
         return false;
 
@@ -148,8 +137,12 @@ async function loadPendingNews() {
             "status",
             "Pending Approval"
         )
+        .eq(
+            "approved",
+            false
+        )
         .order(
-            "Created_at",
+            "created_at",
             {
                 ascending: false
             }
@@ -220,83 +213,95 @@ async function loadPendingNews() {
     }
 
 
-    data.forEach(
-        (news) => {
+    data.forEach(news => {
 
-            const card =
-                template.content
-                    .cloneNode(true);
+        const card =
+            template.content.cloneNode(true);
 
 
-            /* =====================
-               TITLE
-            ===================== */
+        /* =====================
+           TITLE
+        ===================== */
 
-            card.querySelector(
-                ".title"
-            ).textContent =
+        const title =
+            card.querySelector(".title");
+
+        if (title) {
+
+            title.textContent =
                 news.title ||
                 "Untitled";
 
+        }
 
-            /* =====================
-               AUTHOR
-            ===================== */
 
-            card.querySelector(
-                ".author"
-            ).textContent =
+        /* =====================
+           AUTHOR
+        ===================== */
+
+        const author =
+            card.querySelector(".author");
+
+        if (author) {
+
+            author.textContent =
                 "Author: " +
                 (
                     news.author ||
                     "News Room"
                 );
 
-
-            /* =====================
-               DATE
-            ===================== */
-
-            const date =
-                card.querySelector(
-                    ".date"
-                );
+        }
 
 
-            if (date) {
+        /* =====================
+           DATE
+        ===================== */
 
-                date.textContent =
-                    news.Created_at
+        const date =
+            card.querySelector(".date");
+
+
+        if (date) {
+
+            date.textContent =
+                news.created_at
                     ?
                     new Date(
-                        news.Created_at
+                        news.created_at
                     ).toLocaleString()
                     :
                     "Date unavailable";
 
-            }
+        }
 
 
-            /* =====================
-               CONTENT
-            ===================== */
+        /* =====================
+           CONTENT
+        ===================== */
 
-            card.querySelector(
-                ".content"
-            ).innerHTML =
+        const content =
+            card.querySelector(".content");
+
+
+        if (content) {
+
+            content.innerHTML =
                 news.content ||
                 "";
 
+        }
 
-            /* =====================
-               IMAGE
-            ===================== */
 
-            const image =
-                card.querySelector(
-                    ".image"
-                );
+        /* =====================
+           IMAGE
+        ===================== */
 
+        const image =
+            card.querySelector(".image");
+
+
+        if (image) {
 
             if (news.image) {
 
@@ -313,309 +318,306 @@ async function loadPendingNews() {
 
             }
 
-
-            /* =====================
-               VIDEO
-            ===================== */
-
-            const video =
-                card.querySelector(
-                    ".video"
-                );
+        }
 
 
-            if (video) {
+        /* =====================
+           VIDEO
+        ===================== */
 
-                if (news.video) {
+        const video =
+            card.querySelector(".video");
 
-                    video.src =
-                        news.video;
 
-                    video.style.display =
-                        "block";
+        if (video) {
 
-                } else {
+            if (news.video) {
 
-                    video.style.display =
-                        "none";
+                video.src =
+                    news.video;
+
+                video.style.display =
+                    "block";
+
+            } else {
+
+                video.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+        /* =====================
+           APPROVE
+        ===================== */
+
+        const approveButton =
+            card.querySelector(
+                ".approveBtn"
+            );
+
+
+        if (approveButton) {
+
+            approveButton.onclick =
+            async () => {
+
+                const confirmed =
+                    confirm(
+                        "Approve this article and publish it?"
+                    );
+
+
+                if (!confirmed) {
+
+                    return;
 
                 }
 
-            }
 
+                approveButton.disabled =
+                    true;
 
-            /* =====================
-               APPROVE
-            ===================== */
 
-            const approveButton =
-                card.querySelector(
-                    ".approveBtn"
-                );
+                const {
+                    error
+                } =
+                await supabase
+                    .from("news")
+                    .update({
 
+                        approved: true,
 
-            if (approveButton) {
+                        status:
+                            "Published",
 
-                approveButton.onclick =
-                async () => {
+                        approvedBy:
+                            currentUser.id
 
-                    const confirmed =
-                        confirm(
-                            "Approve this article and publish it?"
-                        );
-
-
-                    if (!confirmed) {
-
-                        return;
-
-                    }
-
-
-                    const {
-                        error
-                    } =
-                    await supabase
-                        .from("news")
-                        .update({
-
-                            approved: true,
-
-                            status:
-                                "Published",
-
-                            approvedBy:
-                                currentUser.email,
-
-                            approvedAt:
-                                new Date()
-                                .toISOString()
-
-                        })
-                        .eq(
-                            "id",
-                            news.id
-                        );
-
-
-                    if (error) {
-
-                        console.error(
-                            error
-                        );
-
-                        alert(
-                            "Unable to approve article:\n" +
-                            error.message
-                        );
-
-                        return;
-
-                    }
-
-
-                    alert(
-                        "News approved and published successfully."
-                    );
-
-
-                    loadPendingNews();
-
-                };
-
-            }
-
-
-            /* =====================
-               REJECT
-            ===================== */
-
-            const rejectButton =
-                card.querySelector(
-                    ".rejectBtn"
-                );
-
-
-            if (rejectButton) {
-
-                rejectButton.onclick =
-                async () => {
-
-                    const feedback =
-                        prompt(
-                            "Why are you rejecting this article?"
-                        );
-
-
-                    if (
-                        feedback ===
-                        null
-                    ) {
-
-                        return;
-
-                    }
-
-
-                    const {
-                        error
-                    } =
-                    await supabase
-                        .from("news")
-                        .update({
-
-                            approved: false,
-
-                            status:
-                                "Rejected",
-
-                            feedback:
-                                feedback
-
-                        })
-                        .eq(
-                            "id",
-                            news.id
-                        );
-
-
-                    if (error) {
-
-                        console.error(
-                            error
-                        );
-
-                        alert(
-                            "Unable to reject article:\n" +
-                            error.message
-                        );
-
-                        return;
-
-                    }
-
-
-                    alert(
-                        "News rejected successfully."
-                    );
-
-
-                    loadPendingNews();
-
-                };
-
-            }
-
-
-            /* =====================
-               DELETE
-            ===================== */
-
-            const deleteButton =
-                card.querySelector(
-                    ".deleteBtn"
-                );
-
-
-            if (deleteButton) {
-
-                deleteButton.onclick =
-                async () => {
-
-                    const confirmed =
-                        confirm(
-                            "Are you sure you want to permanently delete this article?"
-                        );
-
-
-                    if (!confirmed) {
-
-                        return;
-
-                    }
-
-
-                    const {
-                        error
-                    } =
-                    await supabase
-                        .from("news")
-                        .delete()
-                        .eq(
-                            "id",
-                            news.id
-                        );
-
-
-                    if (error) {
-
-                        console.error(
-                            error
-                        );
-
-                        alert(
-                            "Unable to delete article:\n" +
-                            error.message
-                        );
-
-                        return;
-
-                    }
-
-
-                    alert(
-                        "Article deleted successfully."
-                    );
-
-
-                    loadPendingNews();
-
-                };
-
-            }
-
-
-            /* =====================
-               EDIT
-            ===================== */
-
-            const editButton =
-                card.querySelector(
-                    ".editBtn"
-                );
-
-
-            if (editButton) {
-
-                editButton.onclick =
-                () => {
-
-                    /*
-                       Save the article ID
-                       so the Newsroom can
-                       open this article.
-                    */
-
-                    localStorage.setItem(
-                        "editNewsId",
+                    })
+                    .eq(
+                        "id",
                         news.id
                     );
 
 
-                    window.location.href =
-                        "admin-newsroom.html";
+                if (error) {
 
-                };
+                    console.error(
+                        "APPROVAL ERROR:",
+                        error
+                    );
 
-            }
+                    approveButton.disabled =
+                        false;
+
+                    alert(
+                        "Unable to approve article:\n" +
+                        error.message
+                    );
+
+                    return;
+
+                }
 
 
-            newsList.appendChild(
-                card
-            );
+                alert(
+                    "News approved and published successfully."
+                );
+
+
+                await loadPendingNews();
+
+            };
 
         }
-    );
+
+
+        /* =====================
+           REJECT
+        ===================== */
+
+        const rejectButton =
+            card.querySelector(
+                ".rejectBtn"
+            );
+
+
+        if (rejectButton) {
+
+            rejectButton.onclick =
+            async () => {
+
+                const feedback =
+                    prompt(
+                        "Why are you rejecting this article?"
+                    );
+
+
+                if (
+                    feedback ===
+                    null
+                ) {
+
+                    return;
+
+                }
+
+
+                const {
+                    error
+                } =
+                await supabase
+                    .from("news")
+                    .update({
+
+                        approved: false,
+
+                        status:
+                            "Rejected",
+
+                        feedback:
+                            feedback
+
+                    })
+                    .eq(
+                        "id",
+                        news.id
+                    );
+
+
+                if (error) {
+
+                    console.error(
+                        "REJECTION ERROR:",
+                        error
+                    );
+
+                    alert(
+                        "Unable to reject article:\n" +
+                        error.message
+                    );
+
+                    return;
+
+                }
+
+
+                alert(
+                    "News rejected successfully."
+                );
+
+
+                await loadPendingNews();
+
+            };
+
+        }
+
+
+        /* =====================
+           DELETE
+        ===================== */
+
+        const deleteButton =
+            card.querySelector(
+                ".deleteBtn"
+            );
+
+
+        if (deleteButton) {
+
+            deleteButton.onclick =
+            async () => {
+
+                const confirmed =
+                    confirm(
+                        "Are you sure you want to permanently delete this article?"
+                    );
+
+
+                if (!confirmed) {
+
+                    return;
+
+                }
+
+
+                const {
+                    error
+                } =
+                await supabase
+                    .from("news")
+                    .delete()
+                    .eq(
+                        "id",
+                        news.id
+                    );
+
+
+                if (error) {
+
+                    console.error(
+                        "DELETE ERROR:",
+                        error
+                    );
+
+                    alert(
+                        "Unable to delete article:\n" +
+                        error.message
+                    );
+
+                    return;
+
+                }
+
+
+                alert(
+                    "Article deleted successfully."
+                );
+
+
+                await loadPendingNews();
+
+            };
+
+        }
+
+
+        /* =====================
+           EDIT
+        ===================== */
+
+        const editButton =
+            card.querySelector(
+                ".editBtn"
+            );
+
+
+        if (editButton) {
+
+            editButton.onclick =
+            () => {
+
+                localStorage.setItem(
+                    "editNewsId",
+                    news.id
+                );
+
+
+                window.location.href =
+                    "admin-newsroom.html";
+
+            };
+
+        }
+
+
+        newsList.appendChild(card);
+
+    });
 
 }
 
@@ -639,4 +641,4 @@ async function loadPendingNews() {
 
     await loadPendingNews();
 
-})();                                       
+})();
