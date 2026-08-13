@@ -142,7 +142,7 @@ async function loadPendingNews() {
             false
         )
         .order(
-            "created_at",
+            "Created_at",
             {
                 ascending: false
             }
@@ -265,10 +265,10 @@ async function loadPendingNews() {
         if (date) {
 
             date.textContent =
-                news.created_at
+                news.Created_at
                     ?
                     new Date(
-                        news.created_at
+                        news.Created_at
                     ).toLocaleString()
                     :
                     "Date unavailable";
