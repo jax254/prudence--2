@@ -19,24 +19,35 @@ async function checkSuperAdmin() {
 
     const {
         data: { user },
-        error
+        error: authError
     } = await supabase.auth.getUser();
 
+    if (authError) {
 
-    if (error || !user) {
+        alert(
+            "AUTH ERROR:\n" +
+            authError.message
+        );
 
-        window.location.href =
-            "login.html";
+        console.error(authError);
 
         return false;
-
     }
 
+    if (!user) {
 
-    currentUser = user;
+        alert(
+            "No Supabase user is logged in."
+        );
 
+        return false;
+    }
 
-    /* Get profile */
+    console.log(
+        "LOGGED IN USER:",
+        user
+    );
+
 
     const {
         data: profile,
@@ -53,23 +64,48 @@ async function checkSuperAdmin() {
         .single();
 
 
-    if (profileError || !profile) {
+    if (profileError) {
+
+        alert(
+            "PROFILE ERROR:\n" +
+            profileError.message +
+            "\n\nCode: " +
+            (
+                profileError.code ||
+                "None"
+            )
+        );
 
         console.error(
             "PROFILE ERROR:",
             profileError
         );
 
-        alert(
-            "Unable to verify your account."
-        );
-
         return false;
-
     }
 
 
-    /* Check role */
+    if (!profile) {
+
+        alert(
+            "No profile found for:\n" +
+            user.email
+        );
+
+        return false;
+    }
+
+
+    alert(
+        "ACCOUNT VERIFIED!\n\n" +
+        "Email: " +
+        profile.email +
+        "\nRole: " +
+        profile.role +
+        "\nStatus: " +
+        profile.status
+    );
+
 
     if (
         profile.role !==
@@ -77,36 +113,17 @@ async function checkSuperAdmin() {
     ) {
 
         alert(
-            "Access denied. Super Admin only."
-        );
-
-        window.location.href =
-            "dashboard.html";
-
-        return false;
-
-    }
-
-
-    /* Check status */
-
-    if (
-        profile.status &&
-        profile.status !==
-        "active"
-    ) {
-
-        alert(
-            "Your Super Admin account is not active."
+            "Wrong role: " +
+            profile.role
         );
 
         return false;
-
     }
 
+
+    currentUser = user;
 
     return true;
-
 }
 
 
