@@ -336,7 +336,34 @@ async function uploadMedia(
 
 }
 
+async function getAuthorName() {
 
+    const {
+        data,
+        error
+    } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+    if (error) {
+
+        console.error(
+            "AUTHOR PROFILE ERROR:",
+            error
+        );
+
+        return "Prudence 2 User";
+
+    }
+
+    return (
+        data?.username ||
+        "Prudence 2 User"
+    );
+
+                                           }
 /* =========================
    SAVE ARTICLE
 ========================= */
