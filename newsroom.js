@@ -1,56 +1,49 @@
 import supabase from "./supabase.js";
 
 
-const form =
-    document.getElementById("newsForm");
+/* =========================
+   ELEMENTS
+========================= */
 
-const titleInput =
-    document.getElementById("title");
+const form = document.getElementById("newsForm");
 
-const contentEditor =
-    document.getElementById("content");
+const titleInput = document.getElementById("title");
 
-const imageFile =
-    document.getElementById("imageFile");
+const contentEditor = document.getElementById("contentEditor");
 
-const videoFile =
-    document.getElementById("videoFile");
+const imageFile = document.getElementById("imageFile");
 
-const imagePreview =
-    document.getElementById("imagePreview");
+const videoFile = document.getElementById("videoFile");
 
-const videoPreview =
-    document.getElementById("videoPreview");
+const imagePreview = document.getElementById("imagePreview");
 
-const myArticles =
-    document.getElementById("myArticles");
+const videoPreview = document.getElementById("videoPreview");
 
-const template =
-    document.getElementById("articleTemplate");
+const myArticles = document.getElementById("myArticles");
 
-const editorHeading =
-    document.getElementById("editorHeading");
+const template = document.getElementById("articleTemplate");
 
-const saveDraftButton =
-    document.getElementById("saveDraft");
+const editorHeading = document.getElementById("editorHeading");
 
-const cancelEditButton =
-    document.getElementById("cancelEdit");
+const saveDraftButton = document.getElementById("saveDraft");
 
-const linkButton =
-    document.getElementById("linkButton");
+const cancelEditButton = document.getElementById("cancelEdit");
 
-const undoButton =
-    document.getElementById("undoButton");
+const linkButton = document.getElementById("linkButton");
 
-const redoButton =
-    document.getElementById("redoButton");
+const undoButton = document.getElementById("undoButton");
 
-const checkWritingBtn =
-    document.getElementById("checkWritingBtn");
+const redoButton = document.getElementById("redoButton");
 
-const writingResults =
-    document.getElementById("writingResults");
+const checkWritingBtn = document.getElementById("checkWritingBtn");
+
+const writingResults = document.getElementById("writingResults");
+
+
+/* =========================
+   VARIABLES
+========================= */
+
 let currentUser = null;
 
 let editingArticleId = null;
@@ -64,7 +57,7 @@ let existingVideo = null;
    CHECK LOGIN
 ========================= */
 
-async function checkUser(){
+async function checkUser() {
 
     const {
         data: { user },
@@ -72,10 +65,9 @@ async function checkUser(){
     } = await supabase.auth.getUser();
 
 
-    if(error || !user){
+    if (error || !user) {
 
-        window.location.href =
-            "../login.html";
+        window.location.href = "../login.html";
 
         return false;
 
@@ -90,55 +82,51 @@ async function checkUser(){
 
 
 /* =========================
-   RICH TEXT TOOLS
+   RICH TEXT TOOLBAR
 ========================= */
 
 document
-.querySelectorAll(".toolbar button[data-command]")
-.forEach(button => {
+    .querySelectorAll(".toolbar button[data-command]")
+    .forEach(button => {
 
-    button.addEventListener("click", () => {
+        button.addEventListener("click", () => {
 
-        const command =
-            button.dataset.command;
+            const command = button.dataset.command;
 
-        document.execCommand(
-            command,
-            false,
-            null
-        );
+            contentEditor.focus();
 
-        contentEditor.focus();
+            document.execCommand(
+                command,
+                false,
+                null
+            );
+
+        });
 
     });
 
-});
-
 
 /* =========================
-   LINK TOOL
+   LINK BUTTON
 ========================= */
 
-if(linkButton){
+if (linkButton) {
 
-    linkButton.addEventListener(
-    "click",
-    () => {
+    linkButton.addEventListener("click", () => {
 
-        const url =
-            prompt(
-                "Enter the website link:"
-            );
+        contentEditor.focus();
 
-        if(!url) return;
+        const url = prompt(
+            "Enter the website link:"
+        );
 
+        if (!url) return;
 
         document.execCommand(
             "createLink",
             false,
             url
         );
-
 
         contentEditor.focus();
 
@@ -151,19 +139,17 @@ if(linkButton){
    UNDO
 ========================= */
 
-if(undoButton){
+if (undoButton) {
 
-    undoButton.addEventListener(
-    "click",
-    () => {
+    undoButton.addEventListener("click", () => {
+
+        contentEditor.focus();
 
         document.execCommand(
             "undo",
             false,
             null
         );
-
-        contentEditor.focus();
 
     });
 
@@ -174,19 +160,17 @@ if(undoButton){
    REDO
 ========================= */
 
-if(redoButton){
+if (redoButton) {
 
-    redoButton.addEventListener(
-    "click",
-    () => {
+    redoButton.addEventListener("click", () => {
+
+        contentEditor.focus();
 
         document.execCommand(
             "redo",
             false,
             null
         );
-
-        contentEditor.focus();
 
     });
 
@@ -197,33 +181,26 @@ if(redoButton){
    IMAGE PREVIEW
 ========================= */
 
-if(imageFile){
+if (imageFile) {
 
-    imageFile.addEventListener(
-    "change",
-    () => {
+    imageFile.addEventListener("change", () => {
 
-        const file =
-            imageFile.files[0];
+        const file = imageFile.files[0];
 
         imagePreview.innerHTML = "";
 
-        if(!file) return;
+        if (!file) return;
 
 
-        const url =
-            URL.createObjectURL(file);
+        const url = URL.createObjectURL(file);
 
-
-        const img =
-            document.createElement("img");
+        const img = document.createElement("img");
 
         img.src = url;
 
         img.style.maxWidth = "100%";
 
         img.style.borderRadius = "10px";
-
 
         imagePreview.appendChild(img);
 
@@ -236,26 +213,20 @@ if(imageFile){
    VIDEO PREVIEW
 ========================= */
 
-if(videoFile){
+if (videoFile) {
 
-    videoFile.addEventListener(
-    "change",
-    () => {
+    videoFile.addEventListener("change", () => {
 
-        const file =
-            videoFile.files[0];
+        const file = videoFile.files[0];
 
         videoPreview.innerHTML = "";
 
-        if(!file) return;
+        if (!file) return;
 
 
-        const url =
-            URL.createObjectURL(file);
+        const url = URL.createObjectURL(file);
 
-
-        const video =
-            document.createElement("video");
+        const video = document.createElement("video");
 
         video.src = url;
 
@@ -264,7 +235,6 @@ if(videoFile){
         video.style.maxWidth = "100%";
 
         video.style.borderRadius = "10px";
-
 
         videoPreview.appendChild(video);
 
@@ -277,12 +247,9 @@ if(videoFile){
    UPLOAD MEDIA
 ========================= */
 
-async function uploadMedia(
-    file,
-    folder
-){
+async function uploadMedia(file, folder) {
 
-    if(!file){
+    if (!file) {
 
         return null;
 
@@ -291,15 +258,15 @@ async function uploadMedia(
 
     const extension =
         file.name
-        .split(".")
-        .pop()
-        .toLowerCase();
+            .split(".")
+            .pop()
+            .toLowerCase();
 
 
     const fileName =
         `${currentUser.id}/${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2)}.${extension}`;
+            .toString(36)
+            .substring(2)}.${extension}`;
 
 
     const path =
@@ -315,12 +282,12 @@ async function uploadMedia(
             path,
             file,
             {
-                upsert:false
+                upsert: false
             }
         );
 
 
-    if(error){
+    if (error) {
 
         throw error;
 
@@ -330,15 +297,20 @@ async function uploadMedia(
     const {
         data
     } =
-    supabase
-        .storage
-        .from("news-media")
-        .getPublicUrl(path);
+        supabase
+            .storage
+            .from("news-media")
+            .getPublicUrl(path);
 
 
     return data.publicUrl;
 
 }
+
+
+/* =========================
+   GET AUTHOR NAME
+========================= */
 
 async function getAuthorName() {
 
@@ -351,6 +323,7 @@ async function getAuthorName() {
         .eq("id", currentUser.id)
         .maybeSingle();
 
+
     if (error) {
 
         console.error(
@@ -362,196 +335,220 @@ async function getAuthorName() {
 
     }
 
+
     return (
         data?.username ||
         "Prudence 2 User"
     );
 
-      /* =========================
+}
+
+
+/* =========================
    SPELLING & GRAMMAR CHECK
 ========================= */
 
-checkWritingBtn.addEventListener(
-    "click",
-    async () => {
+if (checkWritingBtn) {
 
-        const text =
-            contentEditor.innerText.trim();
+    checkWritingBtn.addEventListener(
+        "click",
+        async () => {
 
-        if (!text) {
-
-            alert(
-                "Please write your article first."
-            );
-
-            return;
-        }
-
-        writingResults.style.display =
-            "block";
-
-        writingResults.innerHTML = `
-            <h3>🔍 Checking article...</h3>
-            <p>Please wait.</p>
-        `;
+            const text =
+                contentEditor.innerText.trim();
 
 
-        /*
-         * Basic local checks.
-         * We are deliberately not changing
-         * the article automatically.
-         */
+            if (!text) {
 
-        const warnings = [];
+                alert(
+                    "Please write your article first."
+                );
 
+                contentEditor.focus();
 
-        // Repeated spaces
+                return;
 
-        if (/\s{2,}/.test(text)) {
-
-            warnings.push(
-                "There are repeated spaces in the article."
-            );
-
-        }
+            }
 
 
-        // Repeated words
+            writingResults.style.display =
+                "block";
 
-        const words =
-            text
-                .toLowerCase()
-                .replace(/[.,!?;:"'()]/g, "")
-                .split(/\s+/);
 
-        for (
-            let i = 1;
-            i < words.length;
-            i++
-        ) {
+            writingResults.innerHTML = `
+                <h3>🔍 Checking article...</h3>
+                <p>Please wait.</p>
+            `;
 
-            if (
-                words[i] &&
-                words[i] === words[i - 1]
-            ) {
+
+            const warnings = [];
+
+
+            /* Repeated spaces */
+
+            if (/\s{2,}/.test(text)) {
 
                 warnings.push(
-                    `Repeated word detected: "${words[i]}"`
+                    "There are repeated spaces in the article."
                 );
 
             }
 
-        }
+
+            /* Repeated words */
+
+            const words =
+                text
+                    .toLowerCase()
+                    .replace(
+                        /[.,!?;:"'()]/g,
+                        ""
+                    )
+                    .split(/\s+/);
 
 
-        // Space before punctuation
+            for (
+                let i = 1;
+                i < words.length;
+                i++
+            ) {
 
-        if (/\s+[,.!?]/.test(text)) {
+                if (
+                    words[i] &&
+                    words[i] === words[i - 1]
+                ) {
 
-            warnings.push(
-                "There appears to be a space before punctuation."
-            );
+                    warnings.push(
+                        `Repeated word detected: "${words[i]}"`
+                    );
 
-        }
+                }
 
-
-        // Missing space after punctuation
-
-        if (/[,.!?][A-Za-z]/.test(text)) {
-
-            warnings.push(
-                "Check whether spaces are missing after punctuation."
-            );
-
-        }
+            }
 
 
-        // Very short article
+            /* Space before punctuation */
 
-        if (words.length < 10) {
+            if (/\s+[,.!?]/.test(text)) {
 
-            warnings.push(
-                "This article is very short. Consider adding more context."
-            );
+                warnings.push(
+                    "There appears to be a space before punctuation."
+                );
 
-        }
-
-
-        // Capitalization
-
-        if (
-            text.length > 0 &&
-            /^[a-z]/.test(text)
-        ) {
-
-            warnings.push(
-                "The article appears to begin with a lowercase letter."
-            );
-
-        }
+            }
 
 
-        /* RESULTS */
+            /* Missing space after punctuation */
 
-        if (warnings.length === 0) {
+            if (/[,.!?][A-Za-z]/.test(text)) {
 
-            writingResults.innerHTML = `
-                <div class="writing-success">
-                    <strong>✅ No obvious writing problems found.</strong>
-                    <p>
-                        This is a basic writing check.
-                        It does not guarantee perfect grammar or originality.
-                    </p>
-                </div>
+                warnings.push(
+                    "Check whether spaces are missing after punctuation."
+                );
+
+            }
+
+
+            /* Very short article */
+
+            if (words.length < 10) {
+
+                warnings.push(
+                    "This article is very short. Consider adding more context."
+                );
+
+            }
+
+
+            /* First letter */
+
+            if (
+                text.length > 0 &&
+                /^[a-z]/.test(text)
+            ) {
+
+                warnings.push(
+                    "The article appears to begin with a lowercase letter."
+                );
+
+            }
+
+
+            /* RESULTS */
+
+            if (warnings.length === 0) {
+
+                writingResults.innerHTML = `
+
+                    <div class="writing-success">
+
+                        <strong>
+                            ✅ No obvious writing problems found.
+                        </strong>
+
+                        <p>
+                            This is a basic writing check.
+                            It does not guarantee perfect grammar
+                            or originality.
+                        </p>
+
+                    </div>
+
+                `;
+
+                return;
+
+            }
+
+
+            let html = `
+                <h3>⚠️ Writing suggestions</h3>
             `;
 
-            return;
 
-        }
-
-
-        let html = `
-            <h3>⚠️ Writing suggestions</h3>
-        `;
-
-
-        warnings.forEach(
-            warning => {
+            warnings.forEach(warning => {
 
                 html += `
+
                     <div class="writing-error">
                         ⚠️ ${warning}
                     </div>
+
                 `;
 
-            }
-        );
+            });
 
 
-        html += `
-            <p style="margin-top:10px;">
-                Review these suggestions before submitting.
-            </p>
-        `;
+            html += `
+
+                <p style="margin-top:10px;">
+                    Review these suggestions before submitting.
+                </p>
+
+            `;
 
 
-        writingResults.innerHTML =
-            html;
+            writingResults.innerHTML = html;
 
-    }
-);                                     }
+        }
+    );
+
+}
+
+
 /* =========================
    SAVE ARTICLE
 ========================= */
 
-async function saveArticle(status){
+async function saveArticle(status) {
 
-    if(!currentUser){
+    if (!currentUser) {
 
         const loggedIn =
             await checkUser();
 
-        if(!loggedIn) return;
+
+        if (!loggedIn) return;
 
     }
 
@@ -564,32 +561,41 @@ async function saveArticle(status){
         contentEditor.innerHTML.trim();
 
 
-    if(!title){
+    /* TITLE CHECK */
+
+    if (!title) {
 
         alert(
             "Please enter a news title."
         );
 
+        titleInput.focus();
+
         return;
 
     }
 
 
-    if(!content){
+    /* CONTENT CHECK */
+
+    if (!content || content === "<br>") {
 
         alert(
             "Please write the article."
         );
 
+        contentEditor.focus();
+
         return;
 
     }
 
 
-    try{
+    try {
 
         let imageURL =
             existingImage;
+
 
         let videoURL =
             existingVideo;
@@ -599,8 +605,10 @@ async function saveArticle(status){
            UPLOAD IMAGE
         ===================== */
 
-        if(imageFile &&
-           imageFile.files[0]){
+        if (
+            imageFile &&
+            imageFile.files[0]
+        ) {
 
             imageURL =
                 await uploadMedia(
@@ -615,8 +623,10 @@ async function saveArticle(status){
            UPLOAD VIDEO
         ===================== */
 
-        if(videoFile &&
-           videoFile.files[0]){
+        if (
+            videoFile &&
+            videoFile.files[0]
+        ) {
 
             videoURL =
                 await uploadMedia(
@@ -631,52 +641,52 @@ async function saveArticle(status){
            EDIT EXISTING ARTICLE
         ===================== */
 
-        if(editingArticleId){
+        if (editingArticleId) {
 
             const {
                 error
             } =
-            await supabase
-            .from("news")
-            .update({
+                await supabase
+                    .from("news")
+                    .update({
 
-                title:title,
+                        title: title,
 
-                content:content,
+                        content: content,
 
-                image:imageURL,
+                        image: imageURL,
 
-                video:videoURL,
+                        video: videoURL,
 
-                status:status,
+                        status: status,
 
-                approved:false
+                        approved: false
 
-            })
-            .eq(
-                "id",
-                editingArticleId
-            )
-            .eq(
-                "uid",
-                currentUser.id
-            );
+                    })
+                    .eq(
+                        "id",
+                        editingArticleId
+                    )
+                    .eq(
+                        "uid",
+                        currentUser.id
+                    );
 
 
-            if(error){
+            if (error) {
 
                 throw error;
 
             }
 
 
-            if(status === "Draft"){
+            if (status === "Draft") {
 
                 alert(
                     "Draft updated successfully."
                 );
 
-            }else{
+            } else {
 
                 alert(
                     "Article updated and submitted for approval."
@@ -691,52 +701,54 @@ async function saveArticle(status){
            CREATE NEW ARTICLE
         ===================== */
 
-        else{
+        else {
+
+            const author =
+                await getAuthorName();
+
 
             const {
                 error
             } =
-            await supabase
-            .from("news")
-            .insert({
+                await supabase
+                    .from("news")
+                    .insert({
 
-                title:title,
+                        title: title,
 
-                content:content,
+                        content: content,
 
-                image:imageURL,
+                        image: imageURL,
 
-                video:videoURL,
+                        video: videoURL,
 
-                author:
-                  await getAuthorName(),
+                        author: author,
 
-                uid:
-                  currentUser.id,
+                        uid: currentUser.id,
 
-                approved:false,
+                        approved: false,
 
-                status:status,
+                        status: status,
 
-                likes:0
+                        likes: 0
 
-            });
+                    });
 
 
-            if(error){
+            if (error) {
 
                 throw error;
 
             }
 
 
-            if(status === "Draft"){
+            if (status === "Draft") {
 
                 alert(
                     "Draft saved successfully."
                 );
 
-            }else{
+            } else {
 
                 alert(
                     "News submitted for approval."
@@ -753,8 +765,7 @@ async function saveArticle(status){
 
     }
 
-
-    catch(error){
+    catch (error) {
 
         console.error(
             "NEWSROOM ERROR:",
@@ -776,17 +787,16 @@ async function saveArticle(status){
    SAVE DRAFT
 ========================= */
 
-if(saveDraftButton){
+if (saveDraftButton) {
 
     saveDraftButton.addEventListener(
-    "click",
-    async () => {
+        "click",
+        async () => {
 
-        await saveArticle(
-            "Draft"
-        );
+            await saveArticle("Draft");
 
-    });
+        }
+    );
 
 }
 
@@ -795,48 +805,53 @@ if(saveDraftButton){
    SUBMIT FOR APPROVAL
 ========================= */
 
-form.addEventListener(
-"submit",
-async(e) => {
+if (form) {
 
-    e.preventDefault();
+    form.addEventListener(
+        "submit",
+        async (e) => {
 
-    await saveArticle(
-        "Pending Approval"
+            e.preventDefault();
+
+            await saveArticle(
+                "Pending Approval"
+            );
+
+        }
     );
 
-});
+}
 
 
 /* =========================
-   LOAD ARTICLES
+   LOAD MY ARTICLES
 ========================= */
 
-async function loadArticles(){
+async function loadArticles() {
 
-    if(!currentUser) return;
+    if (!currentUser) return;
 
 
     const {
         data,
         error
     } =
-    await supabase
-    .from("news")
-    .select("*")
-    .eq(
-        "uid",
-        currentUser.id
-    )
-    .order(
-        "Created_at",
-        {
-            ascending:false
-        }
-    );
+        await supabase
+            .from("news")
+            .select("*")
+            .eq(
+                "uid",
+                currentUser.id
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
 
 
-    if(error){
+    if (error) {
 
         console.error(
             "LOAD ARTICLES ERROR:",
@@ -855,8 +870,10 @@ async function loadArticles(){
     myArticles.innerHTML = "";
 
 
-    if(!data ||
-       data.length === 0){
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
         myArticles.innerHTML =
             "<p>No articles yet.</p>";
@@ -869,8 +886,7 @@ async function loadArticles(){
     data.forEach(news => {
 
         const card =
-            template.content
-            .cloneNode(true);
+            template.content.cloneNode(true);
 
 
         /* TITLE */
@@ -896,18 +912,16 @@ async function loadArticles(){
         card.querySelector(
             ".articleDate"
         ).textContent =
-            news.Created_at
-            ?
-            new Date(
-                news.Created_at
-            ).toLocaleString()
-            :
-            "Just now";
+            news.created_at
+                ?
+                new Date(
+                    news.created_at
+                ).toLocaleString()
+                :
+                "Just now";
 
 
-        /* =====================
-           EDIT
-        ===================== */
+        /* EDIT */
 
         const editButton =
             card.querySelector(
@@ -915,22 +929,21 @@ async function loadArticles(){
             );
 
 
-        if(editButton){
+        if (editButton) {
 
             editButton.addEventListener(
-            "click",
-            () => {
+                "click",
+                () => {
 
-                editArticle(news);
+                    editArticle(news);
 
-            });
+                }
+            );
 
         }
 
 
-        /* =====================
-           DELETE
-        ===================== */
+        /* DELETE */
 
         const deleteButton =
             card.querySelector(
@@ -938,17 +951,18 @@ async function loadArticles(){
             );
 
 
-        if(deleteButton){
+        if (deleteButton) {
 
             deleteButton.addEventListener(
-            "click",
-            async() => {
+                "click",
+                async () => {
 
-                await deleteArticle(
-                    news.id
-                );
+                    await deleteArticle(
+                        news.id
+                    );
 
-            });
+                }
+            );
 
         }
 
@@ -964,33 +978,37 @@ async function loadArticles(){
    EDIT ARTICLE
 ========================= */
 
-function editArticle(news){
+function editArticle(news) {
 
     editingArticleId =
         news.id;
 
 
     existingImage =
-        news.image || null;
+        news.image ||
+        null;
 
 
     existingVideo =
-        news.video || null;
+        news.video ||
+        null;
 
 
     titleInput.value =
-        news.title || "";
+        news.title ||
+        "";
 
 
     contentEditor.innerHTML =
-        news.content || "";
+        news.content ||
+        "";
 
 
     editorHeading.textContent =
         "✏️ Edit Article";
 
 
-    if(cancelEditButton){
+    if (cancelEditButton) {
 
         cancelEditButton.style.display =
             "block";
@@ -1000,44 +1018,44 @@ function editArticle(news){
 
     /* IMAGE */
 
-    if(imagePreview){
+    if (imagePreview) {
 
         imagePreview.innerHTML =
             existingImage
-            ?
-            `<img
-                src="${existingImage}"
-                style="max-width:100%;border-radius:10px;"
-            >`
-            :
-            "";
+                ?
+                `<img
+                    src="${existingImage}"
+                    style="max-width:100%;border-radius:10px;"
+                >`
+                :
+                "";
 
     }
 
 
     /* VIDEO */
 
-    if(videoPreview){
+    if (videoPreview) {
 
         videoPreview.innerHTML =
             existingVideo
-            ?
-            `<video
-                src="${existingVideo}"
-                controls
-                style="max-width:100%;border-radius:10px;"
-            ></video>`
-            :
-            "";
+                ?
+                `<video
+                    src="${existingVideo}"
+                    controls
+                    style="max-width:100%;border-radius:10px;"
+                ></video>`
+                :
+                "";
 
     }
 
 
     window.scrollTo({
 
-        top:0,
+        top: 0,
 
-        behavior:"smooth"
+        behavior: "smooth"
 
     });
 
@@ -1048,7 +1066,7 @@ function editArticle(news){
    DELETE ARTICLE
 ========================= */
 
-async function deleteArticle(id){
+async function deleteArticle(id) {
 
     const confirmDelete =
         confirm(
@@ -1056,7 +1074,7 @@ async function deleteArticle(id){
         );
 
 
-    if(!confirmDelete){
+    if (!confirmDelete) {
 
         return;
 
@@ -1066,20 +1084,20 @@ async function deleteArticle(id){
     const {
         error
     } =
-    await supabase
-    .from("news")
-    .delete()
-    .eq(
-        "id",
-        id
-    )
-    .eq(
-        "uid",
-        currentUser.id
-    );
+        await supabase
+            .from("news")
+            .delete()
+            .eq(
+                "id",
+                id
+            )
+            .eq(
+                "uid",
+                currentUser.id
+            );
 
 
-    if(error){
+    if (error) {
 
         console.error(error);
 
@@ -1108,15 +1126,16 @@ async function deleteArticle(id){
    CANCEL EDIT
 ========================= */
 
-if(cancelEditButton){
+if (cancelEditButton) {
 
     cancelEditButton.addEventListener(
-    "click",
-    () => {
+        "click",
+        () => {
 
-        resetEditor();
+            resetEditor();
 
-    });
+        }
+    );
 
 }
 
@@ -1125,7 +1144,7 @@ if(cancelEditButton){
    RESET EDITOR
 ========================= */
 
-function resetEditor(){
+function resetEditor() {
 
     form.reset();
 
@@ -1134,7 +1153,7 @@ function resetEditor(){
         "";
 
 
-    if(imagePreview){
+    if (imagePreview) {
 
         imagePreview.innerHTML =
             "";
@@ -1142,10 +1161,21 @@ function resetEditor(){
     }
 
 
-    if(videoPreview){
+    if (videoPreview) {
 
         videoPreview.innerHTML =
             "";
+
+    }
+
+
+    if (writingResults) {
+
+        writingResults.innerHTML =
+            "";
+
+        writingResults.style.display =
+            "none";
 
     }
 
@@ -1166,7 +1196,7 @@ function resetEditor(){
         "Write News Article";
 
 
-    if(cancelEditButton){
+    if (cancelEditButton) {
 
         cancelEditButton.style.display =
             "none";
@@ -1177,19 +1207,18 @@ function resetEditor(){
 
 
 /* =========================
-   START
+   START NEWS ROOM
 ========================= */
 
-(async() => {
+(async () => {
 
     const loggedIn =
         await checkUser();
 
 
-    if(!loggedIn) return;
+    if (!loggedIn) return;
 
 
     await loadArticles();
 
 })();
-    
