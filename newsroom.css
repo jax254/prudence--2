@@ -362,3 +362,101 @@ margin-top:8px;
     border-radius: 8px;
     background: #e9f8ee;
    }
+
+/* =========================
+   ARTICLE WRITING AREA
+========================= */
+
+.content-editor {
+    width: 100%;
+    min-height: 320px;
+    padding: 20px;
+
+    background: #ffffff;
+    color: #222222;
+
+    border: 1px solid #cccccc;
+    border-top: none;
+
+    border-radius: 0 0 12px 12px;
+
+    font-size: 18px;
+    line-height: 1.7;
+
+    outline: none;
+
+    overflow-y: auto;
+
+    box-sizing: border-box;
+}
+
+.content-editor:focus {
+    border-color: #0066ff;
+}
+
+.content-editor:empty::before {
+    content: attr(data-placeholder);
+    color: #999999;
+    pointer-events: none;
+}
+
+
+/* =========================
+   WRITING CHECKER
+========================= */
+
+.writing-checker {
+    width: 100%;
+    margin-top: 15px;
+    box-sizing: border-box;
+}
+
+#checkWritingBtn {
+    width: 100%;
+    padding: 15px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #673ab7;
+    color: white;
+
+    font-size: 17px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#checkWritingBtn:hover {
+    opacity: 0.9;
+}
+
+.writing-results {
+    width: 100%;
+    margin-top: 15px;
+    padding: 15px;
+
+    box-sizing: border-box;
+
+    border-radius: 10px;
+
+    background: #f5f5f5;
+    border: 1px solid #dddddd;
+}
+
+.writing-error {
+    margin: 8px 0;
+    padding: 10px;
+
+    border-radius: 8px;
+
+    background: #fff0f0;
+}
+
+.writing-success {
+    padding: 10px;
+
+    border-radius: 8px;
+
+    background: #e9f8ee;
+}
