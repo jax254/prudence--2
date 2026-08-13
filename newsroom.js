@@ -46,7 +46,11 @@ const undoButton =
 const redoButton =
     document.getElementById("redoButton");
 
+const checkWritingBtn =
+    document.getElementById("checkWritingBtn");
 
+const writingResults =
+    document.getElementById("writingResults");
 let currentUser = null;
 
 let editingArticleId = null;
