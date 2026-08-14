@@ -969,7 +969,57 @@ async function loadArticles() {
 
         }
 
+/* =====================
+   REJECTION FEEDBACK
+===================== */
 
+const existingFeedback =
+    card.querySelector(
+        ".articleFeedback"
+    );
+
+
+if (existingFeedback) {
+
+    if (
+        news.status === "Rejected" &&
+        news.feedback
+    ) {
+
+        existingFeedback.innerHTML = `
+
+            <div class="feedback-box">
+
+                <strong>
+                    💬 Super Admin Feedback
+                </strong>
+
+                <p>
+                    ${escapeHtml(
+                        news.feedback
+                    )}
+                </p>
+
+            </div>
+
+        `;
+
+        existingFeedback.style.display =
+            "block";
+
+    }
+
+    else {
+
+        existingFeedback.innerHTML =
+            "";
+
+        existingFeedback.style.display =
+            "none";
+
+    }
+
+                   }
         /* =====================
            DATE
         ===================== */
