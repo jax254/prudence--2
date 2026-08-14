@@ -460,3 +460,30 @@ margin-top:8px;
 
     background: #e9f8ee;
 }
+.articleStatus {
+    font-weight: bold;
+    margin: 10px 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.articleStatus.published {
+    color: #087f23;
+    background: #d9f7df;
+}
+
+.articleStatus.pending {
+    color: #8a5a00;
+    background: #fff1c7;
+}
+
+.articleStatus.rejected {
+    color: #a40000;
+    background: #ffdada;
+}
+
+.articleStatus.draft {
+    color: #555;
+    background: #eeeeee;
+}
