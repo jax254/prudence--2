@@ -432,87 +432,98 @@ async function loadPendingNews() {
         }
 
 
-        /* =====================
-           REJECT
-        ===================== */
 
-        const rejectButton =
-            card.querySelector(
-                ".rejectBtn"
+        /* =========================
+   REJECT
+========================= */
+
+const rejectButton =
+    card.querySelector(".rejectBtn");
+
+if (rejectButton) {
+
+    rejectButton.onclick =
+    async () => {
+
+        const feedback =
+            prompt(
+                "Why are you rejecting this article?\n\nPlease give the author helpful feedback:"
+            );
+
+        if (
+            feedback === null
+        ) {
+            return;
+        }
+
+        if (
+            !feedback.trim()
+        ) {
+
+            alert(
+                "Please provide a reason for rejecting the article."
+            );
+
+            return;
+
+        }
+
+        rejectButton.disabled =
+            true;
+
+
+        const {
+            error
+        } =
+        await supabase
+            .from("news")
+            .update({
+
+                approved: false,
+
+                status:
+                    "Rejected",
+
+                feedback:
+                    feedback.trim()
+
+            })
+            .eq(
+                "id",
+                news.id
             );
 
 
-        if (rejectButton) {
+        if (error) {
 
-            rejectButton.onclick =
-            async () => {
+            console.error(
+                "REJECTION ERROR:",
+                error
+            );
 
-                const confirmed =
-                    confirm(
-                        "Reject this article?"
-                    );
+            rejectButton.disabled =
+                false;
 
+            alert(
+                "Unable to reject article:\n" +
+                error.message
+            );
 
-                if (!confirmed) {
-
-                    return;
-
-                }
-
-
-                rejectButton.disabled =
-                    true;
-
-
-                const {
-                    error
-                } =
-                await supabase
-                    .from("news")
-                    .update({
-
-                        approved: false,
-
-                        status:
-                            "Rejected"
-
-                    })
-                    .eq(
-                        "id",
-                        news.id
-                    );
-
-
-                if (error) {
-
-                    console.error(
-                        "REJECTION ERROR:",
-                        error
-                    );
-
-                    rejectButton.disabled =
-                        false;
-
-                    alert(
-                        "Unable to reject article:\n" +
-                        error.message
-                    );
-
-                    return;
-
-                }
-
-
-                alert(
-                    "News rejected successfully."
-                );
-
-
-                await loadPendingNews();
-
-            };
+            return;
 
         }
+
+
+        alert(
+            "Article rejected and feedback sent to the author."
+        );
+
+
+        await loadPendingNews();
+
+    };
+
+}
 
 
         /* =========================
