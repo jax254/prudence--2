@@ -10,7 +10,11 @@
 
 <link rel="stylesheet" href="news.css">
 
-<script type="module" src="news.js" defer></script>
+<script
+    type="module"
+    src="news.js"
+    defer>
+</script>
 
 </head>
 
@@ -18,59 +22,128 @@
 
 <header>
 
-<div class="brand">
-    ✝ Prudence 2
-</div>
+    <div class="brand">
+        ✝ Prudence 2
+    </div>
 
-<h1>Christian News</h1>
+    <h1>Christian News</h1>
 
-<p>Faith. Truth. Hope.</p>
+    <p>Faith. Truth. Hope.</p>
 
 </header>
 
+
 <main class="container">
 
-<div id="newsContainer">
+    <div id="newsContainer">
 
-<p>Loading news...</p>
+        <p>Loading news...</p>
 
-</div>
+    </div>
 
 </main>
 
+
+<!-- =========================
+     NEWS ARTICLE TEMPLATE
+========================= -->
 
 <template id="newsTemplate">
 
 <div class="news-card">
 
-<h2 class="title"></h2>
 
-<p class="author"></p>
+    <!-- TITLE -->
 
-<img class="image" src="" alt="News Image">
+    <h2 class="title"></h2>
 
-<p class="content"></p>
 
-<div class="actions">
+    <!-- AUTHOR -->
 
-<button class="likeBtn">👍 Like</button>
+    <p class="author"></p>
 
-<button class="commentBtn">💬 Comment</button>
 
-<button class="shareBtn">📤 Share</button>
+    <!-- DATE -->
 
-<button class="saveBtn">⭐ Save</button>
+    <p class="date"></p>
 
-<button class="subscribeBtn">🔔 Subscribe</button>
 
-</div>
+    <!-- IMAGE -->
 
-<div class="comments"></div>
+    <img
+        class="image"
+        src=""
+        alt="News Image"
+        style="display:none;"
+    >
+
+
+    <!-- VIDEO -->
+
+    <video
+        class="video"
+        controls
+        playsinline
+        style="display:none;"
+    ></video>
+
+
+    <!-- ARTICLE -->
+
+    <div class="content"></div>
+
+
+    <!-- ACTIONS -->
+
+    <div class="actions">
+
+        <button
+            type="button"
+            class="likeBtn">
+            👍 Like
+        </button>
+
+
+        <button
+            type="button"
+            class="commentBtn">
+            💬 Comment
+        </button>
+
+
+        <button
+            type="button"
+            class="shareBtn">
+            📤 Share
+        </button>
+
+
+        <button
+            type="button"
+            class="saveBtn">
+            ⭐ Save
+        </button>
+
+
+        <button
+            type="button"
+            class="subscribeBtn">
+            🔔 Subscribe
+        </button>
+
+    </div>
+
+
+    <!-- COMMENTS -->
+
+    <div class="comments"></div>
+
 
 </div>
 
 </template>
 
+
 </body>
 
-  </html>
+        </html>
