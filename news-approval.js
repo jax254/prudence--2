@@ -391,10 +391,7 @@ async function loadPendingNews() {
                         approved: true,
 
                         status:
-                            "Published",
-
-                        approvedBy:
-                            currentUser.id
+                            "Published"
 
                     })
                     .eq(
@@ -450,20 +447,21 @@ async function loadPendingNews() {
             rejectButton.onclick =
             async () => {
 
-                const feedback =
-                    prompt(
-                        "Why are you rejecting this article?"
+                const confirmed =
+                    confirm(
+                        "Reject this article?"
                     );
 
 
-                if (
-                    feedback ===
-                    null
-                ) {
+                if (!confirmed) {
 
                     return;
 
                 }
+
+
+                rejectButton.disabled =
+                    true;
 
 
                 const {
@@ -476,10 +474,7 @@ async function loadPendingNews() {
                         approved: false,
 
                         status:
-                            "Rejected",
-
-                        feedback:
-                            feedback
+                            "Rejected"
 
                     })
                     .eq(
@@ -494,6 +489,9 @@ async function loadPendingNews() {
                         "REJECTION ERROR:",
                         error
                     );
+
+                    rejectButton.disabled =
+                        false;
 
                     alert(
                         "Unable to reject article:\n" +
@@ -517,9 +515,9 @@ async function loadPendingNews() {
         }
 
 
-        /* =====================
+        /* =========================
            DELETE
-        ===================== */
+        ========================= */
 
         const deleteButton =
             card.querySelector(
@@ -545,6 +543,10 @@ async function loadPendingNews() {
                 }
 
 
+                deleteButton.disabled =
+                    true;
+
+
                 const {
                     error
                 } =
@@ -563,6 +565,9 @@ async function loadPendingNews() {
                         "DELETE ERROR:",
                         error
                     );
+
+                    deleteButton.disabled =
+                        false;
 
                     alert(
                         "Unable to delete article:\n" +
@@ -586,9 +591,9 @@ async function loadPendingNews() {
         }
 
 
-        /* =====================
+        /* =========================
            EDIT
-        ===================== */
+        ========================= */
 
         const editButton =
             card.querySelector(
@@ -615,7 +620,9 @@ async function loadPendingNews() {
         }
 
 
-        newsList.appendChild(card);
+        newsList.appendChild(
+            card
+        );
 
     });
 
@@ -642,3 +649,4 @@ async function loadPendingNews() {
     await loadPendingNews();
 
 })();
+        
