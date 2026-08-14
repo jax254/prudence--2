@@ -1,280 +1,579 @@
 import supabase from "./supabase.js";
 
-const newsContainer = document.getElementById("newsContainer");
-const newsTemplate = document.getElementById("newsTemplate");
+
+const newsContainer =
+    document.getElementById("newsContainer");
+
+const newsTemplate =
+    document.getElementById("newsTemplate");
 
 
-// =========================
-// CHECK LOGIN
-// =========================
+
+/* =========================
+   CHECK LOGIN
+========================= */
 
 const {
     data: { user },
     error: authError
-} = await supabase.auth.getUser();
+} =
+await supabase.auth.getUser();
+
 
 if (authError || !user) {
 
-    window.location.href = "login.html";
+    window.location.href =
+        "login.html";
 
 }
 
 
-// =========================
-// LOAD NEWS
-// =========================
+
+/* =========================
+   LOAD PUBLISHED NEWS
+========================= */
 
 async function loadNews() {
 
-    const { data, error } = await supabase
-        .from("news")
-        .select("*")
-        .eq("approved", true)
-        .order("Created_at", {
-            ascending: false
-        });
+    newsContainer.innerHTML =
+        "<p>Loading news...</p>";
 
+
+    const {
+        data,
+        error
+    } =
+    await supabase
+
+        .from("news")
+
+        .select("*")
+
+        .eq(
+            "approved",
+            true
+        )
+
+        .eq(
+            "status",
+            "Published"
+        )
+
+        .order(
+            "Created_at",
+            {
+                ascending: false
+            }
+        );
+
+
+    /* =========================
+       DATABASE ERROR
+    ========================= */
 
     if (error) {
 
-        console.error("NEWS ERROR:", error);
+        console.error(
+            "NEWS ERROR:",
+            error
+        );
+
 
         newsContainer.innerHTML = `
-            <div style="
-                background:#ffe5e5;
-                color:#b00020;
-                padding:20px;
-                border-radius:10px;
-                margin:20px 0;
-            ">
-                <h3>News Database Error</h3>
 
-                <p>${error.message}</p>
+            <div class="news-error">
+
+                <h3>
+                    News Database Error
+                </h3>
 
                 <p>
-                    <strong>Code:</strong>
+                    ${error.message}
+                </p>
+
+                <p>
+                    <strong>
+                        Code:
+                    </strong>
+
                     ${error.code || "None"}
-                </p>
 
-                <p>
-                    <strong>Details:</strong>
-                    ${error.details || "None"}
-                </p>
-
-                <p>
-                    <strong>Hint:</strong>
-                    ${error.hint || "None"}
                 </p>
 
             </div>
+
         `;
 
         return;
+
     }
 
 
-    newsContainer.innerHTML = "";
+    newsContainer.innerHTML =
+        "";
 
 
-    if (!data || data.length === 0) {
+    /* =========================
+       NO NEWS
+    ========================= */
 
-        newsContainer.innerHTML =
-            "<p>No news available.</p>";
+    if (
+        !data ||
+        data.length === 0
+    ) {
+
+        newsContainer.innerHTML = `
+
+            <div class="empty-news">
+
+                <h3>
+                    No news available
+                </h3>
+
+                <p>
+                    There are currently
+                    no published articles.
+                </p>
+
+            </div>
+
+        `;
 
         return;
 
     }
 
 
-    data.forEach((news) => {
 
-        const card =
-            newsTemplate.content.cloneNode(true);
+    /* =========================
+       DISPLAY ARTICLES
+    ========================= */
 
-
-        // Title
-
-        card.querySelector(".title").textContent =
-            news.title || "Untitled News";
+    data.forEach(
+        news => {
 
 
-        // Author
-
-        card.querySelector(".author").textContent =
-            "Published by: " +
-            (news.author || "News Room");
-
-
-        // Content
-
-        card.querySelector(".content").textContent =
-            news.content || "";
+            const card =
+                newsTemplate
+                    .content
+                    .cloneNode(true);
 
 
-        // Image
 
-        const image =
-            card.querySelector(".image");
+            /* =====================
+               TITLE
+            ===================== */
 
-
-        if (news.image) {
-
-            image.src = news.image;
-            image.style.display = "block";
-
-        } else {
-
-            image.style.display = "none";
-
-        }
+            const title =
+                card.querySelector(
+                    ".title"
+                );
 
 
-        // =========================
-        // LIKE
-        // =========================
+            if (title) {
 
-        card.querySelector(".likeBtn")
-            .addEventListener("click", async () => {
+                title.textContent =
+                    news.title ||
+                    "Untitled News";
 
-                const newLikes =
-                    (news.likes || 0) + 1;
+            }
 
 
-                const { error } =
-                    await supabase
-                        .from("news")
-                        .update({
-                            likes: newLikes
-                        })
-                        .eq("id", news.id);
+
+            /* =====================
+               AUTHOR
+            ===================== */
+
+            const author =
+                card.querySelector(
+                    ".author"
+                );
 
 
-                if (error) {
+            if (author) {
 
-                    console.error(error);
-
-                    alert(
-                        "Unable to like this news."
+                author.textContent =
+                    "Published by: " +
+                    (
+                        news.author ||
+                        "Prudence 2 News Room"
                     );
 
-                    return;
+            }
+
+
+
+            /* =====================
+               DATE
+            ===================== */
+
+            const date =
+                card.querySelector(
+                    ".date"
+                );
+
+
+            if (date) {
+
+                date.textContent =
+                    news.Created_at
+
+                        ?
+
+                    new Date(
+                        news.Created_at
+                    ).toLocaleString()
+
+                        :
+
+                    "Date unavailable";
+
+            }
+
+
+
+            /* =====================
+               ARTICLE CONTENT
+            ===================== */
+
+            const content =
+                card.querySelector(
+                    ".content"
+                );
+
+
+            if (content) {
+
+                /*
+                 * innerHTML is used because
+                 * the News Room supports
+                 * bold, italic, lists and links.
+                 */
+
+                content.innerHTML =
+                    news.content ||
+                    "";
+
+            }
+
+
+
+            /* =====================
+               IMAGE
+            ===================== */
+
+            const image =
+                card.querySelector(
+                    ".image"
+                );
+
+
+            if (image) {
+
+                if (news.image) {
+
+                    image.src =
+                        news.image;
+
+                    image.style.display =
+                        "block";
+
                 }
 
+                else {
 
-                alert(
-                    "You liked this news. 👍"
-                );
-
-
-                loadNews();
-
-            });
-
-
-        // =========================
-        // COMMENT
-        // =========================
-
-        card.querySelector(".commentBtn")
-            .addEventListener("click", async () => {
-
-                const text =
-                    prompt("Write your comment");
-
-
-                if (!text || !text.trim()) {
-
-                    return;
+                    image.style.display =
+                        "none";
 
                 }
 
+            }
 
-                alert(
-                    "Comment system will be connected next."
+
+
+            /* =====================
+               VIDEO
+            ===================== */
+
+            const video =
+                card.querySelector(
+                    ".video"
                 );
 
-            });
+
+            if (video) {
+
+                if (news.video) {
+
+                    video.src =
+                        news.video;
+
+                    video.style.display =
+                        "block";
+
+                }
+
+                else {
+
+                    video.style.display =
+                        "none";
+
+                }
+
+            }
 
 
-        // =========================
-        // SAVE
-        // =========================
 
-        card.querySelector(".saveBtn")
-            .addEventListener("click", () => {
+            /* =====================
+               LIKE
+            ===================== */
 
-                alert(
-                    "Save feature will be completed in the profile module."
+            const likeButton =
+                card.querySelector(
+                    ".likeBtn"
                 );
 
-            });
+
+            if (likeButton) {
+
+                likeButton.addEventListener(
+                    "click",
+                    async () => {
 
 
-        // =========================
-        // SUBSCRIBE
-        // =========================
-
-        card.querySelector(".subscribeBtn")
-            .addEventListener("click", () => {
-
-                alert(
-                    "You have subscribed to Christian News."
-                );
-
-            });
+                        const newLikes =
+                            (
+                                news.likes ||
+                                0
+                            ) + 1;
 
 
-        // =========================
-        // SHARE
-        // =========================
+                        const {
+                            error
+                        } =
+                        await supabase
 
-        card.querySelector(".shareBtn")
-            .addEventListener("click", async () => {
+                            .from("news")
 
-                try {
+                            .update({
+                                likes:
+                                    newLikes
+                            })
 
-                    if (navigator.share) {
+                            .eq(
+                                "id",
+                                news.id
+                            );
 
-                        await navigator.share({
 
-                            title: news.title,
+                        if (error) {
 
-                            text: news.content,
+                            console.error(
+                                error
+                            );
 
-                            url: window.location.href
+                            alert(
+                                "Unable to like this news."
+                            );
 
-                        });
+                            return;
 
-                    } else {
+                        }
 
-                        await navigator.clipboard.writeText(
-                            window.location.href
-                        );
 
-                        alert("Link copied.");
+                        likeButton.textContent =
+                            `👍 Liked (${newLikes})`;
 
                     }
+                );
 
-                } catch (error) {
-
-                    console.log(
-                        "Share cancelled."
-                    );
-
-                }
-
-            });
+            }
 
 
-        newsContainer.appendChild(card);
 
-    });
+            /* =====================
+               COMMENT
+            ===================== */
+
+            const commentButton =
+                card.querySelector(
+                    ".commentBtn"
+                );
+
+
+            if (commentButton) {
+
+                commentButton.addEventListener(
+                    "click",
+                    () => {
+
+                        const text =
+                            prompt(
+                                "Write your comment:"
+                            );
+
+
+                        if (
+                            !text ||
+                            !text.trim()
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        alert(
+                            "Comment system will be connected next."
+                        );
+
+                    }
+                );
+
+            }
+
+
+
+            /* =====================
+               SAVE
+            ===================== */
+
+            const saveButton =
+                card.querySelector(
+                    ".saveBtn"
+                );
+
+
+            if (saveButton) {
+
+                saveButton.addEventListener(
+                    "click",
+                    () => {
+
+                        alert(
+                            "Save feature will be completed in the profile module."
+                        );
+
+                    }
+                );
+
+            }
+
+
+
+            /* =====================
+               SUBSCRIBE
+            ===================== */
+
+            const subscribeButton =
+                card.querySelector(
+                    ".subscribeBtn"
+                );
+
+
+            if (subscribeButton) {
+
+                subscribeButton.addEventListener(
+                    "click",
+                    () => {
+
+                        alert(
+                            "You have subscribed to Christian News."
+                        );
+
+                    }
+                );
+
+            }
+
+
+
+            /* =====================
+               SHARE
+            ===================== */
+
+            const shareButton =
+                card.querySelector(
+                    ".shareBtn"
+                );
+
+
+            if (shareButton) {
+
+                shareButton.addEventListener(
+                    "click",
+                    async () => {
+
+
+                        try {
+
+                            if (
+                                navigator.share
+                            ) {
+
+                                await navigator.share({
+
+                                    title:
+                                        news.title,
+
+                                    text:
+                                        news.content,
+
+                                    url:
+                                        window.location.href
+
+                                });
+
+                            }
+
+                            else {
+
+                                await navigator
+                                    .clipboard
+                                    .writeText(
+                                        window.location.href
+                                    );
+
+                                alert(
+                                    "Link copied."
+                                );
+
+                            }
+
+                        }
+
+                        catch (error) {
+
+                            console.log(
+                                "Share cancelled."
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+
+            /* =====================
+               ADD CARD
+            ===================== */
+
+            newsContainer.appendChild(
+                card
+            );
+
+        }
+    );
 
 }
 
 
-// =========================
-// START
-// =========================
 
-loadNews();      
+/* =========================
+   START
+========================= */
+
+loadNews();
