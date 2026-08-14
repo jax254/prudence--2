@@ -826,7 +826,6 @@ if (form) {
 /* =========================
    LOAD MY ARTICLES
 ========================= */
-
 async function loadArticles() {
 
     if (!currentUser) return;
@@ -835,20 +834,19 @@ async function loadArticles() {
     const {
         data,
         error
-    } =
-        await supabase
-            .from("news")
-            .select("*")
-            .eq(
-                "uid",
-                currentUser.id
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            );
+    } = await supabase
+        .from("news")
+        .select("*")
+        .eq(
+            "uid",
+            currentUser.id
+        )
+        .order(
+            "Created_at",
+            {
+                ascending: false
+            }
+        );
 
 
     if (error) {
@@ -857,7 +855,6 @@ async function loadArticles() {
             "LOAD ARTICLES ERROR:",
             error
         );
-
 
         myArticles.innerHTML =
             "<p>Unable to load your articles.</p>";
@@ -870,10 +867,7 @@ async function loadArticles() {
     myArticles.innerHTML = "";
 
 
-    if (
-        !data ||
-        data.length === 0
-    ) {
+    if (!data || data.length === 0) {
 
         myArticles.innerHTML =
             "<p>No articles yet.</p>";
@@ -889,39 +883,120 @@ async function loadArticles() {
             template.content.cloneNode(true);
 
 
-        /* TITLE */
+        /* =====================
+           TITLE
+        ===================== */
 
-        card.querySelector(
-            ".articleTitle"
-        ).textContent =
-            news.title ||
-            "Untitled";
+        const title =
+            card.querySelector(
+                ".articleTitle"
+            );
 
+        if (title) {
 
-        /* STATUS */
+            title.textContent =
+                news.title ||
+                "Untitled";
 
-        card.querySelector(
-            ".articleStatus"
-        ).textContent =
-            news.status ||
-            "Draft";
-
-
-        /* DATE */
-
-        card.querySelector(
-            ".articleDate"
-        ).textContent =
-            news.created_at
-                ?
-                new Date(
-                    news.created_at
-                ).toLocaleString()
-                :
-                "Just now";
+        }
 
 
-        /* EDIT */
+        /* =====================
+           STATUS
+        ===================== */
+
+        const status =
+            card.querySelector(
+                ".articleStatus"
+            );
+
+
+        if (status) {
+
+            const currentStatus =
+                news.status ||
+                "Draft";
+
+
+            if (
+                currentStatus ===
+                "Published"
+            ) {
+
+                status.textContent =
+                    "🟢 Published";
+
+                status.className =
+                    "articleStatus published";
+
+            }
+
+            else if (
+                currentStatus ===
+                "Pending Approval"
+            ) {
+
+                status.textContent =
+                    "🟡 Pending Approval";
+
+                status.className =
+                    "articleStatus pending";
+
+            }
+
+            else if (
+                currentStatus ===
+                "Rejected"
+            ) {
+
+                status.textContent =
+                    "🔴 Rejected";
+
+                status.className =
+                    "articleStatus rejected";
+
+            }
+
+            else {
+
+                status.textContent =
+                    "📝 Draft";
+
+                status.className =
+                    "articleStatus draft";
+
+            }
+
+        }
+
+
+        /* =====================
+           DATE
+        ===================== */
+
+        const date =
+            card.querySelector(
+                ".articleDate"
+            );
+
+
+        if (date) {
+
+            date.textContent =
+                news.Created_at
+                    ?
+                    new Date(
+                        news.Created_at
+                    ).toLocaleString()
+                    :
+                    "Date unavailable";
+
+        }
+
+
+        /* =====================
+           EDIT
+        ===================== */
 
         const editButton =
             card.querySelector(
@@ -943,7 +1018,9 @@ async function loadArticles() {
         }
 
 
-        /* DELETE */
+        /* =====================
+           DELETE
+        ===================== */
 
         const deleteButton =
             card.querySelector(
@@ -967,11 +1044,15 @@ async function loadArticles() {
         }
 
 
-        myArticles.appendChild(card);
+        myArticles.appendChild(
+            card
+        );
 
     });
 
-}
+           }
+            
+                    
 
 
 /* =========================
