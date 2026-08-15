@@ -76,7 +76,57 @@ function escapeHtml(text){
 
 }
 
+// =========================
+// RECORD ONE VIEW
+// =========================
 
+async function recordView(newsId) {
+
+    if (!user) {
+        return;
+    }
+
+
+    const {
+        error
+    } = await supabase
+        .from("news_views")
+        .insert({
+
+            news_id:
+                newsId,
+
+            user_id:
+                user.id
+
+        });
+
+
+    /*
+     * If the user already viewed
+     * this article, the UNIQUE
+     * constraint prevents another view.
+     *
+     * Therefore we deliberately
+     * ignore duplicate errors.
+     */
+
+    if (error) {
+
+        if (
+            error.code !== "23505"
+        ) {
+
+            console.error(
+                "VIEW ERROR:",
+                error
+            );
+
+        }
+
+    }
+
+}
 
 /* =========================
    LOAD SUBSCRIBERS
