@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Prudence 2 | News</title>
+<title>Prudence 2 | Christian News</title>
 
 <link rel="stylesheet" href="news.css">
 
@@ -18,54 +18,80 @@
 
 </head>
 
+
 <body>
+
 
 <header>
 
     <div class="brand">
-        ✝ Prudence 2
+        ✝ PRUDENCE 2
     </div>
 
-    <h1>Christian News</h1>
+    <h1>
+        Christian News
+    </h1>
 
-    <p>Faith. Truth. Hope.</p>
+    <p>
+        Faith. Truth. Hope.
+    </p>
+
+
+    <!-- NEWS SUBSCRIBERS -->
+
+    <div class="subscriber-summary">
+
+        🔔
+        <strong id="subscriberCount">
+            0
+        </strong>
+
+        <span>
+            Christian News Subscribers
+        </span>
+
+    </div>
 
 </header>
 
 
+
 <main class="container">
+
 
     <div id="newsContainer">
 
-        <p>Loading news...</p>
+        <div class="loading">
+            Loading Christian news...
+        </div>
 
     </div>
+
 
 </main>
 
 
-<!-- =========================
+
+<!-- =====================================
      NEWS ARTICLE TEMPLATE
-========================= -->
+===================================== -->
 
 <template id="newsTemplate">
+
 
 <div class="news-card">
 
 
     <!-- TITLE -->
 
-    <h2 class="title"></h2>
+    <h2 class="title">
+    </h2>
 
 
     <!-- AUTHOR -->
 
-    <p class="author"></p>
-
-
-    <!-- DATE -->
-
-    <p class="date"></p>
+    <p class="author">
+    </p>
 
 
     <!-- IMAGE -->
@@ -74,7 +100,6 @@
         class="image"
         src=""
         alt="News Image"
-        style="display:none;"
     >
 
 
@@ -83,67 +108,168 @@
     <video
         class="video"
         controls
-        playsinline
-        style="display:none;"
-    ></video>
+        preload="metadata">
+    </video>
 
 
     <!-- ARTICLE -->
 
-    <div class="content"></div>
+    <div class="content">
+    </div>
 
 
-    <!-- ACTIONS -->
+    <!-- =================================
+         STATISTICS
+    ================================== -->
+
+    <div class="statistics">
+
+
+        <span>
+            👁️
+            <strong class="viewCount">
+                0
+            </strong>
+            Views
+        </span>
+
+
+        <span>
+            👍
+            <strong class="likeCount">
+                0
+            </strong>
+        </span>
+
+
+        <span>
+            👎
+            <strong class="dislikeCount">
+                0
+            </strong>
+        </span>
+
+
+        <span>
+            💬
+            <strong class="commentCount">
+                0
+            </strong>
+        </span>
+
+
+    </div>
+
+
+
+    <!-- =================================
+         ACTION BUTTONS
+    ================================== -->
 
     <div class="actions">
+
 
         <button
             type="button"
             class="likeBtn">
+
             👍 Like
+
+        </button>
+
+
+        <button
+            type="button"
+            class="dislikeBtn">
+
+            👎 Dislike
+
         </button>
 
 
         <button
             type="button"
             class="commentBtn">
+
             💬 Comment
+
         </button>
 
 
         <button
             type="button"
             class="shareBtn">
+
             📤 Share
+
         </button>
 
 
         <button
             type="button"
             class="saveBtn">
+
             ⭐ Save
+
         </button>
 
-
-        <button
-            type="button"
-            class="subscribeBtn">
-            🔔 Subscribe
-        </button>
 
     </div>
 
 
-    <!-- COMMENTS -->
 
-    <div class="comments"></div>
+    <!-- =================================
+         COMMENTS
+    ================================== -->
+
+    <section class="comments-section">
+
+
+        <h3>
+
+            💬 Comments
+
+        </h3>
+
+
+        <div class="commentForm">
+
+
+            <textarea
+                class="commentInput"
+                placeholder="Write your comment..."
+                rows="3">
+            </textarea>
+
+
+            <button
+                type="button"
+                class="postCommentBtn">
+
+                Post Comment
+
+            </button>
+
+
+        </div>
+
+
+        <div class="comments">
+
+            Loading comments...
+
+        </div>
+
+
+    </section>
 
 
 </div>
+
 
 </template>
 
 
 </body>
 
-        </html>
+            </html>    
