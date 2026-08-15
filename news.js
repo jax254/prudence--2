@@ -1,45 +1,36 @@
-   import supabase from "./supabase.js";
+import supabase from "./supabase.js";
 
+
+/* =========================
+   ELEMENTS
+========================= */
 
 const newsContainer =
-    document.getElementById(
-        "newsContainer"
-    );
-
+    document.getElementById("newsContainer");
 
 const newsTemplate =
-    document.getElementById(
-        "newsTemplate"
-    );
-
+    document.getElementById("newsTemplate");
 
 const subscriberCount =
-    document.getElementById(
-        "subscriberCount"
-    );
+    document.getElementById("subscriberCount");
 
 
 let currentUser = null;
-
 
 
 /* =========================
    CHECK LOGIN
 ========================= */
 
-async function checkLogin(){
+async function checkLogin() {
 
     const {
         data: { user },
         error
-    } =
-    await supabase.auth.getUser();
+    } = await supabase.auth.getUser();
 
 
-    if(
-        error ||
-        !user
-    ){
+    if (error || !user) {
 
         window.location.href =
             "login.html";
@@ -49,25 +40,21 @@ async function checkLogin(){
     }
 
 
-    currentUser =
-        user;
+    currentUser = user;
 
     return true;
 
 }
 
 
-
 /* =========================
    ESCAPE HTML
 ========================= */
 
-function escapeHtml(text){
+function escapeHtml(text) {
 
     const div =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
     div.textContent =
         text || "";
@@ -76,13 +63,14 @@ function escapeHtml(text){
 
 }
 
-// =========================
-// RECORD ONE VIEW
-// =========================
+
+/* =========================
+   RECORD ONE VIEW
+========================= */
 
 async function recordView(newsId) {
 
-    if (!user) {
+    if (!currentUser) {
         return;
     }
 
@@ -97,25 +85,21 @@ async function recordView(newsId) {
                 newsId,
 
             user_id:
-                user.id
+                currentUser.id
 
         });
 
 
     /*
-     * If the user already viewed
-     * this article, the UNIQUE
-     * constraint prevents another view.
+     * 23505 means the user has
+     * already viewed this article.
      *
-     * Therefore we deliberately
-     * ignore duplicate errors.
+     * We deliberately ignore it.
      */
 
     if (error) {
 
-        if (
-            error.code !== "23505"
-        ) {
+        if (error.code !== "23505") {
 
             console.error(
                 "VIEW ERROR:",
@@ -128,35 +112,77 @@ async function recordView(newsId) {
 
 }
 
+
 /* =========================
-   LOAD SUBSCRIBERS
+   GET VIEW COUNT
 ========================= */
 
-async function loadSubscriberCount(){
+async function getViewCount(newsId) {
 
     const {
         count,
         error
-    } =
-    await supabase
-        .from(
-            "news_subscriptions"
-        )
+    } = await supabase
+        .from("news_views")
         .select(
             "id",
             {
-                count:"exact",
-                head:true
+                count: "exact",
+                head: true
+            }
+        )
+        .eq(
+            "news_id",
+            newsId
+        );
+
+
+    if (error) {
+
+        console.error(
+            "VIEW COUNT ERROR:",
+            error
+        );
+
+        return 0;
+
+    }
+
+
+    return count || 0;
+
+}
+
+
+/* =========================
+   LOAD SUBSCRIBER COUNT
+========================= */
+
+async function loadSubscriberCount() {
+
+    const {
+        count,
+        error
+    } = await supabase
+        .from("news_subscriptions")
+        .select(
+            "id",
+            {
+                count: "exact",
+                head: true
             }
         );
 
 
-    if(error){
+    if (error) {
 
         console.error(
             "SUBSCRIBER ERROR:",
             error
         );
+
+        subscriberCount.textContent =
+            "0";
 
         return;
 
@@ -169,26 +195,221 @@ async function loadSubscriberCount(){
 }
 
 
-
 /* =========================
-   CHECK MY REACTION
+   CHECK SUBSCRIPTION
 ========================= */
 
-async function getMyReaction(
-    newsId
-){
+async function isSubscribed() {
+
+    if (!currentUser) {
+        return false;
+    }
+
 
     const {
         data,
         error
-    } =
-    await supabase
-        .from(
-            "news_reactions"
+    } = await supabase
+        .from("news_subscriptions")
+        .select("id")
+        .eq(
+            "user_id",
+            currentUser.id
         )
-        .select(
-            "reaction"
-        )
+        .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "SUBSCRIPTION CHECK ERROR:",
+            error
+        );
+
+        return false;
+
+    }
+
+
+    return !!data;
+
+}
+
+
+/* =========================
+   UPDATE SUBSCRIBE BUTTON
+========================= */
+
+async function updateSubscribeButton(button) {
+
+    if (!button) {
+        return;
+    }
+
+
+    const subscribed =
+        await isSubscribed();
+
+
+    if (subscribed) {
+
+        button.textContent =
+            "🔕 Unsubscribe";
+
+        button.classList.add(
+            "subscribed"
+        );
+
+    }
+    else {
+
+        button.textContent =
+            "🔔 Subscribe";
+
+        button.classList.remove(
+            "subscribed"
+        );
+
+    }
+
+}
+
+
+/* =========================
+   SUBSCRIBE / UNSUBSCRIBE
+========================= */
+
+async function toggleSubscription(button) {
+
+    if (!currentUser) {
+
+        alert(
+            "Please log in first."
+        );
+
+        return;
+
+    }
+
+
+    button.disabled = true;
+
+
+    const subscribed =
+        await isSubscribed();
+
+
+    /* =====================
+       UNSUBSCRIBE
+    ===================== */
+
+    if (subscribed) {
+
+        const {
+            error
+        } = await supabase
+            .from("news_subscriptions")
+            .delete()
+            .eq(
+                "user_id",
+                currentUser.id
+            );
+
+
+        if (error) {
+
+            console.error(
+                "UNSUBSCRIBE ERROR:",
+                error
+            );
+
+            alert(
+                "Unable to unsubscribe:\n" +
+                error.message
+            );
+
+            button.disabled = false;
+
+            return;
+
+        }
+
+
+        alert(
+            "You have unsubscribed from Christian News."
+        );
+
+    }
+
+
+    /* =====================
+       SUBSCRIBE
+    ===================== */
+
+    else {
+
+        const {
+            error
+        } = await supabase
+            .from("news_subscriptions")
+            .insert({
+
+                user_id:
+                    currentUser.id
+
+            });
+
+
+        if (error) {
+
+            console.error(
+                "SUBSCRIBE ERROR:",
+                error
+            );
+
+            alert(
+                "Unable to subscribe:\n" +
+                error.message
+            );
+
+            button.disabled = false;
+
+            return;
+
+        }
+
+
+        alert(
+            "You are now subscribed to Christian News. 🔔"
+        );
+
+    }
+
+
+    button.disabled = false;
+
+
+    await updateSubscribeButton(
+        button
+    );
+
+    await loadSubscriberCount();
+
+}
+
+
+/* =========================
+   GET MY REACTION
+========================= */
+
+async function getMyReaction(newsId) {
+
+    const {
+        data,
+        error
+    } = await supabase
+        .from("news_reactions")
+        .select("reaction")
         .eq(
             "news_id",
             newsId
@@ -200,7 +421,7 @@ async function getMyReaction(
         .maybeSingle();
 
 
-    if(error){
+    if (error) {
 
         console.error(
             "REACTION ERROR:",
@@ -212,12 +433,92 @@ async function getMyReaction(
     }
 
 
-    return data
-        ?.reaction ||
-        null;
+    return data?.reaction || null;
 
 }
 
+
+/* =========================
+   GET REACTION COUNTS
+========================= */
+
+async function getReactionCounts(newsId) {
+
+    const {
+        count: likes,
+        error: likeError
+    } = await supabase
+        .from("news_reactions")
+        .select(
+            "id",
+            {
+                count: "exact",
+                head: true
+            }
+        )
+        .eq(
+            "news_id",
+            newsId
+        )
+        .eq(
+            "reaction",
+            "like"
+        );
+
+
+    const {
+        count: dislikes,
+        error: dislikeError
+    } = await supabase
+        .from("news_reactions")
+        .select(
+            "id",
+            {
+                count: "exact",
+                head: true
+            }
+        )
+        .eq(
+            "news_id",
+            newsId
+        )
+        .eq(
+            "reaction",
+            "dislike"
+        );
+
+
+    if (likeError) {
+
+        console.error(
+            "LIKE COUNT ERROR:",
+            likeError
+        );
+
+    }
+
+
+    if (dislikeError) {
+
+        console.error(
+            "DISLIKE COUNT ERROR:",
+            dislikeError
+        );
+
+    }
+
+
+    return {
+
+        likes:
+            likes || 0,
+
+        dislikes:
+            dislikes || 0
+
+    };
+
+}
 
 
 /* =========================
@@ -227,28 +528,25 @@ async function getMyReaction(
 async function reactToNews(
     newsId,
     reaction
-){
+) {
 
     const currentReaction =
-        await getMyReaction(
-            newsId
-        );
+        await getMyReaction(newsId);
 
 
-    /* Remove existing reaction */
+    /* =====================
+       REMOVE REACTION
+    ===================== */
 
-    if(
+    if (
         currentReaction ===
         reaction
-    ){
+    ) {
 
         const {
             error
-        } =
-        await supabase
-            .from(
-                "news_reactions"
-            )
+        } = await supabase
+            .from("news_reactions")
             .delete()
             .eq(
                 "news_id",
@@ -260,7 +558,7 @@ async function reactToNews(
             );
 
 
-        if(error){
+        if (error) {
 
             alert(
                 "Unable to remove reaction."
@@ -274,19 +572,17 @@ async function reactToNews(
 
     }
 
-    /* Change reaction */
 
-    else if(
-        currentReaction
-    ){
+    /* =====================
+       CHANGE REACTION
+    ===================== */
+
+    else if (currentReaction) {
 
         const {
             error
-        } =
-        await supabase
-            .from(
-                "news_reactions"
-            )
+        } = await supabase
+            .from("news_reactions")
             .update({
 
                 reaction:
@@ -303,7 +599,7 @@ async function reactToNews(
             );
 
 
-        if(error){
+        if (error) {
 
             alert(
                 "Unable to change reaction."
@@ -317,17 +613,17 @@ async function reactToNews(
 
     }
 
-    /* New reaction */
 
-    else{
+    /* =====================
+       NEW REACTION
+    ===================== */
+
+    else {
 
         const {
             error
-        } =
-        await supabase
-            .from(
-                "news_reactions"
-            )
+        } = await supabase
+            .from("news_reactions")
             .insert({
 
                 news_id:
@@ -342,7 +638,7 @@ async function reactToNews(
             });
 
 
-        if(error){
+        if (error) {
 
             alert(
                 "Unable to save reaction."
@@ -362,7 +658,6 @@ async function reactToNews(
 }
 
 
-
 /* =========================
    LOAD COMMENTS
 ========================= */
@@ -371,16 +666,13 @@ async function loadComments(
     newsId,
     commentsContainer,
     commentCountElement
-){
+) {
 
     const {
         data,
         error
-    } =
-    await supabase
-        .from(
-            "news_comments"
-        )
+    } = await supabase
+        .from("news_comments")
         .select(`
             id,
             user_id,
@@ -398,12 +690,12 @@ async function loadComments(
         .order(
             "created_at",
             {
-                ascending:false
+                ascending: false
             }
         );
 
 
-    if(error){
+    if (error) {
 
         console.error(
             "COMMENTS ERROR:",
@@ -422,17 +714,21 @@ async function loadComments(
         data?.length || 0;
 
 
-    if(
+    if (
         !data ||
         data.length === 0
-    ){
+    ) {
 
-        commentsContainer.innerHTML =
-            `
+        commentsContainer.innerHTML = `
+
             <div class="no-comments">
-                No comments yet. Be the first to comment. 💬
+
+                No comments yet.
+                Be the first to comment. 💬
+
             </div>
-            `;
+
+        `;
 
         return;
 
@@ -451,6 +747,7 @@ async function loadComments(
                     "div"
                 );
 
+
             item.className =
                 "comment-item";
 
@@ -458,19 +755,25 @@ async function loadComments(
             item.innerHTML = `
 
                 <div class="comment-author">
+
                     Christian User
+
                 </div>
 
                 <div class="comment-text">
+
                     ${escapeHtml(
                         comment.content
                     )}
+
                 </div>
 
                 <div class="comment-date">
+
                     ${new Date(
                         comment.created_at
                     ).toLocaleString()}
+
                 </div>
 
             `;
@@ -486,7 +789,6 @@ async function loadComments(
 }
 
 
-
 /* =========================
    POST COMMENT
 ========================= */
@@ -496,13 +798,13 @@ async function postComment(
     input,
     commentsContainer,
     commentCountElement
-){
+) {
 
     const text =
         input.value.trim();
 
 
-    if(!text){
+    if (!text) {
 
         alert(
             "Please write a comment first."
@@ -514,14 +816,13 @@ async function postComment(
 
 
     const button =
-        input
-            .parentElement
+        input.parentElement
             .querySelector(
                 ".postCommentBtn"
             );
 
 
-    if(button){
+    if (button) {
 
         button.disabled =
             true;
@@ -534,11 +835,8 @@ async function postComment(
 
     const {
         error
-    } =
-    await supabase
-        .from(
-            "news_comments"
-        )
+    } = await supabase
+        .from("news_comments")
         .insert({
 
             news_id:
@@ -556,7 +854,7 @@ async function postComment(
         });
 
 
-    if(error){
+    if (error) {
 
         console.error(
             "COMMENT ERROR:",
@@ -570,7 +868,7 @@ async function postComment(
         );
 
 
-        if(button){
+        if (button) {
 
             button.disabled =
                 false;
@@ -589,7 +887,7 @@ async function postComment(
         "";
 
 
-    if(button){
+    if (button) {
 
         button.disabled =
             false;
@@ -609,138 +907,28 @@ async function postComment(
 }
 
 
-
-/* =========================
-   SUBSCRIBE
-========================= */
-
-async function subscribe(){
-
-    const {
-        data: existing,
-        error: checkError
-    } =
-    await supabase
-        .from(
-            "news_subscriptions"
-        )
-        .select(
-            "id"
-        )
-        .eq(
-            "user_id",
-            currentUser.id
-        )
-        .maybeSingle();
-
-
-    if(checkError){
-
-        console.error(
-            checkError
-        );
-
-        return;
-
-    }
-
-
-    if(existing){
-
-        const {
-            error
-        } =
-        await supabase
-            .from(
-                "news_subscriptions"
-            )
-            .delete()
-            .eq(
-                "user_id",
-                currentUser.id
-            );
-
-
-        if(error){
-
-            alert(
-                "Unable to unsubscribe."
-            );
-
-            return;
-
-        }
-
-
-        alert(
-            "You have unsubscribed from Christian News."
-        );
-
-    }
-
-    else{
-
-        const {
-            error
-        } =
-        await supabase
-            .from(
-                "news_subscriptions"
-            )
-            .insert({
-
-                user_id:
-                    currentUser.id
-
-            });
-
-
-        if(error){
-
-            alert(
-                "Unable to subscribe."
-            );
-
-            return;
-
-        }
-
-
-        alert(
-            "You are now subscribed to Christian News. 🔔"
-        );
-
-    }
-
-
-    await loadSubscriberCount();
-
-}
-
-
-
 /* =========================
    LOAD NEWS
 ========================= */
 
-async function loadNews(){
+async function loadNews() {
 
-    newsContainer.innerHTML =
-        `
+    newsContainer.innerHTML = `
+
         <div class="loading">
+
             Loading Christian news...
+
         </div>
-        `;
+
+    `;
 
 
     const {
         data,
         error
-    } =
-    await supabase
-        .from(
-            "news"
-        )
+    } = await supabase
+        .from("news")
         .select("*")
         .eq(
             "approved",
@@ -753,12 +941,12 @@ async function loadNews(){
         .order(
             "Created_at",
             {
-                ascending:false
+                ascending: false
             }
         );
 
 
-    if(error){
+    if (error) {
 
         console.error(
             "NEWS ERROR:",
@@ -793,13 +981,13 @@ async function loadNews(){
         "";
 
 
-    if(
+    if (
         !data ||
         data.length === 0
-    ){
+    ) {
 
-        newsContainer.innerHTML =
-            `
+        newsContainer.innerHTML = `
+
             <div class="news-card">
 
                 <h3>
@@ -807,62 +995,108 @@ async function loadNews(){
                 </h3>
 
                 <p>
-                    Check back soon for new Christian news.
+                    Check back soon for new
+                    Christian news.
                 </p>
 
             </div>
-            `;
+
+        `;
 
         return;
 
     }
 
 
-
     /* =========================
        BUILD ARTICLES
     ========================= */
 
-    for(
+    for (
         const news of data
-    ){
+    ) {
+
+        /*
+         * Record the view BEFORE
+         * displaying the article.
+         *
+         * Duplicate view errors are
+         * deliberately ignored.
+         */
+
+        await recordView(
+            news.id
+        );
+
 
         const card =
             newsTemplate.content
                 .cloneNode(true);
 
 
-        /* TITLE */
+        /* =====================
+           TITLE
+        ===================== */
 
-        card.querySelector(
-            ".title"
-        ).textContent =
-            news.title ||
-            "Untitled News";
-
-
-        /* AUTHOR */
-
-        card.querySelector(
-            ".author"
-        ).textContent =
-            "Published by: " +
-            (
-                news.author ||
-                "News Room"
+        const title =
+            card.querySelector(
+                ".title"
             );
 
 
-        /* CONTENT */
+        if (title) {
 
-        card.querySelector(
-            ".content"
-        ).innerHTML =
-            news.content ||
-            "";
+            title.textContent =
+                news.title ||
+                "Untitled News";
+
+        }
 
 
-        /* IMAGE */
+        /* =====================
+           AUTHOR
+        ===================== */
+
+        const author =
+            card.querySelector(
+                ".author"
+            );
+
+
+        if (author) {
+
+            author.textContent =
+                "Published by: " +
+                (
+                    news.author ||
+                    "News Room"
+                );
+
+        }
+
+
+        /* =====================
+           CONTENT
+        ===================== */
+
+        const content =
+            card.querySelector(
+                ".content"
+            );
+
+
+        if (content) {
+
+            content.innerHTML =
+                news.content ||
+                "";
+
+        }
+
+
+        /* =====================
+           IMAGE
+        ===================== */
 
         const image =
             card.querySelector(
@@ -870,24 +1104,30 @@ async function loadNews(){
             );
 
 
-        if(news.image){
+        if (image) {
 
-            image.src =
-                news.image;
+            if (news.image) {
 
-            image.style.display =
-                "block";
+                image.src =
+                    news.image;
+
+                image.style.display =
+                    "block";
+
+            }
+            else {
+
+                image.style.display =
+                    "none";
+
+            }
 
         }
-        else{
-
-            image.style.display =
-                "none";
-
-        }
 
 
-        /* VIDEO */
+        /* =====================
+           VIDEO
+        ===================== */
 
         const video =
             card.querySelector(
@@ -895,19 +1135,23 @@ async function loadNews(){
             );
 
 
-        if(news.video){
+        if (video) {
 
-            video.src =
-                news.video;
+            if (news.video) {
 
-            video.style.display =
-                "block";
+                video.src =
+                    news.video;
 
-        }
-        else{
+                video.style.display =
+                    "block";
 
-            video.style.display =
-                "none";
+            }
+            else {
+
+                video.style.display =
+                    "none";
+
+            }
 
         }
 
@@ -921,18 +1165,15 @@ async function loadNews(){
                 ".viewCount"
             );
 
-
         const likeCount =
             card.querySelector(
                 ".likeCount"
             );
 
-
         const dislikeCount =
             card.querySelector(
                 ".dislikeCount"
             );
-
 
         const commentCount =
             card.querySelector(
@@ -940,68 +1181,46 @@ async function loadNews(){
             );
 
 
-        viewCount.textContent =
-            news.views || 0;
+        const views =
+            await getViewCount(
+                news.id
+            );
+
+
+        if (viewCount) {
+
+            viewCount.textContent =
+                views;
+
+        }
 
 
         /* =====================
-           REACTIONS
+           REACTION COUNTS
         ===================== */
 
         const {
-            count: likes
-        } =
-        await supabase
-            .from(
-                "news_reactions"
-            )
-            .select(
-                "id",
-                {
-                    count:"exact",
-                    head:true
-                }
-            )
-            .eq(
-                "news_id",
-                news.id
-            )
-            .eq(
-                "reaction",
-                "like"
-            );
+            likes,
+            dislikes
+        } = await getReactionCounts(
+            news.id
+        );
 
 
-        const {
-            count: dislikes
-        } =
-        await supabase
-            .from(
-                "news_reactions"
-            )
-            .select(
-                "id",
-                {
-                    count:"exact",
-                    head:true
-                }
-            )
-            .eq(
-                "news_id",
-                news.id
-            )
-            .eq(
-                "reaction",
-                "dislike"
-            );
+        if (likeCount) {
+
+            likeCount.textContent =
+                likes;
+
+        }
 
 
-        likeCount.textContent =
-            likes || 0;
+        if (dislikeCount) {
 
+            dislikeCount.textContent =
+                dislikes;
 
-        dislikeCount.textContent =
-            dislikes || 0;
+        }
 
 
         /* =====================
@@ -1019,17 +1238,16 @@ async function loadNews(){
                 ".likeBtn"
             );
 
-
         const dislikeBtn =
             card.querySelector(
                 ".dislikeBtn"
             );
 
 
-        if(
+        if (
             myReaction ===
             "like"
-        ){
+        ) {
 
             likeBtn.classList.add(
                 "active"
@@ -1038,10 +1256,10 @@ async function loadNews(){
         }
 
 
-        if(
+        if (
             myReaction ===
             "dislike"
-        ){
+        ) {
 
             dislikeBtn.classList.add(
                 "active"
@@ -1097,6 +1315,10 @@ async function loadNews(){
         );
 
 
+        /* =====================
+           COMMENT INPUT
+        ===================== */
+
         const commentInput =
             card.querySelector(
                 ".commentInput"
@@ -1122,168 +1344,163 @@ async function loadNews(){
         };
 
 
-        /* COMMENT BUTTON */
+        /* =====================
+           COMMENT BUTTON
+        ===================== */
 
-        card.querySelector(
-            ".commentBtn"
-        ).onclick =
-        () => {
+        const commentBtn =
+            card.querySelector(
+                ".commentBtn"
+            );
 
-            commentInput.focus();
 
-            commentsContainer.scrollIntoView({
-                behavior:"smooth",
-                block:"center"
-            });
+        if (commentBtn) {
 
-        };
+            commentBtn.onclick =
+            () => {
+
+                commentInput.focus();
+
+
+                commentsContainer
+                    .scrollIntoView({
+
+                        behavior:
+                            "smooth",
+
+                        block:
+                            "center"
+
+                    });
+
+            };
+
+        }
 
 
         /* =====================
            SHARE
         ===================== */
 
-        card.querySelector(
-            ".shareBtn"
-        ).onclick =
-        async () => {
+        const shareBtn =
+            card.querySelector(
+                ".shareBtn"
+            );
 
-            try{
 
-                if(
-                    navigator.share
-                ){
+        if (shareBtn) {
 
-                    await navigator.share({
+            shareBtn.onclick =
+            async () => {
 
-                        title:
-                            news.title,
+                try {
 
-                        text:
-                            news.content,
+                    if (
+                        navigator.share
+                    ) {
 
-                        url:
-                            window.location.href
+                        await navigator.share({
 
-                    });
+                            title:
+                                news.title,
+
+                            text:
+                                news.content
+                                    ?.replace(
+                                        /<[^>]*>/g,
+                                        ""
+                                    ),
+
+                            url:
+                                window.location.href
+
+                        });
+
+                    }
+                    else {
+
+                        await navigator.clipboard
+                            .writeText(
+                                window.location.href
+                            );
+
+
+                        alert(
+                            "Link copied."
+                        );
+
+                    }
 
                 }
-                else{
+                catch (error) {
 
-                    await navigator.clipboard.writeText(
-                        window.location.href
-                    );
-
-                    alert(
-                        "Link copied."
+                    console.log(
+                        "Share cancelled."
                     );
 
                 }
 
-            }
-            catch(error){
+            };
 
-                console.log(
-                    "Share cancelled."
-                );
-
-            }
-
-        };
+        }
 
 
         /* =====================
            SAVE
         ===================== */
 
-        card.querySelector(
-            ".saveBtn"
-        ).onclick =
-        () => {
-
-            alert(
-                "Save feature will be completed in the profile module."
+        const saveBtn =
+            card.querySelector(
+                ".saveBtn"
             );
 
-        };
+
+        if (saveBtn) {
+
+            saveBtn.onclick =
+            () => {
+
+                alert(
+                    "Save feature will be connected to your profile module."
+                );
+
+            };
+
+        }
 
 
         /* =====================
-           SUBSCRIBE
+           SUBSCRIBE BUTTON
         ===================== */
-
-        /*
-         * We put a Subscribe button
-         * into the card dynamically.
-         */
 
         const subscribeBtn =
-            document.createElement(
-                "button"
+            card.querySelector(
+                ".subscribeBtn"
             );
 
 
-        subscribeBtn.type =
-            "button";
+        if (subscribeBtn) {
+
+            await updateSubscribeButton(
+                subscribeBtn
+            );
 
 
-        subscribeBtn.className =
-            "subscribeBtn";
+            subscribeBtn.onclick =
+            async () => {
 
+                await toggleSubscription(
+                    subscribeBtn
+                );
 
-        subscribeBtn.textContent =
-            "🔔 Subscribe";
+            };
 
-
-        subscribeBtn.onclick =
-        async () => {
-
-            await subscribe();
-
-        };
-
-
-        card.querySelector(
-            ".actions"
-        ).appendChild(
-            subscribeBtn
-        );
+        }
 
 
         /* =====================
-           VIEW
+           ADD CARD
         ===================== */
-
-        const {
-            error:
-                viewError
-        } =
-        await supabase.rpc(
-            "increment_news_view",
-            {
-                article_id:
-                    news.id
-            }
-        );
-
-
-        if(viewError){
-
-            console.error(
-                "VIEW ERROR:",
-                viewError
-            );
-
-        }
-        else{
-
-            viewCount.textContent =
-                Number(
-                    viewCount.textContent
-                ) + 1;
-
-        }
-
 
         newsContainer.appendChild(
             card
@@ -1292,7 +1509,6 @@ async function loadNews(){
     }
 
 }
-
 
 
 /* =========================
@@ -1305,7 +1521,7 @@ async function loadNews(){
         await checkLogin();
 
 
-    if(!loggedIn){
+    if (!loggedIn) {
 
         return;
 
@@ -1316,4 +1532,4 @@ async function loadNews(){
 
     await loadNews();
 
-})();            
+})();
