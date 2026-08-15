@@ -1,11 +1,25 @@
-import supabase from "./supabase.js";
+   import supabase from "./supabase.js";
 
 
 const newsContainer =
-    document.getElementById("newsContainer");
+    document.getElementById(
+        "newsContainer"
+    );
+
 
 const newsTemplate =
-    document.getElementById("newsTemplate");
+    document.getElementById(
+        "newsTemplate"
+    );
+
+
+const subscriberCount =
+    document.getElementById(
+        "subscriberCount"
+    );
+
+
+let currentUser = null;
 
 
 
@@ -13,30 +27,660 @@ const newsTemplate =
    CHECK LOGIN
 ========================= */
 
-const {
-    data: { user },
-    error: authError
-} =
-await supabase.auth.getUser();
+async function checkLogin(){
+
+    const {
+        data: { user },
+        error
+    } =
+    await supabase.auth.getUser();
 
 
-if (authError || !user) {
+    if(
+        error ||
+        !user
+    ){
 
-    window.location.href =
-        "login.html";
+        window.location.href =
+            "login.html";
+
+        return false;
+
+    }
+
+
+    currentUser =
+        user;
+
+    return true;
 
 }
 
 
 
 /* =========================
-   LOAD PUBLISHED NEWS
+   ESCAPE HTML
 ========================= */
 
-async function loadNews() {
+function escapeHtml(text){
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        text || "";
+
+    return div.innerHTML;
+
+}
+
+
+
+/* =========================
+   LOAD SUBSCRIBERS
+========================= */
+
+async function loadSubscriberCount(){
+
+    const {
+        count,
+        error
+    } =
+    await supabase
+        .from(
+            "news_subscriptions"
+        )
+        .select(
+            "id",
+            {
+                count:"exact",
+                head:true
+            }
+        );
+
+
+    if(error){
+
+        console.error(
+            "SUBSCRIBER ERROR:",
+            error
+        );
+
+        return;
+
+    }
+
+
+    subscriberCount.textContent =
+        count || 0;
+
+}
+
+
+
+/* =========================
+   CHECK MY REACTION
+========================= */
+
+async function getMyReaction(
+    newsId
+){
+
+    const {
+        data,
+        error
+    } =
+    await supabase
+        .from(
+            "news_reactions"
+        )
+        .select(
+            "reaction"
+        )
+        .eq(
+            "news_id",
+            newsId
+        )
+        .eq(
+            "user_id",
+            currentUser.id
+        )
+        .maybeSingle();
+
+
+    if(error){
+
+        console.error(
+            "REACTION ERROR:",
+            error
+        );
+
+        return null;
+
+    }
+
+
+    return data
+        ?.reaction ||
+        null;
+
+}
+
+
+
+/* =========================
+   REACT TO NEWS
+========================= */
+
+async function reactToNews(
+    newsId,
+    reaction
+){
+
+    const currentReaction =
+        await getMyReaction(
+            newsId
+        );
+
+
+    /* Remove existing reaction */
+
+    if(
+        currentReaction ===
+        reaction
+    ){
+
+        const {
+            error
+        } =
+        await supabase
+            .from(
+                "news_reactions"
+            )
+            .delete()
+            .eq(
+                "news_id",
+                newsId
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            );
+
+
+        if(error){
+
+            alert(
+                "Unable to remove reaction."
+            );
+
+            console.error(error);
+
+            return;
+
+        }
+
+    }
+
+    /* Change reaction */
+
+    else if(
+        currentReaction
+    ){
+
+        const {
+            error
+        } =
+        await supabase
+            .from(
+                "news_reactions"
+            )
+            .update({
+
+                reaction:
+                    reaction
+
+            })
+            .eq(
+                "news_id",
+                newsId
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            );
+
+
+        if(error){
+
+            alert(
+                "Unable to change reaction."
+            );
+
+            console.error(error);
+
+            return;
+
+        }
+
+    }
+
+    /* New reaction */
+
+    else{
+
+        const {
+            error
+        } =
+        await supabase
+            .from(
+                "news_reactions"
+            )
+            .insert({
+
+                news_id:
+                    newsId,
+
+                user_id:
+                    currentUser.id,
+
+                reaction:
+                    reaction
+
+            });
+
+
+        if(error){
+
+            alert(
+                "Unable to save reaction."
+            );
+
+            console.error(error);
+
+            return;
+
+        }
+
+    }
+
+
+    await loadNews();
+
+}
+
+
+
+/* =========================
+   LOAD COMMENTS
+========================= */
+
+async function loadComments(
+    newsId,
+    commentsContainer,
+    commentCountElement
+){
+
+    const {
+        data,
+        error
+    } =
+    await supabase
+        .from(
+            "news_comments"
+        )
+        .select(`
+            id,
+            user_id,
+            content,
+            created_at
+        `)
+        .eq(
+            "news_id",
+            newsId
+        )
+        .eq(
+            "status",
+            "Published"
+        )
+        .order(
+            "created_at",
+            {
+                ascending:false
+            }
+        );
+
+
+    if(error){
+
+        console.error(
+            "COMMENTS ERROR:",
+            error
+        );
+
+        commentsContainer.innerHTML =
+            "<p>Unable to load comments.</p>";
+
+        return;
+
+    }
+
+
+    commentCountElement.textContent =
+        data?.length || 0;
+
+
+    if(
+        !data ||
+        data.length === 0
+    ){
+
+        commentsContainer.innerHTML =
+            `
+            <div class="no-comments">
+                No comments yet. Be the first to comment. 💬
+            </div>
+            `;
+
+        return;
+
+    }
+
+
+    commentsContainer.innerHTML =
+        "";
+
+
+    data.forEach(
+        comment => {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "comment-item";
+
+
+            item.innerHTML = `
+
+                <div class="comment-author">
+                    Christian User
+                </div>
+
+                <div class="comment-text">
+                    ${escapeHtml(
+                        comment.content
+                    )}
+                </div>
+
+                <div class="comment-date">
+                    ${new Date(
+                        comment.created_at
+                    ).toLocaleString()}
+                </div>
+
+            `;
+
+
+            commentsContainer.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+
+/* =========================
+   POST COMMENT
+========================= */
+
+async function postComment(
+    newsId,
+    input,
+    commentsContainer,
+    commentCountElement
+){
+
+    const text =
+        input.value.trim();
+
+
+    if(!text){
+
+        alert(
+            "Please write a comment first."
+        );
+
+        return;
+
+    }
+
+
+    const button =
+        input
+            .parentElement
+            .querySelector(
+                ".postCommentBtn"
+            );
+
+
+    if(button){
+
+        button.disabled =
+            true;
+
+        button.textContent =
+            "Posting...";
+
+    }
+
+
+    const {
+        error
+    } =
+    await supabase
+        .from(
+            "news_comments"
+        )
+        .insert({
+
+            news_id:
+                newsId,
+
+            user_id:
+                currentUser.id,
+
+            content:
+                text,
+
+            status:
+                "Published"
+
+        });
+
+
+    if(error){
+
+        console.error(
+            "COMMENT ERROR:",
+            error
+        );
+
+
+        alert(
+            "Unable to post comment:\n" +
+            error.message
+        );
+
+
+        if(button){
+
+            button.disabled =
+                false;
+
+            button.textContent =
+                "Post Comment";
+
+        }
+
+        return;
+
+    }
+
+
+    input.value =
+        "";
+
+
+    if(button){
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            "Post Comment";
+
+    }
+
+
+    await loadComments(
+        newsId,
+        commentsContainer,
+        commentCountElement
+    );
+
+}
+
+
+
+/* =========================
+   SUBSCRIBE
+========================= */
+
+async function subscribe(){
+
+    const {
+        data: existing,
+        error: checkError
+    } =
+    await supabase
+        .from(
+            "news_subscriptions"
+        )
+        .select(
+            "id"
+        )
+        .eq(
+            "user_id",
+            currentUser.id
+        )
+        .maybeSingle();
+
+
+    if(checkError){
+
+        console.error(
+            checkError
+        );
+
+        return;
+
+    }
+
+
+    if(existing){
+
+        const {
+            error
+        } =
+        await supabase
+            .from(
+                "news_subscriptions"
+            )
+            .delete()
+            .eq(
+                "user_id",
+                currentUser.id
+            );
+
+
+        if(error){
+
+            alert(
+                "Unable to unsubscribe."
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            "You have unsubscribed from Christian News."
+        );
+
+    }
+
+    else{
+
+        const {
+            error
+        } =
+        await supabase
+            .from(
+                "news_subscriptions"
+            )
+            .insert({
+
+                user_id:
+                    currentUser.id
+
+            });
+
+
+        if(error){
+
+            alert(
+                "Unable to subscribe."
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            "You are now subscribed to Christian News. 🔔"
+        );
+
+    }
+
+
+    await loadSubscriberCount();
+
+}
+
+
+
+/* =========================
+   LOAD NEWS
+========================= */
+
+async function loadNews(){
 
     newsContainer.innerHTML =
-        "<p>Loading news...</p>";
+        `
+        <div class="loading">
+            Loading Christian news...
+        </div>
+        `;
 
 
     const {
@@ -44,34 +688,27 @@ async function loadNews() {
         error
     } =
     await supabase
-
-        .from("news")
-
+        .from(
+            "news"
+        )
         .select("*")
-
         .eq(
             "approved",
             true
         )
-
         .eq(
             "status",
             "Published"
         )
-
         .order(
             "Created_at",
             {
-                ascending: false
+                ascending:false
             }
         );
 
 
-    /* =========================
-       DATABASE ERROR
-    ========================= */
-
-    if (error) {
+    if(error){
 
         console.error(
             "NEWS ERROR:",
@@ -81,23 +718,16 @@ async function loadNews() {
 
         newsContainer.innerHTML = `
 
-            <div class="news-error">
+            <div class="news-card">
 
                 <h3>
                     News Database Error
                 </h3>
 
                 <p>
-                    ${error.message}
-                </p>
-
-                <p>
-                    <strong>
-                        Code:
-                    </strong>
-
-                    ${error.code || "None"}
-
+                    ${escapeHtml(
+                        error.message
+                    )}
                 </p>
 
             </div>
@@ -113,31 +743,25 @@ async function loadNews() {
         "";
 
 
-    /* =========================
-       NO NEWS
-    ========================= */
-
-    if (
+    if(
         !data ||
         data.length === 0
-    ) {
+    ){
 
-        newsContainer.innerHTML = `
-
-            <div class="empty-news">
+        newsContainer.innerHTML =
+            `
+            <div class="news-card">
 
                 <h3>
-                    No news available
+                    No news available.
                 </h3>
 
                 <p>
-                    There are currently
-                    no published articles.
+                    Check back soon for new Christian news.
                 </p>
 
             </div>
-
-        `;
+            `;
 
         return;
 
@@ -146,427 +770,476 @@ async function loadNews() {
 
 
     /* =========================
-       DISPLAY ARTICLES
+       BUILD ARTICLES
     ========================= */
 
-    data.forEach(
-        news => {
+    for(
+        const news of data
+    ){
+
+        const card =
+            newsTemplate.content
+                .cloneNode(true);
 
 
-            const card =
-                newsTemplate
-                    .content
-                    .cloneNode(true);
+        /* TITLE */
+
+        card.querySelector(
+            ".title"
+        ).textContent =
+            news.title ||
+            "Untitled News";
 
 
+        /* AUTHOR */
 
-            /* =====================
-               TITLE
-            ===================== */
-
-            const title =
-                card.querySelector(
-                    ".title"
-                );
-
-
-            if (title) {
-
-                title.textContent =
-                    news.title ||
-                    "Untitled News";
-
-            }
+        card.querySelector(
+            ".author"
+        ).textContent =
+            "Published by: " +
+            (
+                news.author ||
+                "News Room"
+            );
 
 
+        /* CONTENT */
 
-            /* =====================
-               AUTHOR
-            ===================== */
-
-            const author =
-                card.querySelector(
-                    ".author"
-                );
+        card.querySelector(
+            ".content"
+        ).innerHTML =
+            news.content ||
+            "";
 
 
-            if (author) {
+        /* IMAGE */
 
-                author.textContent =
-                    "Published by: " +
-                    (
-                        news.author ||
-                        "Prudence 2 News Room"
-                    );
-
-            }
+        const image =
+            card.querySelector(
+                ".image"
+            );
 
 
+        if(news.image){
 
-            /* =====================
-               DATE
-            ===================== */
+            image.src =
+                news.image;
 
-            const date =
-                card.querySelector(
-                    ".date"
-                );
+            image.style.display =
+                "block";
 
+        }
+        else{
 
-            if (date) {
+            image.style.display =
+                "none";
 
-                date.textContent =
-                    news.Created_at
-
-                        ?
-
-                    new Date(
-                        news.Created_at
-                    ).toLocaleString()
-
-                        :
-
-                    "Date unavailable";
-
-            }
+        }
 
 
+        /* VIDEO */
 
-            /* =====================
-               ARTICLE CONTENT
-            ===================== */
-
-            const content =
-                card.querySelector(
-                    ".content"
-                );
+        const video =
+            card.querySelector(
+                ".video"
+            );
 
 
-            if (content) {
+        if(news.video){
 
-                /*
-                 * innerHTML is used because
-                 * the News Room supports
-                 * bold, italic, lists and links.
-                 */
+            video.src =
+                news.video;
 
-                content.innerHTML =
-                    news.content ||
-                    "";
+            video.style.display =
+                "block";
 
-            }
+        }
+        else{
 
+            video.style.display =
+                "none";
 
-
-            /* =====================
-               IMAGE
-            ===================== */
-
-            const image =
-                card.querySelector(
-                    ".image"
-                );
+        }
 
 
-            if (image) {
+        /* =====================
+           STATISTICS
+        ===================== */
 
-                if (news.image) {
+        const viewCount =
+            card.querySelector(
+                ".viewCount"
+            );
 
-                    image.src =
-                        news.image;
 
-                    image.style.display =
-                        "block";
+        const likeCount =
+            card.querySelector(
+                ".likeCount"
+            );
 
+
+        const dislikeCount =
+            card.querySelector(
+                ".dislikeCount"
+            );
+
+
+        const commentCount =
+            card.querySelector(
+                ".commentCount"
+            );
+
+
+        viewCount.textContent =
+            news.views || 0;
+
+
+        /* =====================
+           REACTIONS
+        ===================== */
+
+        const {
+            count: likes
+        } =
+        await supabase
+            .from(
+                "news_reactions"
+            )
+            .select(
+                "id",
+                {
+                    count:"exact",
+                    head:true
                 }
+            )
+            .eq(
+                "news_id",
+                news.id
+            )
+            .eq(
+                "reaction",
+                "like"
+            );
 
-                else {
 
-                    image.style.display =
-                        "none";
-
+        const {
+            count: dislikes
+        } =
+        await supabase
+            .from(
+                "news_reactions"
+            )
+            .select(
+                "id",
+                {
+                    count:"exact",
+                    head:true
                 }
+            )
+            .eq(
+                "news_id",
+                news.id
+            )
+            .eq(
+                "reaction",
+                "dislike"
+            );
 
-            }
 
+        likeCount.textContent =
+            likes || 0;
 
 
-            /* =====================
-               VIDEO
-            ===================== */
+        dislikeCount.textContent =
+            dislikes || 0;
 
-            const video =
-                card.querySelector(
-                    ".video"
-                );
 
+        /* =====================
+           CURRENT REACTION
+        ===================== */
 
-            if (video) {
+        const myReaction =
+            await getMyReaction(
+                news.id
+            );
 
-                if (news.video) {
 
-                    video.src =
-                        news.video;
+        const likeBtn =
+            card.querySelector(
+                ".likeBtn"
+            );
 
-                    video.style.display =
-                        "block";
 
-                }
+        const dislikeBtn =
+            card.querySelector(
+                ".dislikeBtn"
+            );
 
-                else {
 
-                    video.style.display =
-                        "none";
+        if(
+            myReaction ===
+            "like"
+        ){
 
-                }
-
-            }
-
-
-
-            /* =====================
-               LIKE
-            ===================== */
-
-            const likeButton =
-                card.querySelector(
-                    ".likeBtn"
-                );
-
-
-            if (likeButton) {
-
-                likeButton.addEventListener(
-                    "click",
-                    async () => {
-
-
-                        const newLikes =
-                            (
-                                news.likes ||
-                                0
-                            ) + 1;
-
-
-                        const {
-                            error
-                        } =
-                        await supabase
-
-                            .from("news")
-
-                            .update({
-                                likes:
-                                    newLikes
-                            })
-
-                            .eq(
-                                "id",
-                                news.id
-                            );
-
-
-                        if (error) {
-
-                            console.error(
-                                error
-                            );
-
-                            alert(
-                                "Unable to like this news."
-                            );
-
-                            return;
-
-                        }
-
-
-                        likeButton.textContent =
-                            `👍 Liked (${newLikes})`;
-
-                    }
-                );
-
-            }
-
-
-
-            /* =====================
-               COMMENT
-            ===================== */
-
-            const commentButton =
-                card.querySelector(
-                    ".commentBtn"
-                );
-
-
-            if (commentButton) {
-
-                commentButton.addEventListener(
-                    "click",
-                    () => {
-
-                        const text =
-                            prompt(
-                                "Write your comment:"
-                            );
-
-
-                        if (
-                            !text ||
-                            !text.trim()
-                        ) {
-
-                            return;
-
-                        }
-
-
-                        alert(
-                            "Comment system will be connected next."
-                        );
-
-                    }
-                );
-
-            }
-
-
-
-            /* =====================
-               SAVE
-            ===================== */
-
-            const saveButton =
-                card.querySelector(
-                    ".saveBtn"
-                );
-
-
-            if (saveButton) {
-
-                saveButton.addEventListener(
-                    "click",
-                    () => {
-
-                        alert(
-                            "Save feature will be completed in the profile module."
-                        );
-
-                    }
-                );
-
-            }
-
-
-
-            /* =====================
-               SUBSCRIBE
-            ===================== */
-
-            const subscribeButton =
-                card.querySelector(
-                    ".subscribeBtn"
-                );
-
-
-            if (subscribeButton) {
-
-                subscribeButton.addEventListener(
-                    "click",
-                    () => {
-
-                        alert(
-                            "You have subscribed to Christian News."
-                        );
-
-                    }
-                );
-
-            }
-
-
-
-            /* =====================
-               SHARE
-            ===================== */
-
-            const shareButton =
-                card.querySelector(
-                    ".shareBtn"
-                );
-
-
-            if (shareButton) {
-
-                shareButton.addEventListener(
-                    "click",
-                    async () => {
-
-
-                        try {
-
-                            if (
-                                navigator.share
-                            ) {
-
-                                await navigator.share({
-
-                                    title:
-                                        news.title,
-
-                                    text:
-                                        news.content,
-
-                                    url:
-                                        window.location.href
-
-                                });
-
-                            }
-
-                            else {
-
-                                await navigator
-                                    .clipboard
-                                    .writeText(
-                                        window.location.href
-                                    );
-
-                                alert(
-                                    "Link copied."
-                                );
-
-                            }
-
-                        }
-
-                        catch (error) {
-
-                            console.log(
-                                "Share cancelled."
-                            );
-
-                        }
-
-                    }
-                );
-
-            }
-
-
-
-            /* =====================
-               ADD CARD
-            ===================== */
-
-            newsContainer.appendChild(
-                card
+            likeBtn.classList.add(
+                "active"
             );
 
         }
-    );
+
+
+        if(
+            myReaction ===
+            "dislike"
+        ){
+
+            dislikeBtn.classList.add(
+                "active"
+            );
+
+        }
+
+
+        /* =====================
+           LIKE
+        ===================== */
+
+        likeBtn.onclick =
+        async () => {
+
+            await reactToNews(
+                news.id,
+                "like"
+            );
+
+        };
+
+
+        /* =====================
+           DISLIKE
+        ===================== */
+
+        dislikeBtn.onclick =
+        async () => {
+
+            await reactToNews(
+                news.id,
+                "dislike"
+            );
+
+        };
+
+
+        /* =====================
+           COMMENTS
+        ===================== */
+
+        const commentsContainer =
+            card.querySelector(
+                ".comments"
+            );
+
+
+        await loadComments(
+            news.id,
+            commentsContainer,
+            commentCount
+        );
+
+
+        const commentInput =
+            card.querySelector(
+                ".commentInput"
+            );
+
+
+        const postCommentBtn =
+            card.querySelector(
+                ".postCommentBtn"
+            );
+
+
+        postCommentBtn.onclick =
+        async () => {
+
+            await postComment(
+                news.id,
+                commentInput,
+                commentsContainer,
+                commentCount
+            );
+
+        };
+
+
+        /* COMMENT BUTTON */
+
+        card.querySelector(
+            ".commentBtn"
+        ).onclick =
+        () => {
+
+            commentInput.focus();
+
+            commentsContainer.scrollIntoView({
+                behavior:"smooth",
+                block:"center"
+            });
+
+        };
+
+
+        /* =====================
+           SHARE
+        ===================== */
+
+        card.querySelector(
+            ".shareBtn"
+        ).onclick =
+        async () => {
+
+            try{
+
+                if(
+                    navigator.share
+                ){
+
+                    await navigator.share({
+
+                        title:
+                            news.title,
+
+                        text:
+                            news.content,
+
+                        url:
+                            window.location.href
+
+                    });
+
+                }
+                else{
+
+                    await navigator.clipboard.writeText(
+                        window.location.href
+                    );
+
+                    alert(
+                        "Link copied."
+                    );
+
+                }
+
+            }
+            catch(error){
+
+                console.log(
+                    "Share cancelled."
+                );
+
+            }
+
+        };
+
+
+        /* =====================
+           SAVE
+        ===================== */
+
+        card.querySelector(
+            ".saveBtn"
+        ).onclick =
+        () => {
+
+            alert(
+                "Save feature will be completed in the profile module."
+            );
+
+        };
+
+
+        /* =====================
+           SUBSCRIBE
+        ===================== */
+
+        /*
+         * We put a Subscribe button
+         * into the card dynamically.
+         */
+
+        const subscribeBtn =
+            document.createElement(
+                "button"
+            );
+
+
+        subscribeBtn.type =
+            "button";
+
+
+        subscribeBtn.className =
+            "subscribeBtn";
+
+
+        subscribeBtn.textContent =
+            "🔔 Subscribe";
+
+
+        subscribeBtn.onclick =
+        async () => {
+
+            await subscribe();
+
+        };
+
+
+        card.querySelector(
+            ".actions"
+        ).appendChild(
+            subscribeBtn
+        );
+
+
+        /* =====================
+           VIEW
+        ===================== */
+
+        const {
+            error:
+                viewError
+        } =
+        await supabase.rpc(
+            "increment_news_view",
+            {
+                article_id:
+                    news.id
+            }
+        );
+
+
+        if(viewError){
+
+            console.error(
+                "VIEW ERROR:",
+                viewError
+            );
+
+        }
+        else{
+
+            viewCount.textContent =
+                Number(
+                    viewCount.textContent
+                ) + 1;
+
+        }
+
+
+        newsContainer.appendChild(
+            card
+        );
+
+    }
 
 }
 
@@ -576,4 +1249,21 @@ async function loadNews() {
    START
 ========================= */
 
-loadNews();
+(async () => {
+
+    const loggedIn =
+        await checkLogin();
+
+
+    if(!loggedIn){
+
+        return;
+
+    }
+
+
+    await loadSubscriberCount();
+
+    await loadNews();
+
+})();            
