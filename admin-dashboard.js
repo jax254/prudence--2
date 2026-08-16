@@ -157,9 +157,9 @@ onAuthStateChanged(auth, async (user) => {
 
     loadStatistics();
 
-  loadPendingNews();
+    loadPendingNews();
 
-loadUnreadNotifications();
+    loadUnreadNotifications();
 
 });
 
