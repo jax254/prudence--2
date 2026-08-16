@@ -1,17 +1,4 @@
-import { auth, db } from "./firebase.js";
 import supabase from "./supabase.js";
-
-import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-import {
-    doc,
-    getDoc,
-    collection,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
 /* =========================
@@ -63,75 +50,174 @@ function escapeHtml(text) {
 
 
 /* =========================
-   LOAD NOTIFICATIONS
+   CHECK CURRENT USER
 ========================= */
 
-async function loadUnreadNotifications(userId) {
+async function getCurrentUser() {
 
-    if (!userId) {
+    const {
+        data: {
+            user
+        },
+        error
+    } =
+    await supabase.auth.getUser();
 
-        return;
+
+    if (error) {
+
+        console.error(
+            "AUTH ERROR:",
+            error
+        );
+
+        return null;
 
     }
 
+
+    return user || null;
+
+}
+
+
+/* =========================
+   LOAD ADMIN PROFILE
+========================= */
+
+async function loadAdminProfile(user) {
+
+    const {
+        data: profile,
+        error
+    } =
+    await supabase
+        .from("profiles")
+        .select(
+            "id, email, role, status, username"
+        )
+        .eq(
+            "id",
+            user.id
+        )
+        .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "PROFILE ERROR:",
+            error
+        );
+
+        throw new Error(
+            "Unable to load your profile:\n" +
+            error.message
+        );
+
+    }
+
+
+    if (!profile) {
+
+        throw new Error(
+            "Your profile could not be found."
+        );
+
+    }
+
+
+    const allowedRoles = [
+
+        "admin",
+        "newsroom",
+        "superadmin"
+
+    ];
+
+
+    if (
+        !allowedRoles.includes(
+            profile.role
+        )
+    ) {
+
+        throw new Error(
+            "You are not authorized to access the Admin Panel."
+        );
+
+    }
+
+
+    if (
+        profile.status &&
+        profile.status !== "active"
+    ) {
+
+        throw new Error(
+            "Your administrator account is not active."
+        );
+
+    }
+
+
+    adminName.textContent =
+        profile.username ||
+        profile.email ||
+        user.email ||
+        "Administrator";
+
+
+    adminRole.textContent =
+        (
+            profile.role ||
+            "admin"
+        ).toUpperCase();
+
+
+    return profile;
+
+}
+
+
+/* =========================
+   LOAD USER COUNT
+========================= */
+
+async function loadUsersCount() {
 
     const {
         count,
         error
     } =
     await supabase
-        .from("notifications")
+        .from("profiles")
         .select(
             "id",
             {
                 count: "exact",
                 head: true
             }
-        )
-        .eq(
-            "user_id",
-            userId
-        )
-        .eq(
-            "is_read",
-            false
         );
 
 
     if (error) {
 
         console.error(
-            "NOTIFICATION ERROR:",
+            "USERS COUNT ERROR:",
             error
         );
+
+        usersCount.textContent =
+            "—";
 
         return;
 
     }
 
 
-    const unread =
+    usersCount.textContent =
         count || 0;
-
-
-    if (unread > 0) {
-
-        notificationBadge.textContent =
-            unread > 99
-                ? "99+"
-                : unread;
-
-        notificationBadge.style.display =
-            "inline-flex";
-
-    }
-
-    else {
-
-        notificationBadge.style.display =
-            "none";
-
-    }
 
 }
 
@@ -175,25 +261,42 @@ async function loadNewsStatistics() {
         data || [];
 
 
-    /* TOTAL NEWS */
-
     newsCount.textContent =
         articles.length;
 
-
-    /* PENDING */
 
     const pending =
         articles.filter(
             article =>
                 article.status ===
-                "Pending Approval" &&
+                    "Pending Approval" &&
                 article.approved === false
         );
 
 
     pendingCount.textContent =
         pending.length;
+
+}
+
+
+/* =========================
+   LOAD LIVE COUNT
+========================= */
+
+/*
+ * Live broadcasts have not yet
+ * been moved to Supabase in the
+ * current project.
+ *
+ * We therefore do not query
+ * Firebase here.
+ */
+
+async function loadLiveCount() {
+
+    liveCount.textContent =
+        "—";
 
 }
 
@@ -218,29 +321,26 @@ async function loadPendingNews() {
         error
     } =
     await supabase
-
         .from("news")
-
         .select(`
             id,
             title,
             author,
             content,
+            image,
+            video,
             Created_at,
             status,
             approved
         `)
-
         .eq(
             "status",
             "Pending Approval"
         )
-
         .eq(
             "approved",
             false
         )
-
         .order(
             "Created_at",
             {
@@ -259,7 +359,7 @@ async function loadPendingNews() {
 
         pendingNews.innerHTML = `
 
-            <div class="error-box">
+            <div class="pending-news-item">
 
                 <h3>
                     Unable to load pending news
@@ -287,8 +387,6 @@ async function loadPendingNews() {
     const articles =
         data || [];
 
-
-    /* UPDATE COUNT */
 
     pendingCount.textContent =
         articles.length;
@@ -365,66 +463,89 @@ async function loadPendingNews() {
                     "Date unavailable";
 
 
-            pendingNews.innerHTML += `
+            const item =
+                document.createElement(
+                    "div"
+                );
 
-                <div
-                    class="pending-news-item"
+
+            item.className =
+                "pending-news-item";
+
+
+            item.innerHTML = `
+
+                <h3>
+                    ${title}
+                </h3>
+
+                <p>
+                    <strong>
+                        Author:
+                    </strong>
+                    ${author}
+                </p>
+
+                <p>
+                    <strong>
+                        Submitted:
+                    </strong>
+                    ${escapeHtml(date)}
+                </p>
+
+                <p>
+                    ${shortContent}
+                </p>
+
+                <span
+                    class="pending-status"
                 >
+                    ⏳ Pending Approval
+                </span>
 
-                    <h3>
-                        ${title}
-                    </h3>
+                <br><br>
 
-
-                    <p>
-                        <strong>
-                            Author:
-                        </strong>
-
-                        ${author}
-                    </p>
-
-
-                    <p>
-                        <strong>
-                            Submitted:
-                        </strong>
-
-                        ${escapeHtml(
-                            date
-                        )}
-                    </p>
-
-
-                    <p>
-                        ${shortContent}
-                    </p>
-
-
-                    <span
-                        class="pending-status"
-                    >
-                        ⏳ Pending Approval
-                    </span>
-
-
-                    <br><br>
-
-
-                    <button
-                        type="button"
-                        class="review-button"
-                        onclick="
-                            location.href =
-                            'admin-approvals.html'
-                        "
-                    >
-                        Review Article
-                    </button>
-
-                </div>
+                <button
+                    type="button"
+                    class="review-button"
+                >
+                    Review Article
+                </button>
 
             `;
+
+
+            const reviewButton =
+                item.querySelector(
+                    ".review-button"
+                );
+
+
+            reviewButton.onclick =
+            () => {
+
+                /*
+                 * Save the article ID.
+                 * admin-approvals.html can
+                 * use this later to open
+                 * the specific article.
+                 */
+
+                localStorage.setItem(
+                    "reviewNewsId",
+                    article.id
+                );
+
+
+                window.location.href =
+                    "admin-approvals.html";
+
+            };
+
+
+            pendingNews.appendChild(
+                item
+            );
 
         }
     );
@@ -433,36 +554,76 @@ async function loadPendingNews() {
 
 
 /* =========================
-   LOAD USERS
+   LOAD NOTIFICATIONS
 ========================= */
 
-async function loadUsersCount() {
+async function loadUnreadNotifications(
+    userId
+) {
 
-    try {
+    if (!userId) {
 
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "users"
-                )
-            );
-
-
-        usersCount.textContent =
-            snapshot.size;
+        return;
 
     }
 
-    catch (error) {
+
+    const {
+        count,
+        error
+    } =
+    await supabase
+        .from("notifications")
+        .select(
+            "id",
+            {
+                count: "exact",
+                head: true
+            }
+        )
+        .eq(
+            "user_id",
+            userId
+        )
+        .eq(
+            "is_read",
+            false
+        );
+
+
+    if (error) {
 
         console.error(
-            "USERS ERROR:",
+            "NOTIFICATION ERROR:",
             error
         );
 
-        usersCount.textContent =
-            "—";
+        return;
+
+    }
+
+
+    const unread =
+        count || 0;
+
+
+    if (unread > 0) {
+
+        notificationBadge.textContent =
+            unread > 99
+                ? "99+"
+                : unread;
+
+
+        notificationBadge.style.display =
+            "inline-flex";
+
+    }
+
+    else {
+
+        notificationBadge.style.display =
+            "none";
 
     }
 
@@ -470,60 +631,30 @@ async function loadUsersCount() {
 
 
 /* =========================
-   LOAD LIVE BROADCASTS
+   LOAD DASHBOARD
 ========================= */
 
-async function loadLiveCount() {
+async function loadDashboard(
+    user
+) {
 
-    try {
+    await loadAdminProfile(
+        user
+    );
 
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "liveStreams"
-                )
-            );
-
-
-        liveCount.textContent =
-            snapshot.size;
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "LIVE ERROR:",
-            error
-        );
-
-        liveCount.textContent =
-            "—";
-
-    }
-
-}
-
-
-/* =========================
-   LOAD EVERYTHING
-========================= */
-
-async function loadDashboard(userId) {
 
     await Promise.all([
 
         loadUsersCount(),
 
-        loadLiveCount(),
-
         loadNewsStatistics(),
+
+        loadLiveCount(),
 
         loadPendingNews(),
 
         loadUnreadNotifications(
-            userId
+            user.id
         )
 
     ]);
@@ -532,144 +663,52 @@ async function loadDashboard(userId) {
 
 
 /* =========================
-   CHECK ADMIN LOGIN
+   START
 ========================= */
 
-onAuthStateChanged(
+(async function () {
 
-    auth,
+    try {
 
-    async user => {
+        const user =
+            await getCurrentUser();
+
 
         if (!user) {
 
             window.location.href =
-                "index.html";
+                "../login.html";
 
             return;
 
         }
 
 
-        try {
-
-            /* =====================
-               LOAD FIREBASE PROFILE
-            ===================== */
-
-            const userRef =
-                doc(
-                    db,
-                    "users",
-                    user.uid
-                );
-
-
-            const userSnap =
-                await getDoc(
-                    userRef
-                );
-
-
-            if (
-                !userSnap.exists()
-            ) {
-
-                alert(
-                    "Access denied."
-                );
-
-                window.location.href =
-                    "index.html";
-
-                return;
-
-            }
-
-
-            const profile =
-                userSnap.data();
-
-
-            /* =====================
-               CHECK ROLE
-            ===================== */
-
-            const allowedRoles = [
-
-                "admin",
-
-                "newsroom",
-
-                "superadmin"
-
-            ];
-
-
-            if (
-                !allowedRoles.includes(
-                    profile.role
-                )
-            ) {
-
-                alert(
-                    "You are not authorized to access the Admin Panel."
-                );
-
-                window.location.href =
-                    "index.html";
-
-                return;
-
-            }
-
-
-            /* =====================
-               DISPLAY PROFILE
-            ===================== */
-
-            adminName.textContent =
-                profile.username ||
-                user.email ||
-                "Administrator";
-
-
-            adminRole.textContent =
-                (
-                    profile.role ||
-                    "admin"
-                ).toUpperCase();
-
-
-            /* =====================
-               LOAD DASHBOARD
-            ===================== */
-
-            await loadDashboard(
-                user.uid
-            );
-
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "ADMIN DASHBOARD ERROR:",
-                error
-            );
-
-
-            alert(
-                "Unable to load the Admin Dashboard.\n\n" +
-                error.message
-            );
-
-        }
+        await loadDashboard(
+            user
+        );
 
     }
 
-);
+    catch (error) {
+
+        console.error(
+            "ADMIN DASHBOARD ERROR:",
+            error
+        );
+
+
+        alert(
+            error.message
+        );
+
+
+        window.location.href =
+            "../index.html";
+
+    }
+
+})();
 
 
 /* =========================
@@ -681,11 +720,21 @@ async function () {
 
     try {
 
-        await signOut(auth);
+        const {
+            error
+        } =
+        await supabase.auth.signOut();
+
+
+        if (error) {
+
+            throw error;
+
+        }
 
 
         window.location.href =
-            "index.html";
+            "../login.html";
 
     }
 
@@ -698,7 +747,8 @@ async function () {
 
 
         alert(
-            "Unable to logout. Please try again."
+            "Unable to logout:\n" +
+            error.message
         );
 
     }
