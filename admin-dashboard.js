@@ -24,7 +24,10 @@ const liveCount = document.getElementById("liveCount");
 const pendingCount = document.getElementById("pendingCount");
 
 const pendingNews = document.getElementById("pendingNews");
-
+const notificationBadge =
+    document.getElementById(
+        "notificationBadge"
+    );
 // Check logged in user
 onAuthStateChanged(auth, async (user) => {
 
