@@ -451,8 +451,19 @@ async function loadPendingNews() {
                     return;
 
                 }
+                
+                await createNotification({
+    userId: news.uid,
 
+    title: "✅ Article Approved",
 
+    message:
+        `Your article "${news.title}" has been approved and published by the Superadmin.`,
+
+    type: "article_approved",
+
+    articleId: news.id
+});
                 alert(
                     "News approved and published successfully."
                 );
