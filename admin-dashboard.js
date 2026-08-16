@@ -36,13 +36,13 @@ const notificationBadge =
    ESCAPE HTML
 ========================= */
 
-function escapeHtml(text) {
+function escapeHtml(value) {
 
     const div =
         document.createElement("div");
 
     div.textContent =
-        text || "";
+        value || "";
 
     return div.innerHTML;
 
@@ -50,10 +50,10 @@ function escapeHtml(text) {
 
 
 /* =========================
-   CHECK CURRENT USER
+   GET LOGGED-IN USER
 ========================= */
 
-async function getCurrentUser() {
+async function getLoggedInUser() {
 
     const {
         data: {
@@ -82,10 +82,10 @@ async function getCurrentUser() {
 
 
 /* =========================
-   LOAD ADMIN PROFILE
+   LOAD PROFILE
 ========================= */
 
-async function loadAdminProfile(user) {
+async function loadProfile(user) {
 
     const {
         data: profile,
@@ -94,7 +94,7 @@ async function loadAdminProfile(user) {
     await supabase
         .from("profiles")
         .select(
-            "id, email, role, status, username"
+            "id, email, username, role, status"
         )
         .eq(
             "id",
@@ -121,18 +121,16 @@ async function loadAdminProfile(user) {
     if (!profile) {
 
         throw new Error(
-            "Your profile could not be found."
+            "Your profile was not found."
         );
 
     }
 
 
     const allowedRoles = [
-
         "admin",
         "newsroom",
         "superadmin"
-
     ];
 
 
@@ -181,7 +179,7 @@ async function loadAdminProfile(user) {
 
 
 /* =========================
-   LOAD USER COUNT
+   USERS COUNT
 ========================= */
 
 async function loadUsersCount() {
@@ -223,31 +221,82 @@ async function loadUsersCount() {
 
 
 /* =========================
-   LOAD NEWS STATISTICS
+   NEWS COUNT
 ========================= */
 
-async function loadNewsStatistics() {
+async function loadNewsCount() {
 
     const {
-        data,
+        count,
         error
     } =
     await supabase
         .from("news")
         .select(
-            "id, approved, status"
+            "id",
+            {
+                count: "exact",
+                head: true
+            }
         );
 
 
     if (error) {
 
         console.error(
-            "NEWS STATISTICS ERROR:",
+            "NEWS COUNT ERROR:",
             error
         );
 
         newsCount.textContent =
             "—";
+
+        return;
+
+    }
+
+
+    newsCount.textContent =
+        count || 0;
+
+}
+
+
+/* =========================
+   PENDING COUNT
+========================= */
+
+async function loadPendingCount() {
+
+    const {
+        count,
+        error
+    } =
+    await supabase
+        .from("news")
+        .select(
+            "id",
+            {
+                count: "exact",
+                head: true
+            }
+        )
+        .eq(
+            "approved",
+            false
+        )
+        .eq(
+            "status",
+            "Pending Approval"
+        );
+
+
+    if (error) {
+
+        console.error(
+            "PENDING COUNT ERROR:",
+            error
+        );
 
         pendingCount.textContent =
             "—";
@@ -257,43 +306,24 @@ async function loadNewsStatistics() {
     }
 
 
-    const articles =
-        data || [];
-
-
-    newsCount.textContent =
-        articles.length;
-
-
-    const pending =
-        articles.filter(
-            article =>
-                article.status ===
-                    "Pending Approval" &&
-                article.approved === false
-        );
-
-
     pendingCount.textContent =
-        pending.length;
+        count || 0;
 
 }
 
 
 /* =========================
-   LOAD LIVE COUNT
+   LIVE COUNT
 ========================= */
 
 /*
- * Live broadcasts have not yet
- * been moved to Supabase in the
- * current project.
- *
- * We therefore do not query
- * Firebase here.
- */
+   Firebase is completely removed.
 
-async function loadLiveCount() {
+   Until the Live module has been
+   moved to Supabase, we show —.
+*/
+
+function loadLiveCount() {
 
     liveCount.textContent =
         "—";
@@ -334,12 +364,12 @@ async function loadPendingNews() {
             approved
         `)
         .eq(
-            "status",
-            "Pending Approval"
-        )
-        .eq(
             "approved",
             false
+        )
+        .eq(
+            "status",
+            "Pending Approval"
         )
         .order(
             "Created_at",
@@ -384,25 +414,18 @@ async function loadPendingNews() {
         "";
 
 
-    const articles =
-        data || [];
-
-
-    pendingCount.textContent =
-        articles.length;
-
-
     if (
-        articles.length === 0
+        !data ||
+        data.length === 0
     ) {
 
         pendingNews.innerHTML = `
 
             <div class="empty-pending">
 
-                <p>
-                    ✅ No pending news.
-                </p>
+                <h3>
+                    ✅ No pending news
+                </h3>
 
                 <p>
                     There are currently no
@@ -418,8 +441,18 @@ async function loadPendingNews() {
     }
 
 
-    articles.forEach(
+    data.forEach(
         article => {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.className =
+                "pending-news-item";
+
 
             const title =
                 escapeHtml(
@@ -444,13 +477,13 @@ async function loadPendingNews() {
 
             const shortContent =
                 content.length > 200
-
-                    ? content.substring(
+                    ?
+                    content.substring(
                         0,
                         200
                     ) + "..."
-
-                    : content;
+                    :
+                    content;
 
 
             const date =
@@ -463,16 +496,6 @@ async function loadPendingNews() {
                     "Date unavailable";
 
 
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-
-            item.className =
-                "pending-news-item";
-
-
             item.innerHTML = `
 
                 <h3>
@@ -483,6 +506,7 @@ async function loadPendingNews() {
                     <strong>
                         Author:
                     </strong>
+
                     ${author}
                 </p>
 
@@ -490,20 +514,23 @@ async function loadPendingNews() {
                     <strong>
                         Submitted:
                     </strong>
-                    ${escapeHtml(date)}
+
+                    ${escapeHtml(
+                        date
+                    )}
                 </p>
 
                 <p>
                     ${shortContent}
                 </p>
 
-                <span
-                    class="pending-status"
-                >
-                    ⏳ Pending Approval
-                </span>
+                <p>
+                    <strong>
+                        Status:
+                    </strong>
 
-                <br><br>
+                    ⏳ Pending Approval
+                </p>
 
                 <button
                     type="button"
@@ -522,14 +549,7 @@ async function loadPendingNews() {
 
 
             reviewButton.onclick =
-            () => {
-
-                /*
-                 * Save the article ID.
-                 * admin-approvals.html can
-                 * use this later to open
-                 * the specific article.
-                 */
+            function () {
 
                 localStorage.setItem(
                     "reviewNewsId",
@@ -554,7 +574,7 @@ async function loadPendingNews() {
 
 
 /* =========================
-   LOAD NOTIFICATIONS
+   NOTIFICATIONS
 ========================= */
 
 async function loadUnreadNotifications(
@@ -619,7 +639,6 @@ async function loadUnreadNotifications(
             "inline-flex";
 
     }
-
     else {
 
         notificationBadge.style.display =
@@ -638,7 +657,7 @@ async function loadDashboard(
     user
 ) {
 
-    await loadAdminProfile(
+    await loadProfile(
         user
     );
 
@@ -647,9 +666,9 @@ async function loadDashboard(
 
         loadUsersCount(),
 
-        loadNewsStatistics(),
+        loadNewsCount(),
 
-        loadLiveCount(),
+        loadPendingCount(),
 
         loadPendingNews(),
 
@@ -659,11 +678,14 @@ async function loadDashboard(
 
     ]);
 
+
+    loadLiveCount();
+
 }
 
 
 /* =========================
-   START
+   START DASHBOARD
 ========================= */
 
 (async function () {
@@ -671,7 +693,7 @@ async function loadDashboard(
     try {
 
         const user =
-            await getCurrentUser();
+            await getLoggedInUser();
 
 
         if (!user) {
@@ -693,7 +715,7 @@ async function loadDashboard(
     catch (error) {
 
         console.error(
-            "ADMIN DASHBOARD ERROR:",
+            "DASHBOARD ERROR:",
             error
         );
 
@@ -704,7 +726,7 @@ async function loadDashboard(
 
 
         window.location.href =
-            "../index.html";
+            "../login.html";
 
     }
 
@@ -718,39 +740,31 @@ async function loadDashboard(
 window.logout =
 async function () {
 
-    try {
-
-        const {
-            error
-        } =
-        await supabase.auth.signOut();
+    const {
+        error
+    } =
+    await supabase.auth.signOut();
 
 
-        if (error) {
-
-            throw error;
-
-        }
-
-
-        window.location.href =
-            "../login.html";
-
-    }
-
-    catch (error) {
+    if (error) {
 
         console.error(
             "LOGOUT ERROR:",
             error
         );
 
-
         alert(
             "Unable to logout:\n" +
             error.message
         );
 
+        return;
+
     }
 
+
+    window.location.href =
+        "../login.html";
+
 };
+    
