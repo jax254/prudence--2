@@ -10,10 +10,7 @@ import {
     doc,
     getDoc,
     collection,
-    getDocs,
-    query,
-    where,
-    onSnapshot
+    getDocs
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
@@ -43,7 +40,9 @@ const pendingNews =
     document.getElementById("pendingNews");
 
 const notificationBadge =
-    document.getElementById("notificationBadge");
+    document.getElementById(
+        "notificationBadge"
+    );
 
 
 /* =========================
@@ -64,7 +63,7 @@ function escapeHtml(text) {
 
 
 /* =========================
-   LOAD UNREAD NOTIFICATIONS
+   LOAD NOTIFICATIONS
 ========================= */
 
 async function loadUnreadNotifications(userId) {
@@ -79,10 +78,9 @@ async function loadUnreadNotifications(userId) {
     const {
         count,
         error
-    } = await supabase
-
+    } =
+    await supabase
         .from("notifications")
-
         .select(
             "id",
             {
@@ -90,12 +88,10 @@ async function loadUnreadNotifications(userId) {
                 head: true
             }
         )
-
         .eq(
             "user_id",
             userId
         )
-
         .eq(
             "is_read",
             false
@@ -105,7 +101,7 @@ async function loadUnreadNotifications(userId) {
     if (error) {
 
         console.error(
-            "NOTIFICATION COUNT ERROR:",
+            "NOTIFICATION ERROR:",
             error
         );
 
@@ -141,104 +137,63 @@ async function loadUnreadNotifications(userId) {
 
 
 /* =========================
-   LOAD DASHBOARD STATISTICS
+   LOAD NEWS STATISTICS
 ========================= */
 
-async function loadStatistics() {
+async function loadNewsStatistics() {
 
-    try {
-
-        /* USERS */
-
-        const usersSnapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "users"
-                )
-            );
-
-        usersCount.textContent =
-            usersSnapshot.size;
+    const {
+        data,
+        error
+    } =
+    await supabase
+        .from("news")
+        .select(
+            "id, approved, status"
+        );
 
 
-        /* NEWS */
-
-        const newsSnapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "news"
-                )
-            );
-
-        newsCount.textContent =
-            newsSnapshot.size;
-
-
-        /* LIVE */
-
-        const liveSnapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "liveStreams"
-                )
-            );
-
-        liveCount.textContent =
-            liveSnapshot.size;
-
-
-        /* PENDING NEWS */
-
-        const pendingSnapshot =
-            await getDocs(
-
-                query(
-
-                    collection(
-                        db,
-                        "news"
-                    ),
-
-                    where(
-                        "approved",
-                        "==",
-                        false
-                    )
-
-                )
-
-            );
-
-
-        pendingCount.textContent =
-            pendingSnapshot.size;
-
-
-    }
-
-    catch (error) {
+    if (error) {
 
         console.error(
-            "STATISTICS ERROR:",
+            "NEWS STATISTICS ERROR:",
             error
         );
 
-        usersCount.textContent =
-            "—";
-
         newsCount.textContent =
-            "—";
-
-        liveCount.textContent =
             "—";
 
         pendingCount.textContent =
             "—";
 
+        return;
+
     }
+
+
+    const articles =
+        data || [];
+
+
+    /* TOTAL NEWS */
+
+    newsCount.textContent =
+        articles.length;
+
+
+    /* PENDING */
+
+    const pending =
+        articles.filter(
+            article =>
+                article.status ===
+                "Pending Approval" &&
+                article.approved === false
+        );
+
+
+    pendingCount.textContent =
+        pending.length;
 
 }
 
@@ -247,171 +202,344 @@ async function loadStatistics() {
    LOAD PENDING NEWS
 ========================= */
 
-function loadPendingNews() {
+async function loadPendingNews() {
 
-    const q =
-        query(
+    pendingNews.innerHTML = `
 
-            collection(
-                db,
-                "news"
-            ),
+        <p>
+            Loading pending news...
+        </p>
 
-            where(
-                "approved",
-                "==",
-                false
-            )
+    `;
 
+
+    const {
+        data,
+        error
+    } =
+    await supabase
+
+        .from("news")
+
+        .select(`
+            id,
+            title,
+            author,
+            content,
+            Created_at,
+            status,
+            approved
+        `)
+
+        .eq(
+            "status",
+            "Pending Approval"
+        )
+
+        .eq(
+            "approved",
+            false
+        )
+
+        .order(
+            "Created_at",
+            {
+                ascending: false
+            }
         );
 
 
-    onSnapshot(
+    if (error) {
 
-        q,
-
-        (snapshot) => {
-
-            pendingNews.innerHTML =
-                "";
+        console.error(
+            "PENDING NEWS ERROR:",
+            error
+        );
 
 
-            /* UPDATE PENDING COUNT */
+        pendingNews.innerHTML = `
 
-            pendingCount.textContent =
-                snapshot.size;
+            <div class="error-box">
 
-
-            if (snapshot.empty) {
-
-                pendingNews.innerHTML = `
-
-                    <div class="empty-pending">
-
-                        <p>
-                            ✅ No pending news.
-                        </p>
-
-                    </div>
-
-                `;
-
-                return;
-
-            }
-
-
-            snapshot.forEach(
-                (document) => {
-
-                    const news =
-                        document.data();
-
-
-                    const title =
-                        escapeHtml(
-                            news.title ||
-                            "Untitled News"
-                        );
-
-
-                    const author =
-                        escapeHtml(
-                            news.author ||
-                            "Unknown Author"
-                        );
-
-
-                    const content =
-                        escapeHtml(
-                            news.content ||
-                            ""
-                        );
-
-
-                    const shortContent =
-                        content.length > 200
-
-                            ? content.substring(
-                                0,
-                                200
-                            ) + "..."
-
-                            : content;
-
-
-                    pendingNews.innerHTML += `
-
-                        <div
-                            class="pending-news-item"
-                        >
-
-                            <h3>
-                                ${title}
-                            </h3>
-
-                            <p>
-                                <strong>
-                                    Author:
-                                </strong>
-                                ${author}
-                            </p>
-
-                            <p>
-                                ${shortContent}
-                            </p>
-
-                            <button
-                                type="button"
-                                onclick="
-                                    location.href =
-                                    'admin-approvals.html'
-                                "
-                            >
-                                Review Article
-                            </button>
-
-                        </div>
-
-                    `;
-
-                }
-            );
-
-        },
-
-        (error) => {
-
-            console.error(
-                "PENDING NEWS ERROR:",
-                error
-            );
-
-
-            pendingNews.innerHTML = `
+                <h3>
+                    Unable to load pending news
+                </h3>
 
                 <p>
-                    Unable to load pending news.
+                    ${escapeHtml(
+                        error.message
+                    )}
                 </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    pendingNews.innerHTML =
+        "";
+
+
+    const articles =
+        data || [];
+
+
+    /* UPDATE COUNT */
+
+    pendingCount.textContent =
+        articles.length;
+
+
+    if (
+        articles.length === 0
+    ) {
+
+        pendingNews.innerHTML = `
+
+            <div class="empty-pending">
+
+                <p>
+                    ✅ No pending news.
+                </p>
+
+                <p>
+                    There are currently no
+                    articles waiting for approval.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    articles.forEach(
+        article => {
+
+            const title =
+                escapeHtml(
+                    article.title ||
+                    "Untitled News"
+                );
+
+
+            const author =
+                escapeHtml(
+                    article.author ||
+                    "News Room"
+                );
+
+
+            const content =
+                escapeHtml(
+                    article.content ||
+                    ""
+                );
+
+
+            const shortContent =
+                content.length > 200
+
+                    ? content.substring(
+                        0,
+                        200
+                    ) + "..."
+
+                    : content;
+
+
+            const date =
+                article.Created_at
+                    ?
+                    new Date(
+                        article.Created_at
+                    ).toLocaleString()
+                    :
+                    "Date unavailable";
+
+
+            pendingNews.innerHTML += `
+
+                <div
+                    class="pending-news-item"
+                >
+
+                    <h3>
+                        ${title}
+                    </h3>
+
+
+                    <p>
+                        <strong>
+                            Author:
+                        </strong>
+
+                        ${author}
+                    </p>
+
+
+                    <p>
+                        <strong>
+                            Submitted:
+                        </strong>
+
+                        ${escapeHtml(
+                            date
+                        )}
+                    </p>
+
+
+                    <p>
+                        ${shortContent}
+                    </p>
+
+
+                    <span
+                        class="pending-status"
+                    >
+                        ⏳ Pending Approval
+                    </span>
+
+
+                    <br><br>
+
+
+                    <button
+                        type="button"
+                        class="review-button"
+                        onclick="
+                            location.href =
+                            'admin-approvals.html'
+                        "
+                    >
+                        Review Article
+                    </button>
+
+                </div>
 
             `;
 
         }
-
     );
 
 }
 
 
 /* =========================
-   CHECK ADMIN
+   LOAD USERS
+========================= */
+
+async function loadUsersCount() {
+
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "users"
+                )
+            );
+
+
+        usersCount.textContent =
+            snapshot.size;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "USERS ERROR:",
+            error
+        );
+
+        usersCount.textContent =
+            "—";
+
+    }
+
+}
+
+
+/* =========================
+   LOAD LIVE BROADCASTS
+========================= */
+
+async function loadLiveCount() {
+
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "liveStreams"
+                )
+            );
+
+
+        liveCount.textContent =
+            snapshot.size;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "LIVE ERROR:",
+            error
+        );
+
+        liveCount.textContent =
+            "—";
+
+    }
+
+}
+
+
+/* =========================
+   LOAD EVERYTHING
+========================= */
+
+async function loadDashboard(userId) {
+
+    await Promise.all([
+
+        loadUsersCount(),
+
+        loadLiveCount(),
+
+        loadNewsStatistics(),
+
+        loadPendingNews(),
+
+        loadUnreadNotifications(
+            userId
+        )
+
+    ]);
+
+}
+
+
+/* =========================
+   CHECK ADMIN LOGIN
 ========================= */
 
 onAuthStateChanged(
 
     auth,
 
-    async (user) => {
+    async user => {
 
         if (!user) {
 
@@ -425,7 +553,9 @@ onAuthStateChanged(
 
         try {
 
-            /* GET USER PROFILE */
+            /* =====================
+               LOAD FIREBASE PROFILE
+            ===================== */
 
             const userRef =
                 doc(
@@ -441,7 +571,9 @@ onAuthStateChanged(
                 );
 
 
-            if (!userSnap.exists()) {
+            if (
+                !userSnap.exists()
+            ) {
 
                 alert(
                     "Access denied."
@@ -455,11 +587,13 @@ onAuthStateChanged(
             }
 
 
-            const data =
+            const profile =
                 userSnap.data();
 
 
-            /* CHECK ROLE */
+            /* =====================
+               CHECK ROLE
+            ===================== */
 
             const allowedRoles = [
 
@@ -474,7 +608,7 @@ onAuthStateChanged(
 
             if (
                 !allowedRoles.includes(
-                    data.role
+                    profile.role
                 )
             ) {
 
@@ -490,30 +624,31 @@ onAuthStateChanged(
             }
 
 
-            /* DISPLAY ADMIN */
+            /* =====================
+               DISPLAY PROFILE
+            ===================== */
 
             adminName.textContent =
-                data.username ||
+                profile.username ||
                 user.email ||
                 "Administrator";
 
 
             adminRole.textContent =
                 (
-                    data.role ||
+                    profile.role ||
                     "admin"
                 ).toUpperCase();
 
 
-            /* LOAD DASHBOARD */
+            /* =====================
+               LOAD DASHBOARD
+            ===================== */
 
-            await loadStatistics();
-
-            loadPendingNews();
-
-            await loadUnreadNotifications(
+            await loadDashboard(
                 user.uid
             );
+
 
         }
 
@@ -524,8 +659,10 @@ onAuthStateChanged(
                 error
             );
 
+
             alert(
-                "Unable to load the Admin Dashboard."
+                "Unable to load the Admin Dashboard.\n\n" +
+                error.message
             );
 
         }
@@ -546,6 +683,7 @@ async function () {
 
         await signOut(auth);
 
+
         window.location.href =
             "index.html";
 
@@ -557,6 +695,7 @@ async function () {
             "LOGOUT ERROR:",
             error
         );
+
 
         alert(
             "Unable to logout. Please try again."
