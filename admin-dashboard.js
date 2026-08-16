@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-
+import supabase from "./supabase.js";
 import {
     onAuthStateChanged,
     signOut
