@@ -28,6 +28,90 @@ const notificationBadge =
     document.getElementById(
         "notificationBadge"
     );
+ /* =========================
+   LOAD UNREAD NOTIFICATIONS
+========================= */
+
+async function loadUnreadNotifications() {
+
+    const {
+        data: {
+            user
+        },
+        error: authError
+    } = await supabase.auth.getUser();
+
+
+    if (
+        authError ||
+        !user
+    ) {
+
+        return;
+
+    }
+
+
+    const {
+        count,
+        error
+    } = await supabase
+        .from("notifications")
+        .select(
+            "id",
+            {
+                count: "exact",
+                head: true
+            }
+        )
+        .eq(
+            "user_id",
+            user.id
+        )
+        .eq(
+            "is_read",
+            false
+        );
+
+
+    if (error) {
+
+        console.error(
+            "NOTIFICATION COUNT ERROR:",
+            error
+        );
+
+        return;
+
+    }
+
+
+    const unread =
+        count || 0;
+
+
+    if (
+        unread > 0
+    ) {
+
+        notificationBadge.textContent =
+            unread > 99
+                ? "99+"
+                : unread;
+
+
+        notificationBadge.style.display =
+            "inline-flex";
+
+    }
+    else {
+
+        notificationBadge.style.display =
+            "none";
+
+    }
+
+}
 // Check logged in user
 onAuthStateChanged(auth, async (user) => {
 
