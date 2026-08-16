@@ -557,7 +557,23 @@ if (rejectButton) {
 
         }
 
+await createNotification({
 
+    userId: news.uid,
+
+    title:
+        "❌ Article Rejected",
+
+    message:
+        `Your article "${news.title}" was rejected. Feedback: ${feedback}`,
+
+    type:
+        "article_rejected",
+
+    articleId:
+        news.id
+
+});
         alert(
             "Article rejected and feedback sent to the author."
         );
