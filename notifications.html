@@ -4,35 +4,157 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
 <title>Prudence 2 | Notifications</title>
 
-<link rel="stylesheet" href="css/notifications.css">
+<link
+    rel="stylesheet"
+    href="notifications.css"
+>
 
-<script type="module" src="js/notifications.js" defer></script>
+<script
+    type="module"
+    src="notifications.js"
+    defer
+></script>
 
 </head>
 
+
 <body>
+
 
 <header>
 
-<h1>ðŸ”” Notifications</h1>
+    <div class="brand">
+        ✝ PRUDENCE 2
+    </div>
 
-<p>Stay informed about everything happening in Prudence 2.</p>
+    <h1>
+        Notifications
+    </h1>
+
+    <p>
+        Stay updated with your Prudence 2 account
+    </p>
 
 </header>
 
-<div class="container">
 
-<div id="notificationList">
 
-<p>Loading notifications...</p>
+<main class="container">
 
-</div>
 
-</div>
+    <!-- =========================
+         NOTIFICATION HEADER
+    ========================== -->
+
+    <section class="notification-header">
+
+        <div>
+
+            <h2>
+                🔔 Your Notifications
+            </h2>
+
+            <p id="notificationSummary">
+                Loading notifications...
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            id="markAllReadBtn"
+            class="mark-all-btn"
+        >
+            ✓ Mark All as Read
+        </button>
+
+    </section>
+
+
+
+    <!-- =========================
+         NOTIFICATIONS
+    ========================== -->
+
+    <section
+        id="notificationsList"
+        class="notifications-list"
+    >
+
+        <div class="loading">
+            Loading notifications...
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<!-- =========================
+     NOTIFICATION TEMPLATE
+========================== -->
+
+<template id="notificationTemplate">
+
+    <article class="notification-card">
+
+        <div class="notification-icon"></div>
+
+
+        <div class="notification-body">
+
+            <div class="notification-top">
+
+                <h3 class="notification-title"></h3>
+
+                <span class="unread-badge">
+                    NEW
+                </span>
+
+            </div>
+
+
+            <p class="notification-message"></p>
+
+
+            <div class="notification-date"></div>
+
+
+            <div class="notification-actions">
+
+                <button
+                    type="button"
+                    class="mark-read-btn"
+                >
+                    ✓ Mark as Read
+                </button>
+
+                <button
+                    type="button"
+                    class="delete-notification-btn"
+                >
+                    🗑 Delete
+                </button>
+
+            </div>
+
+        </div>
+
+    </article>
+
+</template>
+
 
 </body>
 
