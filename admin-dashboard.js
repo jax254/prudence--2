@@ -156,7 +156,10 @@ onAuthStateChanged(auth, async (user) => {
     adminRole.textContent = data.role.toUpperCase();
 
     loadStatistics();
-    loadPendingNews();
+
+  loadPendingNews();
+
+loadUnreadNotifications();
 
 });
 
