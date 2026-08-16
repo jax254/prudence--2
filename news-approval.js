@@ -115,7 +115,40 @@ async function checkSuperAdmin() {
     return true;
 
 }
+/* =========================
+   CREATE NOTIFICATION
+========================= */
 
+async function createNotification({
+    userId,
+    title,
+    message,
+    type,
+    articleId
+}) {
+
+    const { error } = await supabase
+        .from("notifications")
+        .insert({
+            user_id: userId,
+            title: title,
+            message: message,
+            type: type,
+            article_id: articleId,
+            is_read: false
+        });
+
+    if (error) {
+
+        console.error(
+            "NOTIFICATION ERROR:",
+            error
+        );
+
+        throw error;
+    }
+
+}
 
 /* =========================
    LOAD PENDING NEWS
