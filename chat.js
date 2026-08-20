@@ -9,7 +9,8 @@ const chatForm = document.getElementById("chatForm");
 const messageInput = document.getElementById("message");
 const sendButton = document.getElementById("sendButton");
 const onlineStatus = document.getElementById("onlineStatus");
-
+const profileName =
+    document.getElementById("profileName");
 let currentUser = null;
 let currentProfileName = "Christian Member";
 
