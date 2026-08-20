@@ -4,67 +4,131 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Prudence 2 | Christian Chat</title>
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-<link rel="stylesheet" href="chat.css">
+<title>Prudence 2 | Christian Fellowship Chat</title>
 
-<script type="module" src="chat.js" defer></script>
+<link
+    rel="stylesheet"
+    href="chat.css"
+>
+
+<script
+    type="module"
+    src="chat.js"
+    defer
+></script>
 
 </head>
 
+
 <body>
+
 
 <header>
 
-<div class="brand">
-    ✝ Prudence 2
-</div>
+    <div class="brand">
+        ✝ PRUDENCE 2
+    </div>
 
-<h1>Christian Fellowship Chat</h1>
+    <h1>
+        Christian Fellowship Chat
+    </h1>
 
-<p>Encourage one another in Christ.</p>
+    <p>
+        Encourage one another in Christ. ❤️
+    </p>
 
 </header>
 
-<div class="container">
 
-<div class="users-panel">
 
-<h2>Members</h2>
+<main class="chat-container">
 
-<div id="usersList">
-Loading members...
-</div>
 
-</div>
+    <section class="chat-header">
 
-<div class="chat-panel">
+        <div>
 
-<div id="chatMessages">
+            <h2>
+                💬 General Fellowship
+            </h2>
 
-<p>Select a member to start chatting.</p>
+            <p>
+                Welcome to the Prudence 2 Christian community.
+            </p>
 
-</div>
+        </div>
 
-<form id="chatForm">
 
-<input
-type="text"
-id="message"
-placeholder="Write your message..."
-required>
+        <div
+            id="onlineStatus"
+            class="online-status"
+        >
 
-<button type="submit">
-Send
-</button>
+            ● Connected
 
-</form>
+        </div>
 
-</div>
+    </section>
 
-</div>
+
+
+    <section
+        id="chatMessages"
+        class="chat-messages"
+    >
+
+        <div class="loading">
+
+            Loading messages...
+
+        </div>
+
+    </section>
+
+
+
+    <form
+        id="chatForm"
+        class="chat-form"
+    >
+
+        <textarea
+            id="message"
+            placeholder="Write something encouraging..."
+            rows="1"
+            maxlength="1000"
+            required
+        ></textarea>
+
+
+        <button
+            type="submit"
+            id="sendButton"
+        >
+
+            Send ➤
+
+        </button>
+
+    </form>
+
+
+    <p class="chat-note">
+
+        Please be respectful, encouraging, and Christ-centered.
+
+    </p>
+
+
+</main>
+
+
 
 </body>
 
