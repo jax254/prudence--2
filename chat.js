@@ -64,7 +64,8 @@ async function checkLogin() {
 
     currentProfileName =
         getProfileName(currentUser);
-
+profileName.textContent =
+    currentProfileName;
     return true;
 }
 
