@@ -3,43 +3,56 @@
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<title>Prudence 2 - Admin Chat</title>
+    <title>Prudence 2 - Admin Chat</title>
 
-<link
-    rel="stylesheet"
-    href="../css/admin-chat.css"
->
+    <link
+        rel="stylesheet"
+        href="admin-chat.css"
+    >
 
-<script
-    type="module"
-    src="../js/admin-chat.js"
-    defer
-></script>
+    <script
+        type="module"
+        src="admin-chat.js"
+        defer
+    ></script>
 
 </head>
 
+
 <body>
 
-<header>
+
+<header class="chat-header">
 
     <div class="brand">
         ✝ PRUDENCE 2
     </div>
 
+
     <h1>
-        ADMIN STRATEGY CHAT
+        💬 ADMIN CHAT
     </h1>
+
 
     <p>
         🔒 Private communication for authorized administrators
     </p>
+
+
+    <button
+        type="button"
+        class="back-button"
+        onclick="location.href='admin-dashboard.html'"
+    >
+        ← Back to Admin Dashboard
+    </button>
 
 </header>
 
@@ -47,45 +60,66 @@
 <main class="chat-container">
 
 
+    <!-- =========================
+         ADMIN INFORMATION
+    ========================= -->
+
     <section class="admin-chat-info">
 
         <div class="admin-chat-icon">
             🛡️
         </div>
 
-        <div>
+
+        <div class="admin-info-text">
 
             <h2>
                 Admin Team
             </h2>
 
             <p>
-                Discuss Prudence 2 administration privately.
+                Private Prudence 2 administrator communication.
             </p>
 
         </div>
 
+
+        <div
+            id="connectionStatus"
+            class="connection-status"
+        >
+            ● Connecting...
+        </div>
+
     </section>
 
+
+    <!-- =========================
+         MESSAGES
+    ========================= -->
 
     <section
         id="messages"
         class="messages"
     >
 
-        <p>
-            Loading messages...
-        </p>
+        <div class="loading">
+            Loading admin messages...
+        </div>
 
     </section>
 
+
+    <!-- =========================
+         COMPOSER
+    ========================= -->
 
     <section class="chat-box">
 
         <textarea
             id="message"
             placeholder="Type a private admin message..."
-            rows="3"
+            rows="2"
             maxlength="2000"
         ></textarea>
 
@@ -94,7 +128,7 @@
             id="sendBtn"
             type="button"
         >
-            SEND
+            SEND ➤
         </button>
 
     </section>
@@ -102,12 +136,13 @@
 
     <p class="security-note">
 
-        🔐 This area is restricted to authorized Prudence 2 administrators.
+        🔐 Only authorized administrators can access this chat.
 
     </p>
 
 
 </main>
+
 
 </body>
 
