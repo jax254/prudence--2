@@ -1,10 +1,11 @@
 import supabase from "./supabase.js";
 
+
 /* =========================
    ELEMENTS
 ========================= */
 
-const messages =
+const messagesContainer =
     document.getElementById("messages");
 
 const sendBtn =
@@ -23,16 +24,27 @@ let currentProfile = null;
 
 
 /* =========================
+   ALLOWED ADMIN ROLES
+========================= */
+
+const allowedRoles = [
+    "admin",
+    "newsroom",
+    "superadmin"
+];
+
+
+/* =========================
    ESCAPE HTML
 ========================= */
 
-function escapeHtml(text) {
+function escapeHtml(value) {
 
     const div =
         document.createElement("div");
 
     div.textContent =
-        text || "";
+        value || "";
 
     return div.innerHTML;
 
@@ -46,38 +58,35 @@ function escapeHtml(text) {
 function formatTime(date) {
 
     if (!date) {
-
-        return "Just now";
-
+        return "";
     }
 
-    return new Date(date)
-        .toLocaleString(
-            [],
-            {
-                dateStyle: "short",
-                timeStyle: "short"
-            }
-        );
+    return new Date(date).toLocaleString(
+        [],
+        {
+            dateStyle: "short",
+            timeStyle: "short"
+        }
+    );
 
 }
 
 
 /* =========================
-   CHECK ADMIN
+   CHECK LOGIN + ADMIN ROLE
 ========================= */
 
-async function checkAdmin() {
+async function checkAccess() {
 
     const {
         data,
         error
-    } =
-    await supabase.auth.getUser();
+    } = await supabase.auth.getUser();
 
 
     if (
         error ||
+        !data ||
         !data.user
     ) {
 
@@ -94,32 +103,36 @@ async function checkAdmin() {
 
 
     /*
-     * Get profile from Supabase.
-     *
-     * This assumes your users/profile
-     * table contains the user's profile.
+     * Load profile from Supabase
      */
 
     const {
         data: profile,
         error: profileError
-    } =
-    await supabase
+    } = await supabase
+
         .from("profiles")
+
         .select(`
             id,
             username,
-            full_name,
+            public_username,
+            profile_photo,
             role
         `)
+
         .eq(
             "id",
             currentUser.id
         )
-        .maybeSingle();
+
+        .single();
 
 
-    if (profileError) {
+    if (
+        profileError ||
+        !profile
+    ) {
 
         console.error(
             "PROFILE ERROR:",
@@ -127,18 +140,7 @@ async function checkAdmin() {
         );
 
         alert(
-            "Unable to load administrator profile."
-        );
-
-        return false;
-
-    }
-
-
-    if (!profile) {
-
-        alert(
-            "Administrator profile not found."
+            "Your profile could not be loaded."
         );
 
         window.location.href =
@@ -153,14 +155,9 @@ async function checkAdmin() {
         profile;
 
 
-    const allowedRoles = [
-
-        "admin",
-        "newsroom",
-        "superadmin"
-
-    ];
-
+    /*
+     * Check admin role
+     */
 
     if (
         !allowedRoles.includes(
@@ -186,25 +183,15 @@ async function checkAdmin() {
 
 
 /* =========================
-   GET DISPLAY NAME
+   GET PROFILE NAME
 ========================= */
 
-function getDisplayName() {
+function getProfileName(profile) {
 
     return (
-
-        currentProfile?.full_name ||
-
-        currentProfile?.username ||
-
-        currentUser?.user_metadata?.full_name ||
-
-        currentUser?.user_metadata?.name ||
-
-        currentUser?.email?.split("@")[0] ||
-
+        profile?.public_username ||
+        profile?.username ||
         "Administrator"
-
     );
 
 }
@@ -219,11 +206,10 @@ async function loadMessages() {
     const {
         data,
         error
-    } =
-    await supabase
-        .from(
-            "admin_chat_messages"
-        )
+    } = await supabase
+
+        .from("admin_chat_messages")
+
         .select(`
             id,
             user_id,
@@ -231,6 +217,7 @@ async function loadMessages() {
             created_at,
             updated_at
         `)
+
         .order(
             "created_at",
             {
@@ -246,13 +233,10 @@ async function loadMessages() {
             error
         );
 
-
-        messages.innerHTML = `
-
+        messagesContainer.innerHTML = `
             <p>
-                Unable to load admin chat.
+                Unable to load admin messages.
             </p>
-
         `;
 
         return;
@@ -260,9 +244,72 @@ async function loadMessages() {
     }
 
 
-    renderMessages(
+    await renderMessages(
         data || []
     );
+
+}
+
+
+/* =========================
+   LOAD PROFILES
+========================= */
+
+async function getProfiles(userIds) {
+
+    if (!userIds.length) {
+        return {};
+    }
+
+
+    const {
+        data,
+        error
+    } = await supabase
+
+        .from("profiles")
+
+        .select(`
+            id,
+            username,
+            public_username,
+            profile_photo,
+            role
+        `)
+
+        .in(
+            "id",
+            userIds
+        );
+
+
+    if (error) {
+
+        console.error(
+            "PROFILE LOAD ERROR:",
+            error
+        );
+
+        return {};
+
+    }
+
+
+    const profileMap = {};
+
+
+    data.forEach(
+        profile => {
+
+            profileMap[
+                profile.id
+            ] = profile;
+
+        }
+    );
+
+
+    return profileMap;
 
 }
 
@@ -271,23 +318,21 @@ async function loadMessages() {
    RENDER MESSAGES
 ========================= */
 
-function renderMessages(
+async function renderMessages(
     messageList
 ) {
 
-    messages.innerHTML = "";
+    messagesContainer.innerHTML = "";
 
 
     if (
         messageList.length === 0
     ) {
 
-        messages.innerHTML = `
-
-            <p>
-                💬 No admin messages yet.
+        messagesContainer.innerHTML = `
+            <p class="no-messages">
+                No admin messages yet.
             </p>
-
         `;
 
         return;
@@ -295,11 +340,34 @@ function renderMessages(
     }
 
 
-    messageList.forEach(
-        msg => {
+    /*
+     * Get all unique user IDs
+     */
 
-            createMessage(
-                msg
+    const userIds = [
+        ...new Set(
+            messageList.map(
+                message =>
+                    message.user_id
+            )
+        )
+    ];
+
+
+    const profiles =
+        await getProfiles(
+            userIds
+        );
+
+
+    messageList.forEach(
+        message => {
+
+            renderSingleMessage(
+                message,
+                profiles[
+                    message.user_id
+                ]
             );
 
         }
@@ -312,21 +380,20 @@ function renderMessages(
 
 
 /* =========================
-   CREATE MESSAGE
+   RENDER ONE MESSAGE
 ========================= */
 
-function createMessage(
-    msg
+function renderSingleMessage(
+    message,
+    profile
 ) {
 
     const div =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
 
     const mine =
-        msg.user_id ===
+        message.user_id ===
         currentUser.id;
 
 
@@ -337,118 +404,145 @@ function createMessage(
 
 
     div.dataset.messageId =
-        msg.id;
+        message.id;
 
 
-    /*
-     * At the moment we display
-     * the current user's real name.
-     *
-     * For other administrators,
-     * the sender name will be loaded
-     * from the profile table in the
-     * next improvement.
-     */
+    const name =
+        getProfileName(
+            profile
+        );
 
-    const senderName =
-        mine
-            ? getDisplayName()
-            : "Administrator";
+
+    const role =
+        profile?.role ||
+        "admin";
+
+
+    const photo =
+        profile?.profile_photo;
+
+
+    const avatarHTML =
+        photo
+            ? `
+                <img
+                    src="${escapeHtml(photo)}"
+                    class="admin-avatar"
+                    alt="Profile"
+                >
+              `
+            : `
+                <div class="admin-avatar-placeholder">
+                    ✝
+                </div>
+              `;
+
+
+    const edited =
+        message.updated_at &&
+        message.created_at &&
+        new Date(
+            message.updated_at
+        ).getTime() >
+        new Date(
+            message.created_at
+        ).getTime()
+            ? `<span class="edited">(edited)</span>`
+            : "";
 
 
     div.innerHTML = `
 
         <div class="message-header">
 
-            <div class="sender">
+            ${avatarHTML}
 
-                👤
-                ${escapeHtml(
-                    senderName
-                )}
+            <div class="admin-info">
 
-            </div>
+                <div class="sender">
 
+                    ${escapeHtml(name)}
 
-            <div class="role">
+                </div>
 
-                🛡️
-                ${mine
-                    ? escapeHtml(
-                        currentProfile.role
-                    )
-                    : "Admin"}
+                <div class="role">
+
+                    ${escapeHtml(role)}
+
+                </div>
 
             </div>
 
         </div>
 
 
-        <div class="message-content">
+        <div
+            class="message-text"
+            data-text
+        >
 
             ${escapeHtml(
-                msg.message
+                message.message
+            )}
+
+            ${edited}
+
+        </div>
+
+
+        <div class="time">
+
+            ${formatTime(
+                message.created_at
             )}
 
         </div>
 
 
-        <div class="message-footer">
+        ${
+            mine
+                ? `
+                    <div class="message-actions">
 
-            <span class="time">
-
-                ${formatTime(
-                    msg.created_at
-                )}
-
-                ${
-                    msg.updated_at
-                        ? " · edited"
-                        : ""
-                }
-
-            </span>
-
-
-            ${
-                mine
-                    ? `
-
-                        <span
-                            class="message-actions"
+                        <button
+                            type="button"
+                            class="edit-btn"
+                            data-edit="${message.id}"
                         >
+                            Edit
+                        </button>
 
-                            <button
-                                type="button"
-                                class="edit-message"
-                                data-id="${msg.id}"
-                            >
-                                ✏️ Edit
-                            </button>
+                        <button
+                            type="button"
+                            class="delete-btn"
+                            data-delete="${message.id}"
+                        >
+                            Delete
+                        </button>
 
-
-                            <button
-                                type="button"
-                                class="delete-message"
-                                data-id="${msg.id}"
-                            >
-                                🗑️ Delete
-                            </button>
-
-                        </span>
-
-                    `
-                    : ""
-            }
-
-        </div>
+                    </div>
+                  `
+                : ""
+        }
 
     `;
 
 
-    messages.appendChild(
+    messagesContainer.appendChild(
         div
     );
+
+}
+
+
+/* =========================
+   SCROLL
+========================= */
+
+function scrollToBottom() {
+
+    messagesContainer.scrollTop =
+        messagesContainer.scrollHeight;
 
 }
 
@@ -459,73 +553,93 @@ function createMessage(
 
 sendBtn.addEventListener(
     "click",
-    async () => {
-
-        const text =
-            messageInput.value.trim();
+    sendMessage
+);
 
 
-        if (!text) {
+messageInput.addEventListener(
+    "keydown",
+    event => {
 
-            return;
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
 
-        }
+            event.preventDefault();
 
-
-        sendBtn.disabled =
-            true;
-
-        sendBtn.textContent =
-            "Sending...";
-
-
-        const {
-            error
-        } =
-        await supabase
-            .from(
-                "admin_chat_messages"
-            )
-            .insert({
-
-                user_id:
-                    currentUser.id,
-
-                message:
-                    text
-
-            });
-
-
-        if (error) {
-
-            console.error(
-                "ADMIN CHAT SEND ERROR:",
-                error
-            );
-
-
-            alert(
-                "Unable to send message."
-            );
+            sendMessage();
 
         }
-        else {
-
-            messageInput.value =
-                "";
-
-        }
-
-
-        sendBtn.disabled =
-            false;
-
-        sendBtn.textContent =
-            "SEND";
 
     }
 );
+
+
+async function sendMessage() {
+
+    const text =
+        messageInput.value.trim();
+
+
+    if (!text) {
+        return;
+    }
+
+
+    sendBtn.disabled =
+        true;
+
+    sendBtn.textContent =
+        "SENDING...";
+
+
+    const {
+        error
+    } = await supabase
+
+        .from(
+            "admin_chat_messages"
+        )
+
+        .insert({
+
+            user_id:
+                currentUser.id,
+
+            message:
+                text
+
+        });
+
+
+    if (error) {
+
+        console.error(
+            "SEND ADMIN MESSAGE ERROR:",
+            error
+        );
+
+        alert(
+            "Unable to send message."
+        );
+
+    }
+    else {
+
+        messageInput.value =
+            "";
+
+    }
+
+
+    sendBtn.disabled =
+        false;
+
+    sendBtn.textContent =
+        "SEND";
+
+}
 
 
 /* =========================
@@ -533,42 +647,71 @@ sendBtn.addEventListener(
 ========================= */
 
 async function editMessage(
-    id
+    messageId
 ) {
 
-    const bubble =
-        document.querySelector(
-            `[data-message-id="${id}"]`
+    const {
+        data,
+        error
+    } = await supabase
+
+        .from(
+            "admin_chat_messages"
+        )
+
+        .select(
+            "message,user_id"
+        )
+
+        .eq(
+            "id",
+            messageId
+        )
+
+        .single();
+
+
+    if (
+        error ||
+        !data
+    ) {
+
+        alert(
+            "Message could not be found."
         );
-
-
-    if (!bubble) {
 
         return;
 
     }
 
 
-    const content =
-        bubble.querySelector(
-            ".message-content"
+    /*
+     * Extra client-side ownership check
+     */
+
+    if (
+        data.user_id !==
+        currentUser.id
+    ) {
+
+        alert(
+            "You can only edit your own messages."
         );
 
+        return;
 
-    const oldText =
-        content.textContent.trim();
+    }
 
 
     const newText =
         prompt(
             "Edit your message:",
-            oldText
+            data.message
         );
 
 
     if (
-        newText === null ||
-        !newText.trim()
+        newText === null
     ) {
 
         return;
@@ -576,39 +719,56 @@ async function editMessage(
     }
 
 
+    const cleanText =
+        newText.trim();
+
+
+    if (!cleanText) {
+
+        alert(
+            "Message cannot be empty."
+        );
+
+        return;
+
+    }
+
+
     const {
-        error
-    } =
-    await supabase
+        error: updateError
+    } = await supabase
+
         .from(
             "admin_chat_messages"
         )
+
         .update({
 
             message:
-                newText.trim(),
+                cleanText,
 
             updated_at:
                 new Date().toISOString()
 
         })
+
         .eq(
             "id",
-            id
+            messageId
         )
+
         .eq(
             "user_id",
             currentUser.id
         );
 
 
-    if (error) {
+    if (updateError) {
 
         console.error(
-            "EDIT ERROR:",
-            error
+            "EDIT MESSAGE ERROR:",
+            updateError
         );
-
 
         alert(
             "Unable to edit message."
@@ -624,34 +784,35 @@ async function editMessage(
 ========================= */
 
 async function deleteMessage(
-    id
+    messageId
 ) {
 
     const confirmed =
         confirm(
-            "Delete this admin message?"
+            "Delete this message?"
         );
 
 
     if (!confirmed) {
-
         return;
-
     }
 
 
     const {
         error
-    } =
-    await supabase
+    } = await supabase
+
         .from(
             "admin_chat_messages"
         )
+
         .delete()
+
         .eq(
             "id",
-            id
+            messageId
         )
+
         .eq(
             "user_id",
             currentUser.id
@@ -661,10 +822,9 @@ async function deleteMessage(
     if (error) {
 
         console.error(
-            "DELETE ERROR:",
+            "DELETE MESSAGE ERROR:",
             error
         );
-
 
         alert(
             "Unable to delete message."
@@ -676,23 +836,23 @@ async function deleteMessage(
 
 
 /* =========================
-   BUTTON ACTIONS
+   EDIT / DELETE BUTTONS
 ========================= */
 
-messages.addEventListener(
+messagesContainer.addEventListener(
     "click",
     event => {
 
-        const edit =
+        const editButton =
             event.target.closest(
-                ".edit-message"
+                "[data-edit]"
             );
 
 
-        if (edit) {
+        if (editButton) {
 
             editMessage(
-                edit.dataset.id
+                editButton.dataset.edit
             );
 
             return;
@@ -700,16 +860,16 @@ messages.addEventListener(
         }
 
 
-        const remove =
+        const deleteButton =
             event.target.closest(
-                ".delete-message"
+                "[data-delete]"
             );
 
 
-        if (remove) {
+        if (deleteButton) {
 
             deleteMessage(
-                remove.dataset.id
+                deleteButton.dataset.delete
             );
 
         }
@@ -722,276 +882,50 @@ messages.addEventListener(
    REALTIME
 ========================= */
 
-function subscribeToAdminChat() {
+function subscribeToChat() {
 
     supabase
+
         .channel(
-            "admin-strategy-chat"
+            "admin-chat-room"
         )
+
         .on(
+
             "postgres_changes",
+
             {
                 event: "*",
                 schema: "public",
-                table:
-                    "admin_chat_messages"
+                table: "admin_chat_messages"
             },
-            payload => {
 
-                if (
-                    payload.eventType ===
-                    "INSERT"
-                ) {
+            async () => {
 
-                    addRealtimeMessage(
-                        payload.new
-                    );
+                /*
+                 * Reload after INSERT,
+                 * UPDATE or DELETE.
+                 *
+                 * This keeps profile names,
+                 * edits and deletions synchronized.
+                 */
 
-                }
-
-
-                if (
-                    payload.eventType ===
-                    "UPDATE"
-                ) {
-
-                    updateRealtimeMessage(
-                        payload.new
-                    );
-
-                }
-
-
-                if (
-                    payload.eventType ===
-                    "DELETE"
-                ) {
-
-                    removeRealtimeMessage(
-                        payload.old
-                    );
-
-                }
+                await loadMessages();
 
             }
+
         )
-        .subscribe();
 
-}
+        .subscribe(
+            status => {
 
+                console.log(
+                    "ADMIN CHAT REALTIME:",
+                    status
+                );
 
-/* =========================
-   REALTIME INSERT
-========================= */
-
-function addRealtimeMessage(
-    msg
-) {
-
-    const existing =
-        document.querySelector(
-            `[data-message-id="${msg.id}"]`
-        );
-
-
-    if (existing) {
-
-        return;
-
-    }
-
-
-    const empty =
-        messages.querySelector(
-            "p"
-        );
-
-
-    if (
-        empty &&
-        empty.textContent.includes(
-            "No admin messages"
-        )
-    ) {
-
-        empty.remove();
-
-    }
-
-
-    createMessage(
-        msg
-    );
-
-
-    scrollToBottom();
-
-}
-
-
-/* =========================
-   REALTIME UPDATE
-========================= */
-
-function updateRealtimeMessage(
-    msg
-) {
-
-    const old =
-        document.querySelector(
-            `[data-message-id="${msg.id}"]`
-        );
-
-
-    if (!old) {
-
-        return;
-
-    }
-
-
-    const replacement =
-        document.createElement(
-            "div"
-        );
-
-
-    const mine =
-        msg.user_id ===
-        currentUser.id;
-
-
-    replacement.className =
-        mine
-            ? "message mine"
-            : "message";
-
-
-    replacement.dataset.messageId =
-        msg.id;
-
-
-    replacement.innerHTML = `
-
-        <div class="message-header">
-
-            <div class="sender">
-
-                👤
-                ${mine
-                    ? escapeHtml(
-                        getDisplayName()
-                    )
-                    : "Administrator"}
-
-            </div>
-
-            <div class="role">
-
-                🛡️
-                ${mine
-                    ? escapeHtml(
-                        currentProfile.role
-                    )
-                    : "Admin"}
-
-            </div>
-
-        </div>
-
-
-        <div class="message-content">
-
-            ${escapeHtml(
-                msg.message
-            )}
-
-        </div>
-
-
-        <div class="message-footer">
-
-            <span class="time">
-
-                ${formatTime(
-                    msg.created_at
-                )}
-                · edited
-
-            </span>
-
-
-            ${
-                mine
-                    ? `
-                        <span
-                            class="message-actions"
-                        >
-
-                            <button
-                                type="button"
-                                class="edit-message"
-                                data-id="${msg.id}"
-                            >
-                                ✏️ Edit
-                            </button>
-
-                            <button
-                                type="button"
-                                class="delete-message"
-                                data-id="${msg.id}"
-                            >
-                                🗑️ Delete
-                            </button>
-
-                        </span>
-                    `
-                    : ""
             }
-
-        </div>
-
-    `;
-
-
-    old.replaceWith(
-        replacement
-    );
-
-}
-
-
-/* =========================
-   REALTIME DELETE
-========================= */
-
-function removeRealtimeMessage(
-    msg
-) {
-
-    const bubble =
-        document.querySelector(
-            `[data-message-id="${msg.id}"]`
         );
-
-
-    if (bubble) {
-
-        bubble.remove();
-
-    }
-
-}
-
-
-/* =========================
-   SCROLL
-========================= */
-
-function scrollToBottom() {
-
-    messages.scrollTop =
-        messages.scrollHeight;
 
 }
 
@@ -1003,18 +937,17 @@ function scrollToBottom() {
 (async function () {
 
     const allowed =
-        await checkAdmin();
+        await checkAccess();
 
 
     if (!allowed) {
-
         return;
-
     }
 
 
     await loadMessages();
 
-    subscribeToAdminChat();
+
+    subscribeToChat();
 
 })();
