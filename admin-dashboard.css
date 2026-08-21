@@ -5,157 +5,403 @@
     font-family:Arial,Helvetica,sans-serif;
 }
 
+
 body{
     background:#eef4ff;
+    color:#222;
 }
 
-header{
-    background:#0066ff;
+
+/* =========================
+   HEADER
+========================= */
+
+.admin-header{
+    background:#0866ff;
     color:white;
     text-align:center;
-    padding:25px;
+    padding:28px 15px;
 }
 
-header h1{
-    color:purple;
+
+.brand{
+    font-size:20px;
+    font-weight:bold;
+    margin-bottom:8px;
 }
+
+
+.admin-header h1{
+    color:#ffffff;
+    font-size:30px;
+    margin-bottom:10px;
+}
+
+
+.admin-header h3{
+    font-size:20px;
+    margin-bottom:5px;
+}
+
+
+.admin-header p{
+    font-size:14px;
+    opacity:.9;
+}
+
+
+/* =========================
+   STATISTICS
+========================= */
 
 .statistics{
 
     width:95%;
     max-width:1200px;
+
     margin:20px auto;
 
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    gap:20px;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(180px,1fr)
+        );
+
+    gap:15px;
 
 }
+
 
 .card{
 
     background:white;
-    padding:25px;
-    border-radius:10px;
+
+    padding:25px 15px;
+
+    border-radius:14px;
+
     text-align:center;
-    box-shadow:0 0 10px rgba(0,0,0,.1);
+
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.08);
 
 }
+
 
 .card h2{
 
-    color:#0066ff;
-    font-size:40px;
+    color:#0866ff;
+
+    font-size:38px;
+
+    margin-bottom:6px;
 
 }
+
+
+.card p{
+
+    color:#555;
+
+    font-weight:bold;
+
+}
+
+
+/* =========================
+   ADMIN MENU
+========================= */
 
 .menu{
 
     width:95%;
     max-width:1200px;
 
-    margin:auto;
+    margin:20px auto;
 
     display:grid;
 
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(220px,1fr)
+        );
 
     gap:15px;
 
 }
 
+
 .menu button{
 
-    padding:18px;
+    position:relative;
+
+    min-height:70px;
+
+    padding:15px;
 
     border:none;
 
-    border-radius:10px;
+    border-radius:12px;
 
-    background:#0066ff;
+    background:#0866ff;
 
     color:white;
 
-    font-size:18px;
+    font-size:17px;
+
+    font-weight:bold;
 
     cursor:pointer;
 
+    transition:.2s;
+
 }
+
 
 .menu button:hover{
 
-    background:purple;
+    background:#5b00b5;
+
+    transform:translateY(-2px);
 
 }
+
+
+.menu-description{
+
+    display:block;
+
+    font-size:11px;
+
+    font-weight:normal;
+
+    opacity:.85;
+
+    margin-top:5px;
+
+}
+
+
+/* =========================
+   ADMIN CHAT BUTTON
+========================= */
+
+.admin-chat-button{
+
+    background:#5b00b5 !important;
+
+}
+
+
+.admin-chat-button:hover{
+
+    background:#0866ff !important;
+
+}
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+.logout-button{
+
+    background:#d93025 !important;
+
+}
+
+
+.logout-button:hover{
+
+    background:#a50000 !important;
+
+}
+
+
+/* =========================
+   NOTIFICATION
+========================= */
+
+.notification-menu-btn{
+
+    position:relative;
+
+}
+
+
+.notification-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:24px;
+
+    height:24px;
+
+    padding:3px 7px;
+
+    margin-left:7px;
+
+    background:#ff1744;
+
+    color:white;
+
+    border-radius:50px;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+}
+
+
+/* =========================
+   RECENT / PENDING NEWS
+========================= */
 
 .recent{
 
     width:95%;
-
     max-width:1200px;
 
-    margin:30px auto;
+    margin:25px auto 40px;
 
     background:white;
 
     padding:20px;
 
-    border-radius:10px;
+    border-radius:14px;
 
-    box-shadow:0 0 10px rgba(0,0,0,.1);
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.08);
 
 }
 
+
 .recent h2{
 
-    color:#0066ff;
+    color:#0866ff;
 
     margin-bottom:20px;
 
 }
-/* =========================
-   NOTIFICATION BUTTON
-========================= */
 
-.notification-menu-btn {
 
-    position: relative;
+.pending-news-item{
+
+    padding:18px;
+
+    margin-bottom:15px;
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+}
+
+
+.pending-news-item h3{
+
+    color:#0866ff;
+
+    margin-bottom:10px;
+
+}
+
+
+.pending-news-item p{
+
+    margin-bottom:8px;
+
+    line-height:1.5;
+
+}
+
+
+.review-button{
+
+    margin-top:10px;
+
+    padding:10px 16px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#0866ff;
+
+    color:white;
+
+    cursor:pointer;
+
+}
+
+
+.empty-pending{
+
+    text-align:center;
+
+    padding:30px;
+
+    color:#555;
 
 }
 
 
 /* =========================
-   NOTIFICATION BADGE
+   MOBILE
 ========================= */
 
-.notification-badge {
+@media(max-width:600px){
 
-    display: inline-flex;
+    .admin-header h1{
+        font-size:25px;
+    }
 
-    align-items: center;
 
-    justify-content: center;
+    .statistics{
 
-    min-width: 24px;
+        grid-template-columns:
+            repeat(2,1fr);
 
-    height: 24px;
+        gap:10px;
 
-    padding: 3px 7px;
+    }
 
-    margin-left: 7px;
 
-    background: #ff1744;
+    .card{
 
-    color: white;
+        padding:18px 8px;
 
-    border-radius: 50px;
+    }
 
-    font-size: 13px;
 
-    font-weight: bold;
+    .card h2{
 
-    box-shadow:
-        0 2px 6px
-        rgba(0,0,0,.2);
+        font-size:30px;
+
+    }
+
+
+    .menu{
+
+        grid-template-columns:1fr;
+
+    }
+
+
+    .menu button{
+
+        width:100%;
+
+    }
 
 }
