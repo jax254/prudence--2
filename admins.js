@@ -27,7 +27,23 @@ let admins = [];
 
 
 /* =========================
-   GET CURRENT USER
+   ESCAPE HTML
+========================= */
+
+function escapeHtml(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        value ?? "";
+
+    return div.innerHTML;
+}
+
+
+/* =========================
+   CURRENT USER
 ========================= */
 
 async function getCurrentUser() {
@@ -44,7 +60,7 @@ async function getCurrentUser() {
             error
         );
 
-        return null;
+        throw error;
     }
 
     return data.user || null;
@@ -52,7 +68,7 @@ async function getCurrentUser() {
 
 
 /* =========================
-   LOAD CURRENT PROFILE
+   CURRENT PROFILE
 ========================= */
 
 async function loadCurrentProfile(user) {
@@ -80,20 +96,15 @@ async function loadCurrentProfile(user) {
         );
 
         throw new Error(
-            "Unable to load your profile."
+            "Unable to load your profile: " +
+            error.message
         );
     }
 
 
-    if (!data) {
-
-        throw new Error(
-            "Your profile was not found."
-        );
-    }
-
-
-    if (data.role !== "superadmin") {
+    if (
+        data.role !== "superadmin"
+    ) {
 
         throw new Error(
             "Access denied. Only Super Admins can manage administrators."
@@ -119,7 +130,7 @@ async function loadCurrentProfile(user) {
 
 
 /* =========================
-   LOAD ADMINISTRATORS
+   LOAD ADMINS
 ========================= */
 
 async function loadAdmins() {
@@ -164,9 +175,9 @@ async function loadAdmins() {
 
             <div class="error-message">
 
-                <strong>
-                    Unable to load administrators.
-                </strong>
+                <h3>
+                    Unable to load administrators
+                </h3>
 
                 <p>
                     ${escapeHtml(error.message)}
@@ -180,7 +191,9 @@ async function loadAdmins() {
     }
 
 
-    admins = data || [];
+    admins =
+        data || [];
+
 
     displayAdmins(admins);
 }
@@ -209,8 +222,7 @@ function displayAdmins(list) {
                 </h3>
 
                 <p>
-                    Add an existing Prudence 2 user
-                    as an administrator.
+                    Add an existing Prudence 2 user below.
                 </p>
 
             </div>
@@ -225,78 +237,44 @@ function displayAdmins(list) {
         admin => {
 
             const card =
-                document.createElement(
-                    "div"
-                );
+                document.createElement("div");
 
 
             card.className =
                 "admin-card";
 
 
-            const name =
-                escapeHtml(
-                    admin.username ||
-                    "No Name"
-                );
-
-
-            const email =
-                escapeHtml(
-                    admin.email ||
-                    "No Email"
-                );
-
-
-            const role =
-                escapeHtml(
-                    admin.role ||
-                    "unknown"
-                );
-
-
-            const status =
-                escapeHtml(
-                    admin.status ||
-                    "active"
-                );
-
-
-            const isCurrentUser =
-                currentUser &&
-                admin.id === currentUser.id;
-
-
             card.innerHTML = `
 
                 <h3>
-                    ${name}
+                    ${escapeHtml(
+                        admin.username ||
+                        "No Name"
+                    )}
                 </h3>
 
                 <p>
-                    <strong>
-                        Email:
-                    </strong>
-
-                    ${email}
+                    <strong>Email:</strong>
+                    ${escapeHtml(
+                        admin.email ||
+                        "No Email"
+                    )}
                 </p>
 
                 <p>
-                    <strong>
-                        Role:
-                    </strong>
-
-                    <span class="admin-role">
-                        ${role.toUpperCase()}
-                    </span>
+                    <strong>Role:</strong>
+                    ${escapeHtml(
+                        admin.role ||
+                        "Unknown"
+                    ).toUpperCase()}
                 </p>
 
                 <p>
-                    <strong>
-                        Status:
-                    </strong>
-
-                    ${status}
+                    <strong>Status:</strong>
+                    ${escapeHtml(
+                        admin.status ||
+                        "active"
+                    )}
                 </p>
 
                 <div class="buttons">
@@ -311,7 +289,6 @@ function displayAdmins(list) {
                     <button
                         type="button"
                         class="remove"
-                        ${isCurrentUser ? "disabled" : ""}
                     >
                         REMOVE
                     </button>
@@ -321,25 +298,32 @@ function displayAdmins(list) {
             `;
 
 
-            const promoteButton =
+            const promote =
                 card.querySelector(
                     ".promote"
                 );
 
 
-            const removeButton =
+            const remove =
                 card.querySelector(
                     ".remove"
                 );
 
 
-            promoteButton.onclick =
-                () => changeRole(admin);
+            if (
+                admin.id === currentUser.id
+            ) {
 
+                promote.disabled = true;
+                remove.disabled = true;
 
-            if (!isCurrentUser) {
+            }
+            else {
 
-                removeButton.onclick =
+                promote.onclick =
+                    () => changeRole(admin);
+
+                remove.onclick =
                     () => removeAdmin(admin);
 
             }
@@ -355,13 +339,232 @@ function displayAdmins(list) {
 
 
 /* =========================
+   ADD ADMIN
+========================= */
+
+addAdminButton.addEventListener(
+    "click",
+    async function () {
+
+        console.log(
+            "ADD ADMIN BUTTON CLICKED"
+        );
+
+
+        const email =
+            adminEmail.value
+                .trim()
+                .toLowerCase();
+
+
+        const role =
+            adminRole.value;
+
+
+        if (!email) {
+
+            alert(
+                "Please enter the user's email address."
+            );
+
+            adminEmail.focus();
+
+            return;
+        }
+
+
+        if (
+            ![
+                "admin",
+                "newsroom",
+                "superadmin"
+            ].includes(role)
+        ) {
+
+            alert(
+                "Invalid administrator role."
+            );
+
+            return;
+        }
+
+
+        addAdminButton.disabled =
+            true;
+
+        addAdminButton.textContent =
+            "ADDING...";
+
+
+        try {
+
+            /*
+             * Find the existing user.
+             */
+
+            const {
+                data: user,
+                error: searchError
+            } = await supabase
+                .from("profiles")
+                .select(
+                    "id, username, email, role, status"
+                )
+                .ilike(
+                    "email",
+                    email
+                )
+                .maybeSingle();
+
+
+            if (searchError) {
+
+                throw new Error(
+                    "Could not search for user: " +
+                    searchError.message
+                );
+            }
+
+
+            if (!user) {
+
+                throw new Error(
+                    "No Prudence 2 user was found with this email:\n\n" +
+                    email +
+                    "\n\nThe person must create a Prudence 2 account first."
+                );
+            }
+
+
+            /*
+             * Do not allow an existing administrator
+             * to be added again.
+             */
+
+            if (
+                [
+                    "admin",
+                    "newsroom",
+                    "superadmin"
+                ].includes(
+                    user.role
+                )
+            ) {
+
+                throw new Error(
+                    "This user is already an administrator.\n\nCurrent role: " +
+                    user.role
+                );
+            }
+
+
+            /*
+             * Give administrator role.
+             */
+
+            const {
+                data: updatedUser,
+                error: updateError
+            } = await supabase
+                .from("profiles")
+                .update({
+                    role: role
+                })
+                .eq(
+                    "id",
+                    user.id
+                )
+                .select(
+                    "id, username, email, role, status"
+                )
+                .single();
+
+
+            if (updateError) {
+
+                throw new Error(
+                    "Database rejected the role change:\n\n" +
+                    updateError.message
+                );
+            }
+
+
+            if (!updatedUser) {
+
+                throw new Error(
+                    "The administrator role was not updated."
+                );
+            }
+
+
+            /*
+             * Log action.
+             */
+
+            await logActivity(
+                "Added " +
+                email +
+                " as " +
+                role
+            );
+
+
+            alert(
+                "SUCCESS!\n\n" +
+                email +
+                "\n\nis now a " +
+                role.toUpperCase() +
+                "."
+            );
+
+
+            adminEmail.value =
+                "";
+
+            adminRole.value =
+                "admin";
+
+
+            await loadAdmins();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "ADD ADMIN ERROR:",
+                error
+            );
+
+
+            alert(
+                "ADD ADMIN FAILED\n\n" +
+                error.message
+            );
+
+        }
+
+        finally {
+
+            addAdminButton.disabled =
+                false;
+
+            addAdminButton.textContent =
+                "ADD ADMIN";
+
+        }
+
+    }
+);
+
+
+/* =========================
    CHANGE ROLE
 ========================= */
 
 async function changeRole(admin) {
 
     if (
-        currentUser &&
         admin.id === currentUser.id
     ) {
 
@@ -375,7 +578,7 @@ async function changeRole(admin) {
 
     const newRole =
         prompt(
-            "Enter the new role:\n\nadmin\nnewsroom\nsuperadmin",
+            "Enter new role:\n\nadmin\nnewsroom\nsuperadmin",
             admin.role
         );
 
@@ -408,13 +611,15 @@ async function changeRole(admin) {
     }
 
 
-    const confirmed =
-        confirm(
-            `Change ${admin.email}'s role to ${role}?`
-        );
-
-
-    if (!confirmed) {
+    if (
+        !confirm(
+            "Change " +
+            admin.email +
+            " to " +
+            role +
+            "?"
+        )
+    ) {
 
         return;
     }
@@ -435,14 +640,8 @@ async function changeRole(admin) {
 
     if (error) {
 
-        console.error(
-            "ROLE UPDATE ERROR:",
-            error
-        );
-
-
         alert(
-            "Unable to change role:\n" +
+            "Unable to change role:\n\n" +
             error.message
         );
 
@@ -451,12 +650,15 @@ async function changeRole(admin) {
 
 
     await logActivity(
-        `Changed ${admin.email} role to ${role}`
+        "Changed " +
+        admin.email +
+        " role to " +
+        role
     );
 
 
     alert(
-        "Administrator role updated successfully."
+        "Role changed successfully."
     );
 
 
@@ -471,7 +673,6 @@ async function changeRole(admin) {
 async function removeAdmin(admin) {
 
     if (
-        currentUser &&
         admin.id === currentUser.id
     ) {
 
@@ -483,13 +684,13 @@ async function removeAdmin(admin) {
     }
 
 
-    const confirmed =
-        confirm(
-            `Remove administrator privileges from ${admin.email}?`
-        );
-
-
-    if (!confirmed) {
+    if (
+        !confirm(
+            "Remove administrator privileges from:\n\n" +
+            admin.email +
+            "?"
+        )
+    ) {
 
         return;
     }
@@ -510,14 +711,8 @@ async function removeAdmin(admin) {
 
     if (error) {
 
-        console.error(
-            "REMOVE ADMIN ERROR:",
-            error
-        );
-
-
         alert(
-            "Unable to remove administrator:\n" +
+            "Unable to remove administrator:\n\n" +
             error.message
         );
 
@@ -526,7 +721,8 @@ async function removeAdmin(admin) {
 
 
     await logActivity(
-        `Removed administrator privileges from ${admin.email}`
+        "Removed administrator privileges from " +
+        admin.email
     );
 
 
@@ -540,183 +736,12 @@ async function removeAdmin(admin) {
 
 
 /* =========================
-   ADD ADMIN
-========================= */
-
-addAdminButton.addEventListener(
-    "click",
-    async () => {
-
-        const email =
-            adminEmail.value
-                .trim()
-                .toLowerCase();
-
-
-        const role =
-            adminRole.value;
-
-
-        if (!email) {
-
-            alert(
-                "Enter the user's email address."
-            );
-
-            return;
-        }
-
-
-        if (
-            ![
-                "admin",
-                "newsroom",
-                "superadmin"
-            ].includes(role)
-        ) {
-
-            alert(
-                "Invalid administrator role."
-            );
-
-            return;
-        }
-
-
-        addAdminButton.disabled =
-            true;
-
-        addAdminButton.textContent =
-            "ADDING...";
-
-
-        try {
-
-            /*
-             * The user must already have
-             * a Prudence 2 profile.
-             */
-
-            const {
-                data: userProfile,
-                error: findError
-            } = await supabase
-                .from("profiles")
-                .select(
-                    "id, username, email, role, status"
-                )
-                .eq(
-                    "email",
-                    email
-                )
-                .maybeSingle();
-
-
-            if (findError) {
-
-                throw findError;
-            }
-
-
-            if (!userProfile) {
-
-                alert(
-                    "No Prudence 2 user was found with that email address."
-                );
-
-                return;
-            }
-
-
-            if (
-                userProfile.role !== "user"
-            ) {
-
-                alert(
-                    "This user is already an administrator."
-                );
-
-                return;
-            }
-
-
-            const {
-                error: updateError
-            } = await supabase
-                .from("profiles")
-                .update({
-                    role: role
-                })
-                .eq(
-                    "id",
-                    userProfile.id
-                );
-
-
-            if (updateError) {
-
-                throw updateError;
-            }
-
-
-            await logActivity(
-                `Added ${email} as ${role}`
-            );
-
-
-            alert(
-                `${email} is now a ${role}.`
-            );
-
-
-            adminEmail.value =
-                "";
-
-
-            adminRole.value =
-                "admin";
-
-
-            await loadAdmins();
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "ADD ADMIN ERROR:",
-                error
-            );
-
-
-            alert(
-                "Unable to add administrator:\n" +
-                error.message
-            );
-
-        }
-
-        finally {
-
-            addAdminButton.disabled =
-                false;
-
-            addAdminButton.textContent =
-                "ADD ADMIN";
-
-        }
-
-    }
-);
-
-
-/* =========================
    SEARCH
 ========================= */
 
 searchAdmin.addEventListener(
     "input",
-    () => {
+    function () {
 
         const keyword =
             searchAdmin.value
@@ -775,11 +800,6 @@ async function logActivity(
 
     try {
 
-        /*
-         * Only attempt this if the
-         * adminLogs table exists.
-         */
-
         const {
             error
         } = await supabase
@@ -793,7 +813,7 @@ async function logActivity(
         if (error) {
 
             console.warn(
-                "Activity log unavailable:",
+                "ADMIN LOG WARNING:",
                 error.message
             );
 
@@ -804,55 +824,11 @@ async function logActivity(
     catch (error) {
 
         console.warn(
-            "Activity log error:",
+            "ADMIN LOG ERROR:",
             error
         );
 
     }
-}
-
-
-/* =========================
-   ESCAPE HTML
-========================= */
-
-function escapeHtml(value) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        value ?? "";
-
-
-    return div.innerHTML;
-}
-
-
-/* =========================
-   BACK BUTTON
-========================= */
-
-const backButton =
-    document.querySelector(
-        ".back-button"
-    );
-
-
-if (backButton) {
-
-    backButton.addEventListener(
-        "click",
-        () => {
-
-            history.back();
-
-        }
-    );
-
 }
 
 
