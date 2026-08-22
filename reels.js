@@ -1,54 +1,30 @@
 import supabase from "./supabase.js";
 
 
-/* =========================
-   ELEMENTS
-========================= */
-
-const reelsFeed =
+const reelsContainer =
     document.getElementById(
-        "reelsFeed"
+        "reelsContainer"
     );
 
 
-/* =========================
-   CURRENT USER
-========================= */
-
-let currentUser = null;
-
-
-/* =========================
-   ESCAPE HTML
-========================= */
-
-function escapeHtml(value){
+function escapeHtml(text){
 
     const div =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
     div.textContent =
-        value || "";
+        text || "";
 
     return div.innerHTML;
 
 }
 
 
-/* =========================
-   FORMAT DATE
-========================= */
-
 function formatDate(date){
 
     if(!date){
-
         return "";
-
     }
-
 
     return new Date(
         date
@@ -63,87 +39,36 @@ function formatDate(date){
 }
 
 
-/* =========================
-   CHECK LOGIN
-========================= */
+async function loadReels(){
 
-async function checkLogin(){
+    reelsContainer.innerHTML = `
+        <div class="loading">
+            Loading Christian reels...
+        </div>
+    `;
+
 
     const {
         data,
         error
     } =
-    await supabase.auth.getUser();
-
-
-    if(error){
-
-        console.error(
-            "AUTH ERROR:",
-            error
-        );
-
-        return false;
-
-    }
-
-
-    if(!data.user){
-
-        window.location.href =
-            "login.html";
-
-        return false;
-
-    }
-
-
-    currentUser =
-        data.user;
-
-
-    return true;
-
-}
-
-
-/* =========================
-   LOAD REELS
-========================= */
-
-async function loadReels(){
-
-    reelsFeed.innerHTML = `
-
-        <div class="loading">
-
-            Loading Christian Reels...
-
-        </div>
-
-    `;
-
-
-    const {
-        data: reels,
-        error
-    } =
     await supabase
+
         .from("reels")
+
         .select(`
             id,
             user_id,
             video_url,
             caption,
-            created_at,
-            profiles (
-                username
-            )
+            created_at
         `)
+
         .eq(
             "status",
             "published"
         )
+
         .order(
             "created_at",
             {
@@ -159,224 +84,149 @@ async function loadReels(){
             error
         );
 
-
-        reelsFeed.innerHTML = `
-
-            <div class="no-reels">
-
-                <h3>
-                    Unable to load Reels
-                </h3>
-
-                <p>
-                    ${escapeHtml(
-                        error.message
-                    )}
-                </p>
-
+        reelsContainer.innerHTML = `
+            <div class="error-message">
+                Unable to load Christian reels.
             </div>
-
         `;
 
         return;
-
     }
 
 
-    renderReels(
-        reels || []
-    );
+    if(!data || data.length === 0){
 
-}
-
-
-/* =========================
-   RENDER REELS
-========================= */
-
-function renderReels(reels){
-
-    reelsFeed.innerHTML =
-        "";
-
-
-    if(
-        reels.length === 0
-    ){
-
-        reelsFeed.innerHTML = `
-
+        reelsContainer.innerHTML = `
             <div class="no-reels">
 
-                <h3>
-                    🎬 No Reels Yet
-                </h3>
+                🎬
 
-                <p>
-                    Christian Reels will appear
-                    here when members start
-                    sharing videos.
-                </p>
+                <br><br>
+
+                No Christian reels have been
+                published yet.
+
+                <br><br>
+
+                Check back soon. ❤️
 
             </div>
-
         `;
 
         return;
-
     }
 
 
-    reels.forEach(
-        reel => {
-
-            const card =
-                document.createElement(
-                    "article"
-                );
+    reelsContainer.innerHTML = "";
 
 
-            card.className =
-                "reel-card";
+    for(const reel of data){
+
+        let username =
+            "Christian Member";
 
 
-            const username =
-                reel.profiles?.username ||
-                "Christian Member";
+        try{
+
+            const {
+                data:profile
+            } =
+            await supabase
+
+                .from("profiles")
+
+                .select(`
+                    public_username,
+                    username
+                `)
+
+                .eq(
+                    "id",
+                    reel.user_id
+                )
+
+                .maybeSingle();
 
 
-            card.innerHTML = `
+            if(profile){
 
-                <video
-                    class="reel-video"
-                    src="${escapeHtml(
-                        reel.video_url
-                    )}"
-                    controls
-                    playsinline
-                    preload="metadata"
-                ></video>
+                username =
+                    profile.public_username ||
+                    profile.username ||
+                    username;
 
+            }
 
-                <div class="reel-info">
+        }
+        catch(error){
 
-                    <div class="reel-user">
-
-                        👤 ${escapeHtml(
-                            username
-                        )}
-
-                    </div>
-
-
-                    <div class="reel-caption">
-
-                        ${escapeHtml(
-                            reel.caption ||
-                            ""
-                        )}
-
-                    </div>
-
-
-                    <div class="reel-date">
-
-                        ${formatDate(
-                            reel.created_at
-                        )}
-
-                    </div>
-
-
-                    <div class="reel-actions">
-
-                        <button
-                            type="button"
-                            class="like-button"
-                            data-reel-id="${reel.id}"
-                        >
-                            ❤️ Like
-                        </button>
-
-
-                        <button
-                            type="button"
-                            class="comment-button"
-                            data-reel-id="${reel.id}"
-                        >
-                            💬 Comments
-                        </button>
-
-                    </div>
-
-                </div>
-
-            `;
-
-
-            const likeButton =
-                card.querySelector(
-                    ".like-button"
-                );
-
-
-            likeButton.addEventListener(
-                "click",
-                function(){
-
-                    alert(
-                        "Likes will be enabled in the next Reels stage."
-                    );
-
-                }
-            );
-
-
-            const commentButton =
-                card.querySelector(
-                    ".comment-button"
-                );
-
-
-            commentButton.addEventListener(
-                "click",
-                function(){
-
-                    alert(
-                        "Comments will be enabled in the next Reels stage."
-                    );
-
-                }
-            );
-
-
-            reelsFeed.appendChild(
-                card
+            console.warn(
+                "PROFILE LOAD ERROR:",
+                error
             );
 
         }
-    );
+
+
+        const article =
+            document.createElement("article");
+
+        article.className =
+            "reel";
+
+
+        article.innerHTML = `
+
+            <video
+                controls
+                playsinline
+                preload="metadata"
+                src="${escapeHtml(
+                    reel.video_url
+                )}"
+            ></video>
+
+
+            <div class="reel-overlay">
+
+                <div class="reel-user">
+
+                    ✝ ${escapeHtml(
+                        username
+                    )}
+
+                </div>
+
+
+                <div class="reel-caption">
+
+                    ${escapeHtml(
+                        reel.caption
+                    )}
+
+                </div>
+
+
+                <div class="reel-date">
+
+                    ${formatDate(
+                        reel.created_at
+                    )}
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        reelsContainer.appendChild(
+            article
+        );
+
+    }
 
 }
 
 
-/* =========================
-   START
-========================= */
-
-(async function(){
-
-    const loggedIn =
-        await checkLogin();
-
-
-    if(!loggedIn){
-
-        return;
-
-    }
-
-
-    await loadReels();
-
-})();
+loadReels();
