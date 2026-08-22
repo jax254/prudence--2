@@ -1,58 +1,29 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Prudence 2 - Admin Dashboard</title>
 
-    <link
-        rel="stylesheet"
-        href="admin-dashboard.css"
-    >
+    <link rel="stylesheet" href="admin-dashboard.css">
 
-    <script
-        type="module"
-        src="admin-dashboard.js"
-        defer
-    ></script>
-
+    <script type="module" src="admin-dashboard.js" defer></script>
 </head>
-
 
 <body>
 
+<header>
 
-<header class="admin-header">
+    <h1>PRUDENCE 2 ADMIN PANEL</h1>
 
-    <div class="brand">
-        ✝ PRUDENCE 2
-    </div>
+    <h3 id="adminName">Loading...</h3>
 
-    <h1>
-        ADMIN PANEL
-    </h1>
-
-    <h3 id="adminName">
-        Loading...
-    </h3>
-
-    <p id="adminRole">
-        Administrator
-    </p>
+    <p id="adminRole">Administrator</p>
 
 </header>
 
-
-<!-- =========================
-     STATISTICS
-========================= -->
 
 <section class="statistics">
 
@@ -61,18 +32,15 @@
         <p>Users</p>
     </div>
 
-
     <div class="card">
         <h2 id="newsCount">0</h2>
         <p>News Articles</p>
     </div>
 
-
     <div class="card">
-        <h2 id="liveCount">—</h2>
+        <h2 id="liveCount">0</h2>
         <p>Live Broadcasts</p>
     </div>
-
 
     <div class="card">
         <h2 id="pendingCount">0</h2>
@@ -82,34 +50,20 @@
 </section>
 
 
-<!-- =========================
-     ADMIN MENU
-========================= -->
-
 <section class="menu">
 
-    <button
-        type="button"
-        onclick="location.href='admin-newsroom.html'"
-    >
+    <button onclick="location.href='admin-newsroom.html'">
         📰 NEWS ROOM
     </button>
 
-
-    <button
-        type="button"
-        onclick="location.href='admin-approvals.html'"
-    >
+    <button onclick="location.href='admin-approvals.html'">
         ✅ NEWS APPROVALS
     </button>
 
-
     <button
-        type="button"
         class="notification-menu-btn"
         onclick="location.href='notifications.html'"
     >
-
         🔔 NOTIFICATIONS
 
         <span
@@ -119,83 +73,49 @@
         >
             0
         </span>
-
     </button>
 
-
-    <!-- ADMIN CHAT -->
-
-    <button
-        type="button"
-        class="admin-chat-button"
-        onclick="location.href='admin-chat.html'"
-    >
-
+    <button onclick="location.href='admin-chat.html'">
         💬 ADMIN CHAT
-
-        <span class="menu-description">
-            Private administrator communication
-        </span>
-
     </button>
 
 
+    <!-- SUPERADMIN ONLY -->
+
     <button
-        type="button"
+        id="adminManagementButton"
+        style="display:none;"
         onclick="location.href='superadmin-admins.html'"
     >
-        👥 ADD ADMINS
+        👑 ADMIN MANAGEMENT
     </button>
 
 
-    <button
-        type="button"
-        onclick="location.href='settings.html'"
-    >
+    <button onclick="location.href='settings.html'">
         ⚙️ WEBSITE SETTINGS
     </button>
 
-
-    <button
-        type="button"
-        onclick="location.href='reports.html'"
-    >
+    <button onclick="location.href='reports.html'">
         📊 REPORTS
     </button>
 
-
-    <button
-        type="button"
-        class="logout-button"
-        onclick="logout()"
-    >
+    <button onclick="logout()">
         🚪 LOGOUT
     </button>
 
 </section>
 
 
-<!-- =========================
-     PENDING NEWS
-========================= -->
-
 <section class="recent">
 
-    <h2>
-        Pending News
-    </h2>
+    <h2>Pending News</h2>
 
     <div id="pendingNews">
-
-        <p>
-            Loading pending news...
-        </p>
-
+        No pending news.
     </div>
 
 </section>
 
-
 </body>
 
-</html>    
+</html>          
