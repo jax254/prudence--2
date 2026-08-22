@@ -25,22 +25,16 @@
 
 </head>
 
-
 <body>
-
 
 <header>
 
-    <div class="brand">
-        ✝ PRUDENCE 2
-    </div>
+    <h1>PRUDENCE 2</h1>
 
-    <h1>
-        👑 SUPERADMIN
-    </h1>
+    <h2>ADMIN MANAGEMENT</h2>
 
     <p>
-        Administrator Management
+        Superadmin Control Center
     </p>
 
 </header>
@@ -49,60 +43,39 @@
 <main class="container">
 
 
-    <div class="top-actions">
+    <!-- =========================
+         ADD ADMIN
+    ========================== -->
 
-        <button
-            type="button"
-            onclick="location.href='admin-dashboard.html'"
-        >
-            ← Back to Admin Panel
-        </button>
-
-    </div>
-
-
-    <section class="add-admin">
+    <section class="panel">
 
         <h2>
-            Add Administrator
+            👤 Add Administrator
         </h2>
 
         <p class="description">
-            Search for an existing Prudence 2 user
-            and assign an administrator role.
+
+            Enter the email address of an existing
+            Prudence 2 user and assign an administrator role.
+
         </p>
 
 
+        <label for="adminEmail">
+            User Email
+        </label>
+
         <input
-            type="text"
-            id="adminSearch"
-            placeholder="Search by email or username..."
+            type="email"
+            id="adminEmail"
+            placeholder="example@email.com"
             autocomplete="off"
         >
 
 
-        <div
-            id="searchResults"
-            class="search-results"
-        ></div>
-
-
-        <div
-            id="selectedUser"
-            class="selected-user"
-            style="display:none;"
-        >
-
-            <strong>
-                Selected User
-            </strong>
-
-            <span id="selectedUserName"></span>
-
-            <span id="selectedUserEmail"></span>
-
-        </div>
-
+        <label for="adminRole">
+            Administrator Role
+        </label>
 
         <select id="adminRole">
 
@@ -114,32 +87,47 @@
                 Newsroom Admin
             </option>
 
+            <option value="superadmin">
+                Super Admin
+            </option>
+
         </select>
 
 
         <button
-            type="button"
             id="addAdmin"
+            type="button"
+            class="primary-button"
         >
-            ➕ Make Administrator
+            ADD ADMIN
         </button>
+
+
+        <p
+            id="adminMessage"
+            class="message"
+        ></p>
 
     </section>
 
 
 
-    <section class="admin-list">
+    <!-- =========================
+         ADMIN LIST
+    ========================== -->
 
-        <div class="section-heading">
+    <section class="panel">
+
+        <div class="list-header">
 
             <div>
 
                 <h2>
-                    Current Administrators
+                    👥 Current Administrators
                 </h2>
 
-                <p>
-                    Only the Superadmin can change these roles.
+                <p class="description">
+                    Only superadmins can manage these accounts.
                 </p>
 
             </div>
@@ -148,17 +136,18 @@
 
 
         <input
-            type="text"
+            type="search"
             id="searchAdmin"
-            placeholder="Search administrators..."
+            placeholder="Search by name or email..."
+            autocomplete="off"
         >
 
 
-        <div
-            id="adminsContainer"
-        >
+        <div id="adminsContainer">
 
-            Loading administrators...
+            <p class="loading">
+                Loading administrators...
+            </p>
 
         </div>
 
@@ -168,49 +157,37 @@
 </main>
 
 
+
+<!-- =========================
+     ADMIN CARD TEMPLATE
+========================== -->
+
 <template id="adminTemplate">
 
     <article class="admin-card">
 
+        <div class="admin-info">
 
-        <div class="admin-information">
+            <h3 class="name">
+                Administrator
+            </h3>
 
-            <div class="admin-avatar">
-                👤
-            </div>
+            <p class="email"></p>
 
+            <p class="role"></p>
 
-            <div>
-
-                <h3 class="name">
-                    User
-                </h3>
-
-                <p class="email">
-                    email
-                </p>
-
-                <p class="role">
-                    Role
-                </p>
-
-                <p class="status">
-                    Status
-                </p>
-
-            </div>
+            <p class="status"></p>
 
         </div>
 
 
         <div class="buttons">
 
-
             <button
                 type="button"
                 class="promote"
             >
-                🔼 Change Role
+                CHANGE ROLE
             </button>
 
 
@@ -218,18 +195,28 @@
                 type="button"
                 class="remove"
             >
-                🚫 Remove Admin
+                REMOVE ADMIN
             </button>
 
-
         </div>
-
 
     </article>
 
 </template>
 
 
+<footer>
+
+    <button
+        type="button"
+        onclick="history.back()"
+        class="back-button"
+    >
+        ← BACK
+    </button>
+
+</footer>
+
 </body>
 
-</html>                      
+</html>
