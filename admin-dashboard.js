@@ -1,4 +1,4 @@
-import supabase from "./supabase.js";
+  import supabase from "./supabase.js";
 
 
 /* =========================
@@ -27,9 +27,10 @@ const pendingNews =
     document.getElementById("pendingNews");
 
 const notificationBadge =
-    document.getElementById(
-        "notificationBadge"
-    );
+    document.getElementById("notificationBadge");
+
+const adminManagementButton =
+    document.getElementById("adminManagementButton");
 
 
 /* =========================
@@ -45,7 +46,6 @@ function escapeHtml(value) {
         value || "";
 
     return div.innerHTML;
-
 }
 
 
@@ -56,9 +56,7 @@ function escapeHtml(value) {
 async function getLoggedInUser() {
 
     const {
-        data: {
-            user
-        },
+        data,
         error
     } =
     await supabase.auth.getUser();
@@ -72,12 +70,10 @@ async function getLoggedInUser() {
         );
 
         return null;
-
     }
 
 
-    return user || null;
-
+    return data.user || null;
 }
 
 
@@ -114,7 +110,6 @@ async function loadProfile(user) {
             "Unable to load your profile:\n" +
             error.message
         );
-
     }
 
 
@@ -123,7 +118,6 @@ async function loadProfile(user) {
         throw new Error(
             "Your profile was not found."
         );
-
     }
 
 
@@ -143,7 +137,6 @@ async function loadProfile(user) {
         throw new Error(
             "You are not authorized to access the Admin Panel."
         );
-
     }
 
 
@@ -155,9 +148,12 @@ async function loadProfile(user) {
         throw new Error(
             "Your administrator account is not active."
         );
-
     }
 
+
+    /* =========================
+       DISPLAY PROFILE
+    ========================= */
 
     adminName.textContent =
         profile.username ||
@@ -173,8 +169,27 @@ async function loadProfile(user) {
         ).toUpperCase();
 
 
-    return profile;
+    /* =========================
+       SUPERADMIN CONTROL
+    ========================= */
 
+    if (
+        profile.role === "superadmin"
+    ) {
+
+        adminManagementButton.style.display =
+            "block";
+
+    }
+    else {
+
+        adminManagementButton.style.display =
+            "none";
+
+    }
+
+
+    return profile;
 }
 
 
@@ -210,13 +225,11 @@ async function loadUsersCount() {
             "—";
 
         return;
-
     }
 
 
     usersCount.textContent =
         count || 0;
-
 }
 
 
@@ -252,13 +265,11 @@ async function loadNewsCount() {
             "—";
 
         return;
-
     }
 
 
     newsCount.textContent =
         count || 0;
-
 }
 
 
@@ -302,13 +313,11 @@ async function loadPendingCount() {
             "—";
 
         return;
-
     }
 
 
     pendingCount.textContent =
         count || 0;
-
 }
 
 
@@ -316,18 +325,10 @@ async function loadPendingCount() {
    LIVE COUNT
 ========================= */
 
-/*
-   Firebase is completely removed.
-
-   Until the Live module has been
-   moved to Supabase, we show —.
-*/
-
 function loadLiveCount() {
 
     liveCount.textContent =
         "—";
-
 }
 
 
@@ -338,11 +339,7 @@ function loadLiveCount() {
 async function loadPendingNews() {
 
     pendingNews.innerHTML = `
-
-        <p>
-            Loading pending news...
-        </p>
-
+        <p>Loading pending news...</p>
     `;
 
 
@@ -406,7 +403,6 @@ async function loadPendingNews() {
         `;
 
         return;
-
     }
 
 
@@ -437,7 +433,6 @@ async function loadPendingNews() {
         `;
 
         return;
-
     }
 
 
@@ -515,9 +510,7 @@ async function loadPendingNews() {
                         Submitted:
                     </strong>
 
-                    ${escapeHtml(
-                        date
-                    )}
+                    ${escapeHtml(date)}
                 </p>
 
                 <p>
@@ -559,7 +552,6 @@ async function loadPendingNews() {
 
                 window.location.href =
                     "admin-approvals.html";
-
             };
 
 
@@ -569,7 +561,6 @@ async function loadPendingNews() {
 
         }
     );
-
 }
 
 
@@ -582,9 +573,7 @@ async function loadUnreadNotifications(
 ) {
 
     if (!userId) {
-
         return;
-
     }
 
 
@@ -619,7 +608,6 @@ async function loadUnreadNotifications(
         );
 
         return;
-
     }
 
 
@@ -637,15 +625,12 @@ async function loadUnreadNotifications(
 
         notificationBadge.style.display =
             "inline-flex";
-
     }
     else {
 
         notificationBadge.style.display =
             "none";
-
     }
-
 }
 
 
@@ -653,13 +638,9 @@ async function loadUnreadNotifications(
    LOAD DASHBOARD
 ========================= */
 
-async function loadDashboard(
-    user
-) {
+async function loadDashboard(user) {
 
-    await loadProfile(
-        user
-    );
+    await loadProfile(user);
 
 
     await Promise.all([
@@ -680,12 +661,11 @@ async function loadDashboard(
 
 
     loadLiveCount();
-
 }
 
 
 /* =========================
-   START DASHBOARD
+   START
 ========================= */
 
 (async function () {
@@ -699,16 +679,13 @@ async function loadDashboard(
         if (!user) {
 
             window.location.href =
-                "../login.html";
+                "login.html";
 
             return;
-
         }
 
 
-        await loadDashboard(
-            user
-        );
+        await loadDashboard(user);
 
     }
 
@@ -720,14 +697,11 @@ async function loadDashboard(
         );
 
 
-        alert(
-            error.message
-        );
+        alert(error.message);
 
 
         window.location.href =
-            "../login.html";
-
+            "login.html";
     }
 
 })();
@@ -759,12 +733,9 @@ async function () {
         );
 
         return;
-
     }
 
 
     window.location.href =
-        "../login.html";
-
-};
-    
+        "login.html";
+};          
