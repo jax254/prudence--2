@@ -1,114 +1,558 @@
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,Helvetica,sans-serif;
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
-background:#eef5ff;
+    background:#eef4ff;
+    color:#222;
 }
 
+
+/* =========================
+   HEADER
+========================= */
+
 header{
-background:#0066ff;
-color:white;
-text-align:center;
-padding:25px;
+    background:#0066ff;
+    color:white;
+    text-align:center;
+    padding:28px 20px;
+}
+
+.brand{
+    font-size:20px;
+    font-weight:bold;
+    margin-bottom:8px;
 }
 
 header h1{
-color:purple;
+    font-size:30px;
+    color:white;
+    margin-bottom:8px;
 }
+
+header p{
+    opacity:.95;
+}
+
+
+/* =========================
+   MAIN
+========================= */
 
 .container{
-width:95%;
-max-width:1200px;
-margin:25px auto;
-display:grid;
-grid-template-columns:1fr 2fr;
-gap:20px;
+    width:95%;
+    max-width:1100px;
+    margin:25px auto;
 }
 
-.add-admin,
-.admin-list{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,.1);
+
+/* =========================
+   BACK BUTTON
+========================= */
+
+.back-button{
+    border:none;
+    background:#333;
+    color:white;
+    padding:12px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    margin-bottom:20px;
+    font-size:15px;
+}
+
+.back-button:hover{
+    background:#555;
+}
+
+
+/* =========================
+   SECURITY CARD
+========================= */
+
+.security-card{
+    display:flex;
+    align-items:center;
+    gap:15px;
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:12px;
+
+    margin-bottom:20px;
+
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.08);
+
+    border-left:5px solid #0066ff;
+}
+
+.security-icon{
+    width:55px;
+    height:55px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    background:#0066ff;
+
+    color:white;
+
+    font-size:25px;
+}
+
+.security-card h2{
+    color:#0066ff;
+    margin-bottom:5px;
+}
+
+
+/* =========================
+   PANELS
+========================= */
+
+.panel{
+    background:white;
+
+    padding:22px;
+
+    border-radius:12px;
+
+    margin-bottom:20px;
+
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.08);
+}
+
+.panel h2{
+    color:#0066ff;
+    margin-bottom:8px;
+}
+
+.description{
+    color:#666;
+    font-size:14px;
+    margin-bottom:18px;
+}
+
+
+/* =========================
+   FORM
+========================= */
+
+label{
+    display:block;
+
+    font-weight:bold;
+
+    margin-bottom:7px;
+
+    color:#333;
 }
 
 input,
 select{
-width:100%;
-padding:15px;
-margin-bottom:15px;
-border:1px solid #ccc;
-border-radius:8px;
-font-size:16px;
+    width:100%;
+
+    padding:14px;
+
+    margin-bottom:15px;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+    font-size:16px;
+
+    background:white;
 }
+
+input:focus,
+select:focus{
+    outline:none;
+
+    border-color:#0066ff;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(0,102,255,.1);
+}
+
+
+/* =========================
+   BUTTON
+========================= */
 
 button{
-padding:12px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-color:white;
-background:#0066ff;
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-size:14px;
 }
 
-button:hover{
-background:purple;
+.primary-button{
+    width:100%;
+
+    padding:14px;
+
+    background:#0066ff;
+
+    color:white;
+
+    font-size:17px;
+
+    font-weight:bold;
+}
+
+.primary-button:hover{
+    background:#0050c7;
+}
+
+.primary-button:disabled{
+    opacity:.6;
+
+    cursor:not-allowed;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+.status-message{
+    margin-top:12px;
+
+    font-size:14px;
+
+    min-height:20px;
+}
+
+.status-message.success{
+    color:#087f23;
+}
+
+.status-message.error{
+    color:#d93025;
+}
+
+
+/* =========================
+   LIST HEADER
+========================= */
+
+.list-header{
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-bottom:15px;
+}
+
+.admin-total{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:40px;
+
+    height:40px;
+
+    padding:0 12px;
+
+    background:#0066ff;
+
+    color:white;
+
+    border-radius:30px;
+
+    font-weight:bold;
+}
+
+
+/* =========================
+   SEARCH
+========================= */
+
+#searchAdmin{
+    margin-bottom:20px;
+}
+
+
+/* =========================
+   ADMIN LIST
+========================= */
+
+.admins-container{
+    display:flex;
+
+    flex-direction:column;
+
+    gap:15px;
 }
 
 .admin-card{
-background:#f5f5f5;
-padding:15px;
-margin-top:15px;
-border-radius:10px;
+    background:#f7f9fc;
+
+    border:1px solid #e1e6ef;
+
+    border-radius:12px;
+
+    padding:18px;
 }
 
-.admin-card h3{
-color:#0066ff;
-margin-bottom:8px;
+.admin-info{
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
 }
 
-.buttons{
-display:flex;
-gap:10px;
-margin-top:15px;
-flex-wrap:wrap;
+.avatar{
+    width:55px;
+    height:55px;
+
+    flex-shrink:0;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:#0066ff;
+
+    color:white;
+
+    font-size:22px;
+
+    font-weight:bold;
 }
 
-.promote{
-background:green;
+.details{
+    min-width:0;
 }
 
-.demote{
-background:#ff9800;
+.details h3{
+    color:#0066ff;
+
+    margin-bottom:4px;
+
+    word-break:break-word;
 }
 
-.remove{
-background:red;
+.email{
+    color:#555;
+
+    font-size:14px;
+
+    margin-bottom:8px;
+
+    word-break:break-word;
 }
 
-.promote:hover{
-background:#006400;
+
+/* =========================
+   BADGES
+========================= */
+
+.role-badge,
+.status-badge{
+    display:inline-block;
+
+    padding:5px 9px;
+
+    border-radius:20px;
+
+    font-size:12px;
+
+    font-weight:bold;
+
+    margin-right:5px;
 }
 
-.demote:hover{
-background:#d97706;
+.role-badge.admin{
+    background:#dce8ff;
+
+    color:#0052cc;
 }
 
-.remove:hover{
-background:#8b0000;
+.role-badge.newsroom{
+    background:#eee1ff;
+
+    color:#7020b5;
 }
 
-@media(max-width:900px){
+.role-badge.superadmin{
+    background:#fff0c2;
 
-.container{
-
-grid-template-columns:1fr;
-
+    color:#805c00;
 }
+
+.status-badge.active{
+    background:#d8f5df;
+
+    color:#087f23;
+}
+
+.status-badge.inactive{
+    background:#ffe0e0;
+
+    color:#b00020;
+}
+
+
+/* =========================
+   ACTIONS
+========================= */
+
+.admin-actions{
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:8px;
+
+    margin-top:15px;
+}
+
+.role-button,
+.remove-button{
+    padding:10px 13px;
+
+    color:white;
+}
+
+.role-button{
+    background:#0066ff;
+}
+
+.role-button:hover{
+    background:#0050c7;
+}
+
+.newsroom-button{
+    background:#7b2cbf;
+}
+
+.newsroom-button:hover{
+    background:#5b1e91;
+}
+
+.remove-button{
+    background:#d93025;
+}
+
+.remove-button:hover{
+    background:#a82018;
+}
+
+.protected{
+    display:inline-flex;
+
+    align-items:center;
+
+    padding:10px 13px;
+
+    background:#fff0c2;
+
+    color:#805c00;
+
+    border-radius:8px;
+
+    font-weight:bold;
+
+    font-size:13px;
+}
+
+
+/* =========================
+   STATES
+========================= */
+
+.loading,
+.empty-box,
+.error-box{
+    padding:20px;
+
+    text-align:center;
+
+    border-radius:10px;
+}
+
+.loading{
+    color:#666;
+}
+
+.empty-box{
+    background:#f4f4f4;
+
+    color:#666;
+}
+
+.error-box{
+    background:#ffe5e5;
+
+    color:#b00020;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:650px){
+
+    header h1{
+        font-size:24px;
+    }
+
+    .security-card{
+        align-items:flex-start;
+    }
+
+    .list-header{
+        align-items:flex-start;
+    }
+
+    .admin-info{
+        align-items:flex-start;
+    }
+
+    .admin-actions{
+        flex-direction:column;
+    }
+
+    .role-button,
+    .remove-button,
+    .protected{
+        width:100%;
+
+        text-align:center;
+
+        justify-content:center;
+    }
 
 }
