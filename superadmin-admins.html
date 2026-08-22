@@ -4,13 +4,24 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Prudence 2 | Admin Management</title>
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-<link rel="stylesheet" href="../css/admins.css">
+<title>Prudence 2 | Administrator Management</title>
 
-<script type="module" src="../js/admins.js" defer></script>
+<link
+    rel="stylesheet"
+    href="../css/admins.css"
+>
+
+<script
+    type="module"
+    src="../js/admins.js"
+    defer
+></script>
 
 </head>
 
@@ -18,95 +29,166 @@
 
 <header>
 
-<h1>ADMIN MANAGEMENT</h1>
+    <div class="brand">
+        ✝ PRUDENCE 2
+    </div>
 
-<p>Manage Administrators of Prudence 2</p>
+    <h1>
+        Administrator Management
+    </h1>
+
+    <p>
+        Superadmin Control Center
+    </p>
 
 </header>
 
-<div class="container">
 
-<div class="add-admin">
+<main class="container">
 
-<h2>Add New Admin</h2>
 
-<input
-type="email"
-id="adminEmail"
-placeholder="Admin Email">
+    <!-- BACK -->
 
-<select id="adminRole">
+    <button
+        id="backButton"
+        class="back-button"
+        type="button"
+    >
+        ← Back to Admin Dashboard
+    </button>
 
-<option value="admin">Administrator</option>
 
-<option value="newsroom">News Room Admin</option>
+    <!-- ACCESS STATUS -->
 
-<option value="superadmin">Super Admin</option>
+    <section class="security-card">
 
-</select>
+        <div class="security-icon">
+            🛡️
+        </div>
 
-<button id="addAdmin">
+        <div>
 
-Send Invitation
+            <h2>
+                Superadmin Control
+            </h2>
 
-</button>
+            <p>
+                Only the Superadmin can manage administrator roles.
+            </p>
 
-</div>
+        </div>
 
-<div class="admin-list">
+    </section>
 
-<h2>Current Administrators</h2>
 
-<input
-type="text"
-id="searchAdmin"
-placeholder="Search administrator...">
+    <!-- ADD ADMIN -->
 
-<div id="adminsContainer">
+    <section class="panel">
 
-Loading administrators...
+        <h2>
+            Add Administrator
+        </h2>
 
-</div>
+        <p class="description">
+            Enter the email address of an existing Prudence 2 user.
+        </p>
 
-</div>
+        <label for="adminEmail">
+            User Email
+        </label>
 
-</div>
+        <input
+            type="email"
+            id="adminEmail"
+            placeholder="user@example.com"
+            autocomplete="email"
+        >
 
-<template id="adminTemplate">
 
-<div class="admin-card">
+        <label for="adminRole">
+            Administrator Role
+        </label>
 
-<h3 class="name"></h3>
+        <select id="adminRole">
 
-<p class="email"></p>
+            <option value="admin">
+                Administrator
+            </option>
 
-<p class="role"></p>
+            <option value="newsroom">
+                Newsroom Administrator
+            </option>
 
-<div class="buttons">
+        </select>
 
-<button class="promote">
 
-Promote
+        <button
+            id="addAdmin"
+            class="primary-button"
+            type="button"
+        >
+            Add Administrator
+        </button>
 
-</button>
 
-<button class="demote">
+        <p
+            id="addStatus"
+            class="status-message"
+        ></p>
 
-Demote
+    </section>
 
-</button>
 
-<button class="remove">
+    <!-- ADMIN LIST -->
 
-Remove
+    <section class="panel">
 
-</button>
+        <div class="list-header">
 
-</div>
+            <div>
 
-</div>
+                <h2>
+                    Current Administrators
+                </h2>
 
-</template>
+                <p class="description">
+                    Manage existing administrator accounts.
+                </p>
+
+            </div>
+
+            <span
+                id="adminTotal"
+                class="admin-total"
+            >
+                0
+            </span>
+
+        </div>
+
+
+        <input
+            type="search"
+            id="searchAdmin"
+            placeholder="Search by name or email..."
+        >
+
+
+        <div
+            id="adminsContainer"
+            class="admins-container"
+        >
+
+            <p class="loading">
+                Loading administrators...
+            </p>
+
+        </div>
+
+    </section>
+
+
+</main>
 
 </body>
 
