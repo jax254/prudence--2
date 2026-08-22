@@ -1,24 +1,12 @@
 import supabase from "./supabase.js";
 
 
-/* =========================================================
+/* =====================================================
    ELEMENTS
-========================================================= */
+===================================================== */
 
-const adminSearch =
-    document.getElementById("adminSearch");
-
-const searchResults =
-    document.getElementById("searchResults");
-
-const selectedUser =
-    document.getElementById("selectedUser");
-
-const selectedUserName =
-    document.getElementById("selectedUserName");
-
-const selectedUserEmail =
-    document.getElementById("selectedUserEmail");
+const adminEmail =
+    document.getElementById("adminEmail");
 
 const adminRole =
     document.getElementById("adminRole");
@@ -26,49 +14,49 @@ const adminRole =
 const addAdmin =
     document.getElementById("addAdmin");
 
+const adminMessage =
+    document.getElementById("adminMessage");
+
 const adminsContainer =
     document.getElementById("adminsContainer");
-
-const searchAdmin =
-    document.getElementById("searchAdmin");
 
 const adminTemplate =
     document.getElementById("adminTemplate");
 
+const searchAdmin =
+    document.getElementById("searchAdmin");
 
-/* =========================================================
+
+/* =====================================================
    STATE
-========================================================= */
+===================================================== */
 
 let currentUser = null;
-
-let currentProfile = null;
-
-let selectedProfile = null;
 
 let administrators = [];
 
 
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
+/* =====================================================
+   MESSAGE
+===================================================== */
 
-function escapeHtml(value) {
+function showMessage(
+    message,
+    type = "info"
+) {
 
-    const div =
-        document.createElement("div");
+    adminMessage.textContent =
+        message;
 
-    div.textContent =
-        value || "";
-
-    return div.innerHTML;
+    adminMessage.className =
+        "message " + type;
 
 }
 
 
-/* =========================================================
+/* =====================================================
    GET CURRENT USER
-========================================================= */
+===================================================== */
 
 async function getCurrentUser() {
 
@@ -96,43 +84,45 @@ async function getCurrentUser() {
 }
 
 
-/* =========================================================
-   LOAD CURRENT PROFILE
-========================================================= */
+/* =====================================================
+   CHECK SUPERADMIN
+===================================================== */
 
-async function loadCurrentProfile() {
+async function checkSuperadmin(
+    user
+) {
 
     const {
-        data,
+        data: profile,
         error
     } =
     await supabase
         .from("profiles")
-        .select(`
-            id,
-            username,
-            email,
-            role,
-            status
-        `)
+        .select(
+            "id, username, email, role, status"
+        )
         .eq(
             "id",
-            currentUser.id
+            user.id
         )
         .maybeSingle();
 
 
     if (error) {
 
+        console.error(
+            "PROFILE ERROR:",
+            error
+        );
+
         throw new Error(
-            "Unable to load your profile:\n" +
-            error.message
+            "Unable to verify your administrator account."
         );
 
     }
 
 
-    if (!data) {
+    if (!profile) {
 
         throw new Error(
             "Your profile was not found."
@@ -141,45 +131,47 @@ async function loadCurrentProfile() {
     }
 
 
-    currentProfile =
-        data;
-
-
     if (
-        currentProfile.role !==
+        profile.role !==
         "superadmin"
     ) {
 
         throw new Error(
-            "Access denied. Only the Superadmin can manage administrators."
+            "Access denied. Only Super Admin can manage administrators."
         );
 
     }
 
 
     if (
-        currentProfile.status &&
-        currentProfile.status !==
-        "active"
+        profile.status &&
+        profile.status !== "active"
     ) {
 
         throw new Error(
-            "Your Superadmin account is not active."
+            "Your account is not active."
         );
 
     }
 
+
+    return profile;
+
 }
 
 
-/* =========================================================
+/* =====================================================
    LOAD ADMINISTRATORS
-========================================================= */
+===================================================== */
 
 async function loadAdministrators() {
 
     adminsContainer.innerHTML = `
-        <p>Loading administrators...</p>
+
+        <p class="loading">
+            Loading administrators...
+        </p>
+
     `;
 
 
@@ -194,7 +186,8 @@ async function loadAdministrators() {
             username,
             email,
             role,
-            status
+            status,
+            created_at
         `)
         .in(
             "role",
@@ -215,7 +208,7 @@ async function loadAdministrators() {
     if (error) {
 
         console.error(
-            "ADMIN LOAD ERROR:",
+            "ADMIN LIST ERROR:",
             error
         );
 
@@ -252,9 +245,9 @@ async function loadAdministrators() {
 }
 
 
-/* =========================================================
+/* =====================================================
    DISPLAY ADMINISTRATORS
-========================================================= */
+===================================================== */
 
 function displayAdministrators(
     list
@@ -292,34 +285,27 @@ function displayAdministrators(
                     .cloneNode(true);
 
 
-            card.querySelector(
-                ".name"
-            ).textContent =
-                admin.username ||
-                "No username";
+            const name =
+                card.querySelector(
+                    ".name"
+                );
 
 
-            card.querySelector(
-                ".email"
-            ).textContent =
-                admin.email ||
-                "No email";
+            const email =
+                card.querySelector(
+                    ".email"
+                );
 
 
-            card.querySelector(
-                ".role"
-            ).textContent =
-                "Role: " +
-                admin.role;
+            const role =
+                card.querySelector(
+                    ".role"
+                );
 
 
-            card.querySelector(
-                ".status"
-            ).textContent =
-                "Status: " +
-                (
-                    admin.status ||
-                    "active"
+            const status =
+                card.querySelector(
+                    ".status"
                 );
 
 
@@ -335,10 +321,36 @@ function displayAdministrators(
                 );
 
 
+            name.textContent =
+                admin.username ||
+                "No username";
+
+
+            email.textContent =
+                admin.email ||
+                "No email";
+
+
+            role.textContent =
+                "Role: " +
+                formatRole(
+                    admin.role
+                );
+
+
+            status.textContent =
+                "Status: " +
+                (
+                    admin.status ||
+                    "active"
+                );
+
+
             /*
-             * Never allow the Superadmin
-             * to accidentally remove themselves.
-             */
+                Prevent the superadmin
+                from accidentally removing
+                themselves.
+            */
 
             if (
                 admin.id ===
@@ -351,14 +363,18 @@ function displayAdministrators(
                 removeButton.disabled =
                     true;
 
-                removeButton.textContent =
-                    "👑 Your Account";
+                status.textContent +=
+                    " • YOU";
 
             }
 
 
+            /* =========================
+               CHANGE ROLE
+            ========================== */
+
             promoteButton.onclick =
-            async () => {
+            async function () {
 
                 await changeRole(
                     admin
@@ -367,10 +383,14 @@ function displayAdministrators(
             };
 
 
-            removeButton.onclick =
-            async () => {
+            /* =========================
+               REMOVE ADMIN
+            ========================== */
 
-                await removeAdministrator(
+            removeButton.onclick =
+            async function () {
+
+                await removeAdmin(
                     admin
                 );
 
@@ -387,13 +407,417 @@ function displayAdministrators(
 }
 
 
-/* =========================================================
-   SEARCH ADMINISTRATORS
-========================================================= */
+/* =====================================================
+   CHANGE ROLE
+===================================================== */
+
+async function changeRole(
+    admin
+) {
+
+    if (
+        admin.id ===
+        currentUser.id
+    ) {
+
+        alert(
+            "You cannot change your own role."
+        );
+
+        return;
+
+    }
+
+
+    const newRole =
+        prompt(
+            "Enter the new role:\n\n" +
+            "admin\n" +
+            "newsroom\n" +
+            "superadmin"
+        );
+
+
+    if (!newRole) {
+
+        return;
+
+    }
+
+
+    const role =
+        newRole
+            .trim()
+            .toLowerCase();
+
+
+    if (
+        ![
+            "admin",
+            "newsroom",
+            "superadmin"
+        ].includes(role)
+    ) {
+
+        alert(
+            "Invalid role."
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            "Change " +
+            (admin.email || "this user") +
+            " to " +
+            role +
+            "?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+    await supabase
+        .from("profiles")
+        .update({
+            role: role
+        })
+        .eq(
+            "id",
+            admin.id
+        );
+
+
+    if (error) {
+
+        console.error(
+            "ROLE UPDATE ERROR:",
+            error
+        );
+
+
+        alert(
+            "Unable to change role:\n\n" +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    await logAdminAction(
+        "Changed " +
+        (admin.email || admin.id) +
+        " role to " +
+        role
+    );
+
+
+    alert(
+        "Role changed successfully."
+    );
+
+
+    await loadAdministrators();
+
+}
+
+
+/* =====================================================
+   REMOVE ADMIN
+===================================================== */
+
+async function removeAdmin(
+    admin
+) {
+
+    if (
+        admin.id ===
+        currentUser.id
+    ) {
+
+        alert(
+            "You cannot remove yourself."
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            "Remove administrator privileges from:\n\n" +
+            (admin.email || admin.id) +
+            "?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+    await supabase
+        .from("profiles")
+        .update({
+            role: "user"
+        })
+        .eq(
+            "id",
+            admin.id
+        );
+
+
+    if (error) {
+
+        console.error(
+            "REMOVE ADMIN ERROR:",
+            error
+        );
+
+
+        alert(
+            "Unable to remove administrator:\n\n" +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    await logAdminAction(
+        "Removed administrator privileges from " +
+        (admin.email || admin.id)
+    );
+
+
+    alert(
+        "Administrator removed successfully."
+    );
+
+
+    await loadAdministrators();
+
+}
+
+
+/* =====================================================
+   ADD ADMIN
+===================================================== */
+
+addAdmin.addEventListener(
+    "click",
+    async function () {
+
+        const email =
+            adminEmail.value
+                .trim()
+                .toLowerCase();
+
+
+        const role =
+            adminRole.value;
+
+
+        if (!email) {
+
+            showMessage(
+                "Enter the user's email address.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        addAdmin.disabled =
+            true;
+
+
+        showMessage(
+            "Searching for user...",
+            "info"
+        );
+
+
+        try {
+
+            /*
+                Find an existing
+                Prudence 2 profile.
+            */
+
+            const {
+                data: userProfile,
+                error
+            } =
+            await supabase
+                .from("profiles")
+                .select(
+                    "id, username, email, role, status"
+                )
+                .eq(
+                    "email",
+                    email
+                )
+                .maybeSingle();
+
+
+            if (error) {
+
+                throw error;
+
+            }
+
+
+            if (!userProfile) {
+
+                showMessage(
+                    "No Prudence 2 user was found with that email.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            if (
+                userProfile.id ===
+                currentUser.id
+            ) {
+
+                showMessage(
+                    "You are already a Super Admin.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            const confirmed =
+                confirm(
+                    "Make " +
+                    (
+                        userProfile.username ||
+                        userProfile.email
+                    ) +
+                    " a " +
+                    formatRole(role) +
+                    "?"
+                );
+
+
+            if (!confirmed) {
+
+                return;
+
+            }
+
+
+            const {
+                error: updateError
+            } =
+            await supabase
+                .from("profiles")
+                .update({
+                    role: role
+                })
+                .eq(
+                    "id",
+                    userProfile.id
+                );
+
+
+            if (updateError) {
+
+                throw updateError;
+
+            }
+
+
+            await logAdminAction(
+                "Added " +
+                userProfile.email +
+                " as " +
+                role
+            );
+
+
+            showMessage(
+                "Administrator added successfully.",
+                "success"
+            );
+
+
+            adminEmail.value =
+                "";
+
+
+            adminRole.value =
+                "admin";
+
+
+            await loadAdministrators();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "ADD ADMIN ERROR:",
+                error
+            );
+
+
+            showMessage(
+                error.message ||
+                "Unable to add administrator.",
+                "error"
+            );
+
+        }
+
+        finally {
+
+            addAdmin.disabled =
+                false;
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
 
 searchAdmin.addEventListener(
     "input",
-    () => {
+    function () {
 
         const keyword =
             searchAdmin.value
@@ -430,12 +854,21 @@ searchAdmin.addEventListener(
                         ).toLowerCase();
 
 
+                    const role =
+                        (
+                            admin.role ||
+                            ""
+                        ).toLowerCase();
+
+
                     return (
                         username.includes(
                             keyword
-                        )
-                        ||
+                        ) ||
                         email.includes(
+                            keyword
+                        ) ||
+                        role.includes(
                             keyword
                         )
                     );
@@ -452,569 +885,107 @@ searchAdmin.addEventListener(
 );
 
 
-/* =========================================================
-   SEARCH USERS TO ADD
-========================================================= */
+/* =====================================================
+   ADMIN ACTIVITY LOG
+===================================================== */
 
-let searchTimer = null;
-
-
-adminSearch.addEventListener(
-    "input",
-    () => {
-
-        clearTimeout(
-            searchTimer
-        );
-
-
-        const keyword =
-            adminSearch.value
-                .trim();
-
-
-        selectedProfile =
-            null;
-
-
-        selectedUser.style.display =
-            "none";
-
-
-        searchResults.innerHTML =
-            "";
-
-
-        if (
-            keyword.length < 2
-        ) {
-
-            return;
-
-        }
-
-
-        searchTimer =
-            setTimeout(
-                () => {
-
-                    searchUsers(
-                        keyword
-                    );
-
-                },
-                400
-            );
-
-    }
-);
-
-
-/* =========================================================
-   SEARCH USERS
-========================================================= */
-
-async function searchUsers(
-    keyword
+async function logAdminAction(
+    action
 ) {
 
-    searchResults.innerHTML = `
-        <p>Searching...</p>
-    `;
-
-
     const {
-        data,
         error
     } =
     await supabase
-        .from("profiles")
-        .select(`
-            id,
-            username,
-            email,
-            role,
-            status
-        `)
-        .or(
-            `email.ilike.%${keyword}%,username.ilike.%${keyword}%`
-        )
-        .limit(10);
+        .from("admin_logs")
+        .insert({
+            action: action,
+            performed_by:
+                currentUser.id
+        });
 
 
     if (error) {
 
         console.error(
-            "USER SEARCH ERROR:",
+            "ADMIN LOG ERROR:",
             error
         );
 
-
-        searchResults.innerHTML = `
-
-            <p class="error-text">
-
-                Unable to search users.
-
-            </p>
-
-        `;
-
-        return;
-
     }
-
-
-    const users =
-        (data || []).filter(
-            user =>
-
-                user.role !==
-                    "admin" &&
-
-                user.role !==
-                    "newsroom" &&
-
-                user.role !==
-                    "superadmin"
-
-        );
-
-
-    searchResults.innerHTML =
-        "";
-
-
-    if (
-        users.length === 0
-    ) {
-
-        searchResults.innerHTML = `
-
-            <p class="empty-search">
-
-                No eligible users found.
-
-            </p>
-
-        `;
-
-        return;
-
-    }
-
-
-    users.forEach(
-        user => {
-
-            const button =
-                document.createElement(
-                    "button"
-                );
-
-
-            button.type =
-                "button";
-
-
-            button.className =
-                "search-result";
-
-
-            button.innerHTML = `
-
-                <strong>
-                    ${escapeHtml(
-                        user.username ||
-                        "No username"
-                    )}
-                </strong>
-
-                <span>
-                    ${escapeHtml(
-                        user.email ||
-                        "No email"
-                    )}
-                </span>
-
-            `;
-
-
-            button.onclick =
-            () => {
-
-                selectUser(
-                    user
-                );
-
-            };
-
-
-            searchResults.appendChild(
-                button
-            );
-
-        }
-    );
 
 }
 
 
-/* =========================================================
-   SELECT USER
-========================================================= */
-
-function selectUser(
-    user
-) {
-
-    selectedProfile =
-        user;
-
-
-    selectedUserName.textContent =
-        user.username ||
-        "No username";
-
-
-    selectedUserEmail.textContent =
-        user.email ||
-        "No email";
-
-
-    selectedUser.style.display =
-        "flex";
-
-
-    searchResults.innerHTML =
-        "";
-
-
-    adminSearch.value =
-        user.email ||
-        user.username ||
-        "";
-
-}
-
-
-/* =========================================================
-   ADD ADMINISTRATOR
-========================================================= */
-
-addAdmin.addEventListener(
-    "click",
-    async () => {
-
-        if (!selectedProfile) {
-
-            alert(
-                "Search for and select a user first."
-            );
-
-            return;
-
-        }
-
-
-        const role =
-            adminRole.value;
-
-
-        if (
-            ![
-                "admin",
-                "newsroom"
-            ].includes(role)
-        ) {
-
-            alert(
-                "Invalid administrator role."
-            );
-
-            return;
-
-        }
-
-
-        const confirmed =
-            confirm(
-                `Make ${selectedProfile.email} a ${role}?`
-            );
-
-
-        if (!confirmed) {
-
-            return;
-
-        }
-
-
-        addAdmin.disabled =
-            true;
-
-
-        addAdmin.textContent =
-            "Updating...";
-
-
-        const {
-            error
-        } =
-        await supabase
-            .from("profiles")
-            .update({
-                role: role,
-                status: "active"
-            })
-            .eq(
-                "id",
-                selectedProfile.id
-            );
-
-
-        if (error) {
-
-            console.error(
-                "ADD ADMIN ERROR:",
-                error
-            );
-
-
-            alert(
-                "Unable to add administrator:\n" +
-                error.message
-            );
-
-        }
-        else {
-
-            alert(
-                "Administrator added successfully."
-            );
-
-
-            selectedProfile =
-                null;
-
-
-            selectedUser.style.display =
-                "none";
-
-
-            selectedUserName.textContent =
-                "";
-
-
-            selectedUserEmail.textContent =
-                "";
-
-
-            adminSearch.value =
-                "";
-
-
-            await loadAdministrators();
-
-        }
-
-
-        addAdmin.disabled =
-            false;
-
-
-        addAdmin.textContent =
-            "➕ Make Administrator";
-
-    }
-);
-
-
-/* =========================================================
-   CHANGE ROLE
-========================================================= */
-
-async function changeRole(
-    admin
+/* =====================================================
+   FORMAT ROLE
+===================================================== */
+
+function formatRole(
+    role
 ) {
 
     if (
-        admin.id ===
-        currentUser.id
+        role ===
+        "superadmin"
     ) {
 
-        return;
-
-    }
-
-
-    const newRole =
-        prompt(
-            `Current role: ${admin.role}\n\nEnter new role:\nadmin\nnewsroom`
-        );
-
-
-    if (!newRole) {
-
-        return;
-
-    }
-
-
-    const role =
-        newRole
-            .trim()
-            .toLowerCase();
-
-
-    if (
-        ![
-            "admin",
-            "newsroom"
-        ].includes(role)
-    ) {
-
-        alert(
-            "Only admin or newsroom can be selected here."
-        );
-
-        return;
+        return "Super Admin";
 
     }
 
 
     if (
         role ===
-        admin.role
+        "newsroom"
     ) {
 
-        return;
+        return "Newsroom Admin";
 
     }
 
-
-    const {
-        error
-    } =
-    await supabase
-        .from("profiles")
-        .update({
-            role: role
-        })
-        .eq(
-            "id",
-            admin.id
-        );
-
-
-    if (error) {
-
-        console.error(
-            "ROLE CHANGE ERROR:",
-            error
-        );
-
-
-        alert(
-            "Unable to change role:\n" +
-            error.message
-        );
-
-        return;
-
-    }
-
-
-    alert(
-        "Administrator role updated."
-    );
-
-
-    await loadAdministrators();
-
-}
-
-
-/* =========================================================
-   REMOVE ADMINISTRATOR
-========================================================= */
-
-async function removeAdministrator(
-    admin
-) {
 
     if (
-        admin.id ===
-        currentUser.id
+        role ===
+        "admin"
     ) {
 
-        alert(
-            "You cannot remove your own Superadmin account."
-        );
-
-        return;
+        return "Administrator";
 
     }
 
 
-    const confirmed =
-        confirm(
-            `Remove administrator privileges from ${admin.email}?`
-        );
-
-
-    if (!confirmed) {
-
-        return;
-
-    }
-
-
-    const {
-        error
-    } =
-    await supabase
-        .from("profiles")
-        .update({
-            role: "user"
-        })
-        .eq(
-            "id",
-            admin.id
-        );
-
-
-    if (error) {
-
-        console.error(
-            "REMOVE ADMIN ERROR:",
-            error
-        );
-
-
-        alert(
-            "Unable to remove administrator:\n" +
-            error.message
-        );
-
-        return;
-
-    }
-
-
-    alert(
-        "Administrator privileges removed."
-    );
-
-
-    await loadAdministrators();
+    return role || "User";
 
 }
 
 
-/* =========================================================
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHtml(
+    value
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        value || "";
+
+
+    return div.innerHTML;
+
+}
+
+
+/* =====================================================
    START
-========================================================= */
+===================================================== */
 
 (async function () {
 
@@ -1034,7 +1005,10 @@ async function removeAdministrator(
         }
 
 
-        await loadCurrentProfile();
+        await checkSuperadmin(
+            currentUser
+        );
+
 
         await loadAdministrators();
 
@@ -1054,7 +1028,7 @@ async function removeAdministrator(
 
 
         window.location.href =
-            "admin-dashboard.html";
+            "../dashboard.html";
 
     }
 
