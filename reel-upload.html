@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Prudence 2 | Upload Christian Reel</title>
+
+<link
+    rel="stylesheet"
+    href="reel-upload.css"
+>
+
+<script
+    type="module"
+    src="reel-upload.js"
+    defer
+></script>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div class="brand">
+        ✝ PRUDENCE 2
+    </div>
+
+    <h1>🎬 Upload Christian Reel</h1>
+
+    <p>
+        Share something that encourages others in Christ. ❤️
+    </p>
+
+</header>
+
+
+<main class="upload-container">
+
+
+    <div class="upload-card">
+
+        <h2>Share a Reel</h2>
+
+        <p class="intro">
+            Upload a short Christian video for the Prudence 2 community.
+        </p>
+
+
+        <label for="videoFile">
+            Choose Video
+        </label>
+
+        <input
+            type="file"
+            id="videoFile"
+            accept="video/*"
+        >
+
+
+        <div
+            id="videoPreviewContainer"
+            class="video-preview-container"
+            style="display:none;"
+        >
+
+            <video
+                id="videoPreview"
+                controls
+                playsinline
+            ></video>
+
+        </div>
+
+
+        <label for="caption">
+            Caption
+        </label>
+
+        <textarea
+            id="caption"
+            maxlength="1000"
+            rows="4"
+            placeholder="Write an encouraging Christian message..."
+        ></textarea>
+
+
+        <div
+            id="progressContainer"
+            class="progress-container"
+            style="display:none;"
+        >
+
+            <div class="progress-bar">
+
+                <div
+                    id="progressBar"
+                    class="progress"
+                ></div>
+
+            </div>
+
+            <p id="progressText">
+                Uploading...
+            </p>
+
+        </div>
+
+
+        <button
+            id="uploadButton"
+            type="button"
+        >
+            ⬆️ Publish Reel
+        </button>
+
+
+        <button
+            id="backButton"
+            type="button"
+            class="back-button"
+        >
+            ← Back to Reels
+        </button>
+
+
+        <p
+            id="statusMessage"
+            class="status-message"
+        ></p>
+
+
+    </div>
+
+
+</main>
+
+
+</body>
+
+</html>
