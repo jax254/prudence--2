@@ -1,0 +1,363 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+
+body{
+    background:#eef5ff;
+    color:#222;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.top-header{
+
+    background:#0066ff;
+
+    color:white;
+
+    text-align:center;
+
+    padding:22px 15px;
+
+}
+
+
+.brand{
+
+    font-size:20px;
+
+    font-weight:bold;
+
+    margin-bottom:8px;
+
+}
+
+
+.top-header h1{
+
+    color:white;
+
+    font-size:30px;
+
+    margin-bottom:7px;
+
+}
+
+
+.top-header p{
+
+    font-size:15px;
+
+    opacity:.95;
+
+}
+
+
+/* =========================
+   PAGE
+========================= */
+
+.reels-page{
+
+    width:100%;
+
+    max-width:1100px;
+
+    margin:auto;
+
+    padding:20px 15px 40px;
+
+}
+
+
+/* =========================
+   INTRO
+========================= */
+
+.reels-intro{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:14px;
+
+    margin-bottom:20px;
+
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.08);
+
+}
+
+
+.reels-intro h2{
+
+    color:#0066ff;
+
+    margin-bottom:8px;
+
+}
+
+
+.reels-intro p{
+
+    color:#666;
+
+    line-height:1.5;
+
+}
+
+
+/* =========================
+   FEED
+========================= */
+
+.reels-feed{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(280px,1fr)
+        );
+
+    gap:22px;
+
+}
+
+
+/* =========================
+   REEL CARD
+========================= */
+
+.reel-card{
+
+    background:#111;
+
+    border-radius:16px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 5px 18px
+        rgba(0,0,0,.18);
+
+    position:relative;
+
+}
+
+
+/* =========================
+   VIDEO
+========================= */
+
+.reel-video{
+
+    width:100%;
+
+    aspect-ratio:9 / 16;
+
+    max-height:650px;
+
+    display:block;
+
+    background:#000;
+
+    object-fit:cover;
+
+}
+
+
+/* =========================
+   INFORMATION
+========================= */
+
+.reel-info{
+
+    background:white;
+
+    padding:15px;
+
+}
+
+
+.reel-user{
+
+    font-weight:bold;
+
+    color:#0066ff;
+
+    margin-bottom:7px;
+
+}
+
+
+.reel-caption{
+
+    color:#333;
+
+    line-height:1.5;
+
+    white-space:pre-wrap;
+
+    word-break:break-word;
+
+}
+
+
+.reel-date{
+
+    margin-top:8px;
+
+    color:#888;
+
+    font-size:12px;
+
+}
+
+
+/* =========================
+   ACTIONS
+========================= */
+
+.reel-actions{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-top:14px;
+
+}
+
+
+.reel-actions button{
+
+    border:none;
+
+    border-radius:8px;
+
+    padding:9px 14px;
+
+    background:#eef4ff;
+
+    color:#0066ff;
+
+    cursor:pointer;
+
+    font-size:14px;
+
+}
+
+
+.reel-actions button:hover{
+
+    background:#0066ff;
+
+    color:white;
+
+}
+
+
+.like-button.liked{
+
+    background:#ff1744;
+
+    color:white;
+
+}
+
+
+/* =========================
+   EMPTY / LOADING
+========================= */
+
+.loading,
+.no-reels{
+
+    background:white;
+
+    padding:30px;
+
+    border-radius:14px;
+
+    text-align:center;
+
+    color:#666;
+
+    grid-column:1 / -1;
+
+}
+
+
+.no-reels h3{
+
+    color:#0066ff;
+
+    margin-bottom:8px;
+
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:600px){
+
+    .top-header{
+
+        padding:18px 12px;
+
+    }
+
+
+    .top-header h1{
+
+        font-size:24px;
+
+    }
+
+
+    .reels-page{
+
+        padding:
+            12px
+            10px
+            30px;
+
+    }
+
+
+    .reels-feed{
+
+        grid-template-columns:1fr;
+
+        gap:15px;
+
+    }
+
+
+    .reel-card{
+
+        border-radius:12px;
+
+    }
+
+
+    .reel-video{
+
+        max-height:none;
+
+    }
+
+}
