@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -10,7 +10,7 @@
     content="width=device-width, initial-scale=1.0"
 >
 
-<title>Prudence 2 | Administrator Management</title>
+<title>Prudence 2 | Admin Management</title>
 
 <link
     rel="stylesheet"
@@ -25,7 +25,9 @@
 
 </head>
 
+
 <body>
+
 
 <header>
 
@@ -34,11 +36,11 @@
     </div>
 
     <h1>
-        Administrator Management
+        👑 SUPERADMIN
     </h1>
 
     <p>
-        Superadmin Control Center
+        Administrator Management
     </p>
 
 </header>
@@ -47,67 +49,60 @@
 <main class="container">
 
 
-    <!-- BACK -->
+    <div class="top-actions">
 
-    <button
-        id="backButton"
-        class="back-button"
-        type="button"
-    >
-        ← Back to Admin Dashboard
-    </button>
+        <button
+            type="button"
+            onclick="location.href='admin-dashboard.html'"
+        >
+            ← Back to Admin Panel
+        </button>
 
-
-    <!-- ACCESS STATUS -->
-
-    <section class="security-card">
-
-        <div class="security-icon">
-            🛡️
-        </div>
-
-        <div>
-
-            <h2>
-                Superadmin Control
-            </h2>
-
-            <p>
-                Only the Superadmin can manage administrator roles.
-            </p>
-
-        </div>
-
-    </section>
+    </div>
 
 
-    <!-- ADD ADMIN -->
-
-    <section class="panel">
+    <section class="add-admin">
 
         <h2>
             Add Administrator
         </h2>
 
         <p class="description">
-            Enter the email address of an existing Prudence 2 user.
+            Search for an existing Prudence 2 user
+            and assign an administrator role.
         </p>
 
-        <label for="adminEmail">
-            User Email
-        </label>
 
         <input
-            type="email"
-            id="adminEmail"
-            placeholder="user@example.com"
-            autocomplete="email"
+            type="text"
+            id="adminSearch"
+            placeholder="Search by email or username..."
+            autocomplete="off"
         >
 
 
-        <label for="adminRole">
-            Administrator Role
-        </label>
+        <div
+            id="searchResults"
+            class="search-results"
+        ></div>
+
+
+        <div
+            id="selectedUser"
+            class="selected-user"
+            style="display:none;"
+        >
+
+            <strong>
+                Selected User
+            </strong>
+
+            <span id="selectedUserName"></span>
+
+            <span id="selectedUserEmail"></span>
+
+        </div>
+
 
         <select id="adminRole">
 
@@ -116,34 +111,26 @@
             </option>
 
             <option value="newsroom">
-                Newsroom Administrator
+                Newsroom Admin
             </option>
 
         </select>
 
 
         <button
-            id="addAdmin"
-            class="primary-button"
             type="button"
+            id="addAdmin"
         >
-            Add Administrator
+            ➕ Make Administrator
         </button>
-
-
-        <p
-            id="addStatus"
-            class="status-message"
-        ></p>
 
     </section>
 
 
-    <!-- ADMIN LIST -->
 
-    <section class="panel">
+    <section class="admin-list">
 
-        <div class="list-header">
+        <div class="section-heading">
 
             <div>
 
@@ -151,37 +138,27 @@
                     Current Administrators
                 </h2>
 
-                <p class="description">
-                    Manage existing administrator accounts.
+                <p>
+                    Only the Superadmin can change these roles.
                 </p>
 
             </div>
-
-            <span
-                id="adminTotal"
-                class="admin-total"
-            >
-                0
-            </span>
 
         </div>
 
 
         <input
-            type="search"
+            type="text"
             id="searchAdmin"
-            placeholder="Search by name or email..."
+            placeholder="Search administrators..."
         >
 
 
         <div
             id="adminsContainer"
-            class="admins-container"
         >
 
-            <p class="loading">
-                Loading administrators...
-            </p>
+            Loading administrators...
 
         </div>
 
@@ -190,6 +167,69 @@
 
 </main>
 
+
+<template id="adminTemplate">
+
+    <article class="admin-card">
+
+
+        <div class="admin-information">
+
+            <div class="admin-avatar">
+                👤
+            </div>
+
+
+            <div>
+
+                <h3 class="name">
+                    User
+                </h3>
+
+                <p class="email">
+                    email
+                </p>
+
+                <p class="role">
+                    Role
+                </p>
+
+                <p class="status">
+                    Status
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="buttons">
+
+
+            <button
+                type="button"
+                class="promote"
+            >
+                🔼 Change Role
+            </button>
+
+
+            <button
+                type="button"
+                class="remove"
+            >
+                🚫 Remove Admin
+            </button>
+
+
+        </div>
+
+
+    </article>
+
+</template>
+
+
 </body>
 
-</html>
+</html>                      
