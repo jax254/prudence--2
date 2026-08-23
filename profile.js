@@ -1,147 +1,462 @@
-import { auth, db } from "./firebase.js";
+import supabase from "./supabase.js";
 
-import {
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
-import {
-    doc,
-    getDoc,
-    updateDoc,
-    collection,
-    query,
-    where,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+/* =========================
+   ELEMENTS
+========================= */
 
-import {
-    getStorage,
-    ref,
-    uploadBytes,
-    getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
+const profileImage =
+    document.getElementById("profileImage");
 
-const storage = getStorage();
+const imageInput =
+    document.getElementById("imageInput");
 
-const profileImage = document.getElementById("profileImage");
-const imageInput = document.getElementById("imageInput");
+const username =
+    document.getElementById("username");
 
-const username = document.getElementById("username");
-const admissionNumber = document.getElementById("admissionNumber");
-const church = document.getElementById("church");
-const bibleVerse = document.getElementById("bibleVerse");
-const bio = document.getElementById("bio");
+const admissionNumber =
+    document.getElementById("admissionNumber");
 
-const saveProfile = document.getElementById("saveProfile");
+const church =
+    document.getElementById("church");
 
-const newsCount = document.getElementById("newsCount");
-const prayerCount = document.getElementById("prayerCount");
-const chatCount = document.getElementById("chatCount");
+const bibleVerse =
+    document.getElementById("bibleVerse");
+
+const bio =
+    document.getElementById("bio");
+
+const saveProfile =
+    document.getElementById("saveProfile");
+
+const newsCount =
+    document.getElementById("newsCount");
+
+const prayerCount =
+    document.getElementById("prayerCount");
+
+const chatCount =
+    document.getElementById("chatCount");
+
 
 let currentUser = null;
 
-// Check login
-onAuthStateChanged(auth, async (user) => {
 
-    if (!user) {
-        window.location.href = "login.html";
-        return;
+/* =========================
+   CHECK LOGIN
+========================= */
+
+async function checkLogin(){
+
+    const {
+        data,
+        error
+    } =
+    await supabase.auth.getUser();
+
+
+    if(error || !data.user){
+
+        window.location.href =
+            "login.html";
+
+        return false;
+
     }
 
-    currentUser = user;
 
-    loadProfile();
-    loadStatistics();
+    currentUser =
+        data.user;
 
-});
-
-// Load Profile
-async function loadProfile() {
-
-    const userRef = doc(db, "users", currentUser.uid);
-
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) return;
-
-    const data = userSnap.data();
-
-    username.value = data.username || "";
-    admissionNumber.value = data.admissionNumber || "";
-    church.value = data.church || "";
-    bibleVerse.value = data.bibleVerse || "";
-    bio.value = data.bio || "";
-
-    if (data.photoURL) {
-        profileImage.src = data.photoURL;
-    }
+    return true;
 
 }
 
-// Save Profile
-saveProfile.addEventListener("click", async () => {
 
-    let photoURL = profileImage.src;
+/* =========================
+   LOAD PROFILE
+========================= */
 
-    const file = imageInput.files[0];
+async function loadProfile(){
 
-    if (file) {
+    const {
+        data,
+        error
+    } =
+    await supabase
 
-        const storageRef = ref(
-            storage,
-            "profilePictures/" + currentUser.uid
+        .from("profiles")
+
+        .select(`
+            prudence_id,
+            username,
+            admission_number,
+            university,
+            church,
+            bible_verse,
+            bio,
+            profile_photo
+        `)
+
+        .eq(
+            "id",
+            currentUser.id
+        )
+
+        .single();
+
+
+    if(error){
+
+        console.error(
+            "PROFILE LOAD ERROR:",
+            error
         );
 
-        await uploadBytes(storageRef, file);
+        alert(
+            "Unable to load your profile."
+        );
 
-        photoURL = await getDownloadURL(storageRef);
+        return;
 
     }
 
-    await updateDoc(doc(db, "users", currentUser.uid), {
 
-        username: username.value.trim(),
-        church: church.value.trim(),
-        bibleVerse: bibleVerse.value.trim(),
-        bio: bio.value.trim(),
-        photoURL: photoURL
+    username.value =
+        data.username || "";
 
-    });
+    admissionNumber.value =
+        data.admission_number || "";
 
-    profileImage.src = photoURL;
+    church.value =
+        data.church || "";
 
-    alert("Profile updated successfully.");
+    bibleVerse.value =
+        data.bible_verse || "";
 
-});
+    bio.value =
+        data.bio || "";
 
-// Activity Statistics
-async function loadStatistics() {
 
-    newsCount.textContent = (
-        await getDocs(
-            query(
-                collection(db, "news"),
-                where("uid", "==", currentUser.uid)
-            )
-        )
-    ).size;
+    if(data.profile_photo){
 
-    prayerCount.textContent = (
-        await getDocs(
-            query(
-                collection(db, "prayers"),
-                where("uid", "==", currentUser.uid)
-            )
-        )
-    ).size;
+        profileImage.src =
+            data.profile_photo;
 
-    chatCount.textContent = (
-        await getDocs(
-            query(
-                collection(db, "messages"),
-                where("uid", "==", currentUser.uid)
-            )
-        )
-    ).size;
+    }
 
 }
+
+
+/* =========================
+   SAVE PROFILE
+========================= */
+
+saveProfile.addEventListener(
+    "click",
+    async () => {
+
+        if(!currentUser){
+
+            return;
+
+        }
+
+
+        saveProfile.disabled =
+            true;
+
+        saveProfile.textContent =
+            "Saving...";
+
+
+        try{
+
+            let profilePhoto =
+                null;
+
+
+            /*
+             * Upload profile picture
+             * to Supabase Storage
+             */
+
+            const file =
+                imageInput.files[0];
+
+
+            if(file){
+
+                const extension =
+                    file.name
+                        .split(".")
+                        .pop()
+                        .toLowerCase();
+
+
+                const fileName =
+                    `${currentUser.id}/profile-${crypto.randomUUID()}.${extension}`;
+
+
+                const {
+                    error:
+                        uploadError
+                } =
+                await supabase.storage
+
+                    .from("profile-pictures")
+
+                    .upload(
+                        fileName,
+                        file,
+                        {
+                            cacheControl:
+                                "3600",
+
+                            upsert:false,
+
+                            contentType:
+                                file.type
+                        }
+                    );
+
+
+                if(uploadError){
+
+                    throw uploadError;
+
+                }
+
+
+                const {
+                    data:
+                        publicData
+                } =
+                supabase.storage
+
+                    .from(
+                        "profile-pictures"
+                    )
+
+                    .getPublicUrl(
+                        fileName
+                    );
+
+
+                profilePhoto =
+                    publicData.publicUrl;
+
+
+                profileImage.src =
+                    profilePhoto;
+
+            }
+
+
+            /*
+             * Update profile
+             */
+
+            const updateData = {
+
+                username:
+                    username.value.trim(),
+
+                church:
+                    church.value.trim(),
+
+                bible_verse:
+                    bibleVerse.value.trim(),
+
+                bio:
+                    bio.value.trim()
+
+            };
+
+
+            if(profilePhoto){
+
+                updateData.profile_photo =
+                    profilePhoto;
+
+            }
+
+
+            const {
+                error
+            } =
+            await supabase
+
+                .from("profiles")
+
+                .update(
+                    updateData
+                )
+
+                .eq(
+                    "id",
+                    currentUser.id
+                );
+
+
+            if(error){
+
+                throw error;
+
+            }
+
+
+            alert(
+                "Profile updated successfully."
+            );
+
+
+        }
+        catch(error){
+
+            console.error(
+                "PROFILE UPDATE ERROR:",
+                error
+            );
+
+
+            alert(
+                "Unable to update your profile: " +
+                error.message
+            );
+
+        }
+
+
+        saveProfile.disabled =
+            false;
+
+        saveProfile.textContent =
+            "Save Profile";
+
+    }
+);
+
+
+/* =========================
+   LOAD STATISTICS
+========================= */
+
+async function loadStatistics(){
+
+    /*
+     * News
+     */
+
+    const {
+        count:
+            newsTotal
+    } =
+    await supabase
+
+        .from("news")
+
+        .select(
+            "*",
+            {
+                count:"exact",
+                head:true
+            }
+        )
+
+        .eq(
+            "user_id",
+            currentUser.id
+        );
+
+
+    newsCount.textContent =
+        newsTotal || 0;
+
+
+    /*
+     * Prayer requests
+     */
+
+    const {
+        count:
+            prayerTotal
+    } =
+    await supabase
+
+        .from("prayers")
+
+        .select(
+            "*",
+            {
+                count:"exact",
+                head:true
+            }
+        )
+
+        .eq(
+            "user_id",
+            currentUser.id
+        );
+
+
+    prayerCount.textContent =
+        prayerTotal || 0;
+
+
+    /*
+     * General chat messages
+     */
+
+    const {
+        count:
+            chatTotal
+    } =
+    await supabase
+
+        .from(
+            "general_chat_messages"
+        )
+
+        .select(
+            "*",
+            {
+                count:"exact",
+                head:true
+            }
+        )
+
+        .eq(
+            "user_id",
+            currentUser.id
+        );
+
+
+    chatCount.textContent =
+        chatTotal || 0;
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+(async function(){
+
+    const loggedIn =
+        await checkLogin();
+
+
+    if(!loggedIn){
+
+        return;
+
+    }
+
+
+    await loadProfile();
+
+    await loadStatistics();
+
+})();
