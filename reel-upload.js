@@ -387,7 +387,7 @@ uploadButton.addEventListener(
                         captionText,
 
                     status:
-                        "published"
+                        "pending"
 
                 });
 
