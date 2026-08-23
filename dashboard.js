@@ -6,10 +6,79 @@ const prudenceId = document.getElementById("prudenceId");
 const postComment = document.getElementById("postComment");
 const comment = document.getElementById("comment");
 const commentsContainer = document.getElementById("commentsContainer");
-
+const notificationBadge =
+    document.getElementById("notificationBadge");
 let currentUser = null;
 
+// =========================
+// LOAD UNREAD NOTIFICATIONS
+// =========================
 
+async function loadNotificationCount(){
+
+    if(!currentUser){
+
+        return;
+
+    }
+
+    const {
+        count,
+        error
+    } =
+    await supabase
+        .from("notifications")
+        .select(
+            "id",
+            {
+                count:"exact",
+                head:true
+            }
+        )
+        .eq(
+            "user_id",
+            currentUser.id
+        )
+        .eq(
+            "is_read",
+            false
+        );
+
+
+    if(error){
+
+        console.error(
+            "NOTIFICATION COUNT ERROR:",
+            error
+        );
+
+        return;
+
+    }
+
+
+    if(
+        count &&
+        count > 0
+    ){
+
+        notificationBadge.textContent =
+            count > 99
+                ? "99+"
+                : count;
+
+        notificationBadge.style.display =
+            "inline-flex";
+
+    }
+    else{
+
+        notificationBadge.style.display =
+            "none";
+
+    }
+
+}
 // Load logged-in user
 async function loadUser() {
 
