@@ -93,7 +93,7 @@ async function loadUser() {
     }
 
     currentUser = user;
-
+    loadNotificationCount();
     const { data: profile, error: profileError } =
         await supabase
             .from("profiles")
