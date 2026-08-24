@@ -1,92 +1,243 @@
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,Helvetica,sans-serif;
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
-background:#eef5ff;
+    background:#eef5ff;
+    color:#222;
 }
 
 header{
-background:#0066ff;
-color:white;
-padding:25px;
-text-align:center;
+    background:#0066ff;
+    color:white;
+    text-align:center;
+    padding:25px 15px;
+}
+
+.brand{
+    font-size:20px;
+    font-weight:bold;
 }
 
 header h1{
-color:purple;
+    color:white;
+    margin:8px 0;
 }
 
 .container{
-width:95%;
-max-width:1100px;
-margin:25px auto;
+    width:95%;
+    max-width:1100px;
+    margin:20px auto;
+}
+
+.top-actions{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.top-actions button{
+    border:none;
+    padding:12px 18px;
+    border-radius:8px;
+    background:#0066ff;
+    color:white;
+    cursor:pointer;
+    font-size:15px;
+}
+
+.top-actions button:hover{
+    background:purple;
+}
+
+.panel{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+    margin-bottom:20px;
+}
+
+.panel-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:18px;
+}
+
+.panel-heading h2{
+    color:#0066ff;
+    margin-bottom:5px;
+}
+
+.panel-heading p{
+    color:#666;
+}
+
+.count{
+    min-width:42px;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:#0066ff;
+    color:white;
+    font-weight:bold;
+}
+
+.live-list{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
 }
 
 .live-card{
-background:white;
-padding:20px;
-margin-bottom:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,.1);
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:18px;
+    background:#fafafa;
 }
 
 .live-card h3{
-color:#0066ff;
-margin-bottom:10px;
+    color:#0066ff;
+    margin-bottom:8px;
 }
 
 .live-card p{
-margin-bottom:10px;
+    margin:7px 0;
+    line-height:1.5;
 }
 
-.live-card a{
-display:inline-block;
-margin-bottom:15px;
-color:#0066ff;
-text-decoration:none;
-font-weight:bold;
+.requester{
+    font-size:14px;
+    color:#555;
 }
 
-.buttons{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
+.live-badge{
+    display:inline-block;
+    background:#d93025;
+    color:white;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:10px;
 }
 
-.buttons button{
-flex:1;
-padding:15px;
-border:none;
-border-radius:8px;
-font-size:16px;
-cursor:pointer;
-color:white;
+.pending-badge{
+    display:inline-block;
+    background:#f5a623;
+    color:white;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:10px;
 }
 
-.approve{
-background:green;
+.rejected-badge{
+    display:inline-block;
+    background:#777;
+    color:white;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:10px;
 }
 
-.reject{
-background:red;
+.ended-badge{
+    display:inline-block;
+    background:#555;
+    color:white;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:10px;
 }
 
-.stop{
-background:#ff9800;
+.actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:15px;
 }
 
-.approve:hover{
-background:#006400;
+.actions button{
+    border:none;
+    padding:10px 14px;
+    border-radius:7px;
+    color:white;
+    cursor:pointer;
+    font-weight:bold;
 }
 
-.reject:hover{
-background:#8b0000;
+.approve-btn{
+    background:#188038;
 }
 
-.stop:hover{
-background:#e68900;
+.reject-btn{
+    background:#d93025;
+}
+
+.end-btn{
+    background:#555;
+}
+
+.actions button:hover{
+    opacity:.85;
+}
+
+.stream-link{
+    display:block;
+    margin-top:10px;
+    word-break:break-all;
+    color:#0066ff;
+}
+
+.loading,
+.empty-state,
+.error-message{
+    padding:20px;
+    text-align:center;
+    border-radius:8px;
+    background:#f5f5f5;
+}
+
+.error-message{
+    color:#d93025;
+}
+
+.empty-state{
+    color:#666;
+}
+
+@media(max-width:600px){
+
+    .top-actions{
+        flex-direction:column;
+    }
+
+    .top-actions button{
+        width:100%;
+    }
+
+    .panel-heading{
+        align-items:flex-start;
+    }
+
+    .actions{
+        flex-direction:column;
+    }
+
+    .actions button{
+        width:100%;
+    }
+
 }
