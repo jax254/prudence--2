@@ -1,625 +1,432 @@
-import supabase from "./supabase.js";
+import { createClient } from
+"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 
-/* =========================
-   ELEMENTS
-========================= */
+// ===============================
+// SUPABASE
+// ===============================
 
-const liveList =
-    document.getElementById(
-        "liveList"
-    );
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
 
-const liveRequestForm =
-    document.getElementById(
-        "liveRequestForm"
-    );
+const SUPABASE_PUBLISHABLE_KEY =
+"YOUR_SUPABASE_PUBLISHABLE_KEY";
 
-const titleInput =
-    document.getElementById(
-        "title"
-    );
-
-const preacherInput =
-    document.getElementById(
-        "preacher"
-    );
-
-const descriptionInput =
-    document.getElementById(
-        "description"
-    );
-
-const streamLinkInput =
-    document.getElementById(
-        "streamLink"
-    );
-
-const requestLive =
-    document.getElementById(
-        "requestLive"
-    );
-
-const requestStatus =
-    document.getElementById(
-        "requestStatus"
-    );
-
-const myRequests =
-    document.getElementById(
-        "myRequests"
-    );
+const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
 
 
-let currentUser = null;
+// ===============================
+// LIVEKIT
+// ===============================
+
+const LIVEKIT_URL =
+"wss://prudence-2-live-00bm3cbr.livekit.cloud
+
+   ";
 
 
-/* =========================
-   LOGIN
-========================= */
+// ===============================
+// ELEMENTS
+// ===============================
 
-async function checkLogin(){
+const startLive =
+document.getElementById("startLive");
+
+const joinLive =
+document.getElementById("joinLive");
+
+const endLive =
+document.getElementById("endLive");
+
+const liveVideo =
+document.getElementById("liveVideo");
+
+const statusText =
+document.getElementById("status");
+
+
+// ===============================
+// ROOM
+// ===============================
+
+let room = null;
+
+let currentRoomName = null;
+
+let isBroadcaster = false;
+
+
+// ===============================
+// GET USER
+// ===============================
+
+async function getCurrentUser() {
 
     const {
         data,
         error
-    } =
-    await supabase.auth.getUser();
+    } = await supabase.auth.getUser();
 
 
-    if(
-        error ||
-        !data.user
-    ){
+    if (error || !data.user) {
 
-        window.location.href =
-            "login.html";
+        window.location.href = "login.html";
 
-        return false;
+        return null;
 
     }
 
 
-    currentUser =
-        data.user;
-
-    return true;
+    return data.user;
 
 }
 
 
-/* =========================
-   STATUS
-========================= */
+// ===============================
+// GET LIVEKIT TOKEN
+// ===============================
 
-function showStatus(
-    message,
-    type = ""
-){
-
-    requestStatus.textContent =
-        message;
-
-    requestStatus.className =
-        "status-message " +
-        type;
-
-}
-
-
-/* =========================
-   ESCAPE HTML
-========================= */
-
-function escapeHTML(text){
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-    div.textContent =
-        text || "";
-
-    return div.innerHTML;
-
-}
-
-
-/* =========================
-   LOAD LIVE BROADCASTS
-========================= */
-
-async function loadLiveBroadcasts(){
-
-    liveList.innerHTML = `
-        <div class="loading">
-            Loading live broadcasts...
-        </div>
-    `;
+async function getLiveKitToken(
+    roomName,
+    participantName,
+    participantIdentity
+) {
 
 
     const {
         data,
         error
-    } =
-    await supabase
+    } = await supabase.functions.invoke(
+        "livekit-token",
+        {
 
-        .from("live_streams")
+            body: {
 
-        .select(`
-            id,
-            user_id,
-            title,
-            preacher,
-            description,
-            stream_url,
-            started_at
-        `)
+                roomName,
+                participantName,
+                participantIdentity
 
-        .eq(
-            "approved",
-            true
-        )
-
-        .eq(
-            "status",
-            "live"
-        )
-
-        .order(
-            "started_at",
-            {
-                ascending:false
             }
+
+        }
+    );
+
+
+    if (error) {
+
+        console.error(error);
+
+        throw new Error(
+            "Unable to get LiveKit token."
         );
-
-
-    if(error){
-
-        console.error(
-            "LIVE LOAD ERROR:",
-            error
-        );
-
-        liveList.innerHTML = `
-            <div class="error-message">
-                Unable to load live broadcasts.
-            </div>
-        `;
-
-        return;
 
     }
 
 
-    if(
-        !data ||
-        data.length === 0
-    ){
+    if (!data || !data.token) {
 
-        liveList.innerHTML = `
-            <div class="empty-state">
-
-                🔴
-
-                <h3>
-                    No Live Broadcasts
-                </h3>
-
-                <p>
-                    There are no live broadcasts
-                    at the moment.
-                </p>
-
-            </div>
-        `;
-
-        return;
+        throw new Error(
+            "LiveKit token was not returned."
+        );
 
     }
 
 
-    liveList.innerHTML = "";
+    return data.token;
+
+}
 
 
-    data.forEach(
-        live => {
+// ===============================
+// CONNECT TO ROOM
+// ===============================
 
-            const card =
-                document.createElement(
-                    "article"
+async function connectToRoom(
+    roomName,
+    publish
+) {
+
+
+    const user = await getCurrentUser();
+
+
+    if (!user) return;
+
+
+    const participantName =
+        user.user_metadata?.full_name ||
+        user.email ||
+        "Prudence User";
+
+
+    const participantIdentity =
+        user.id;
+
+
+    statusText.textContent =
+        "Connecting...";
+
+
+    const token =
+        await getLiveKitToken(
+            roomName,
+            participantName,
+            participantIdentity
+        );
+
+
+    room = new LivekitClient.Room({
+
+        adaptiveStream: true,
+
+        dynacast: true
+
+    });
+
+
+    room.on(
+        LivekitClient.RoomEvent.TrackSubscribed,
+        (track) => {
+
+            if (
+                track.kind ===
+                LivekitClient.Track.Kind.Video
+            ) {
+
+                const element =
+                    track.attach();
+
+                element.autoplay = true;
+                element.playsInline = true;
+
+                document
+                    .getElementById("videoContainer")
+                    .appendChild(element);
+
+            }
+
+
+            if (
+                track.kind ===
+                LivekitClient.Track.Kind.Audio
+            ) {
+
+                const element =
+                    track.attach();
+
+                element.autoplay = true;
+
+                document
+                    .getElementById("videoContainer")
+                    .appendChild(element);
+
+            }
+
+        }
+    );
+
+
+    room.on(
+        LivekitClient.RoomEvent.TrackUnsubscribed,
+        (track) => {
+
+            track.detach();
+
+        }
+    );
+
+
+    room.on(
+        LivekitClient.RoomEvent.Disconnected,
+        () => {
+
+            statusText.textContent =
+                "Disconnected";
+
+        }
+    );
+
+
+    await room.connect(
+        LIVEKIT_URL,
+        token
+    );
+
+
+    currentRoomName =
+        roomName;
+
+
+    statusText.textContent =
+        publish
+        ? "🔴 LIVE"
+        : "Watching Live";
+
+
+    // ===============================
+    // BROADCASTER
+    // ===============================
+
+    if (publish) {
+
+        isBroadcaster = true;
+
+
+        await room
+            .localParticipant
+            .enableCameraAndMicrophone();
+
+
+        const cameraPublication =
+            room.localParticipant
+                .getTrackPublication(
+                    LivekitClient.Track.Source.Camera
                 );
 
-            card.className =
-                "live-card";
 
+        if (
+            cameraPublication &&
+            cameraPublication.track
+        ) {
 
-            card.innerHTML = `
+            const element =
+                cameraPublication.track.attach();
 
-                <div class="live-badge">
-                    🔴 LIVE
-                </div>
+            element.autoplay = true;
+            element.playsInline = true;
+            element.muted = true;
 
-                <h3>
-                    ${escapeHTML(
-                        live.title
-                    )}
-                </h3>
-
-                <p class="preacher">
-                    ✝ ${escapeHTML(
-                        live.preacher
-                    )}
-                </p>
-
-                <p>
-                    ${escapeHTML(
-                        live.description
-                    )}
-                </p>
-
-                ${
-                    live.stream_url
-                    ?
-                    `
-                    <div class="stream-container">
-
-                        <iframe
-                            src="${escapeHTML(
-                                live.stream_url
-                            )}"
-                            allowfullscreen
-                            allow="autoplay; fullscreen"
-                        ></iframe>
-
-                    </div>
-                    `
-                    :
-                    `
-                    <div class="stream-unavailable">
-
-                        🎥 Stream link not available yet.
-
-                    </div>
-                    `
-                }
-
-            `;
-
-
-            liveList.appendChild(
-                card
-            );
+            document
+                .getElementById("videoContainer")
+                .appendChild(element);
 
         }
-    );
+
+    }
 
 }
 
 
-/* =========================
-   REQUEST LIVE
-========================= */
+// ===============================
+// START LIVE
+// ===============================
 
-liveRequestForm.addEventListener(
-    "submit",
-    async event => {
+startLive.addEventListener(
+    "click",
+    async () => {
 
-        event.preventDefault();
+        try {
 
-
-        if(!currentUser){
-
-            return;
-
-        }
+            const user =
+                await getCurrentUser();
 
 
-        requestLive.disabled =
-            true;
-
-        requestLive.textContent =
-            "Submitting...";
+            if (!user) return;
 
 
-        showStatus(
-            "",
-            ""
-        );
+            const roomName =
+                "prudence-live-" +
+                user.id;
 
 
-        const title =
-            titleInput.value.trim();
-
-        const preacher =
-            preacherInput.value.trim();
-
-        const description =
-            descriptionInput.value.trim();
-
-        const streamURL =
-            streamLinkInput.value.trim();
-
-
-        try{
-
-            const {
-                error
-            } =
-            await supabase
-
-                .from("live_streams")
-
-                .insert({
-
-                    user_id:
-                        currentUser.id,
-
-                    title:
-                        title,
-
-                    preacher:
-                        preacher,
-
-                    description:
-                        description,
-
-                    stream_url:
-                        streamURL || null,
-
-                    status:
-                        "pending",
-
-                    approved:
-                        false
-
-                });
-
-
-            if(error){
-
-                throw error;
-
-            }
-
-
-            showStatus(
-                "✅ Your Live request has been submitted for approval.",
-                "status-success"
+            await connectToRoom(
+                roomName,
+                true
             );
 
 
-            liveRequestForm.reset();
+            startLive.disabled = true;
+            joinLive.disabled = true;
 
 
-            await loadMyRequests();
+        } catch (error) {
 
-        }
-        catch(error){
+            console.error(error);
 
-            console.error(
-                "LIVE REQUEST ERROR:",
-                error
-            );
+            statusText.textContent =
+                "Live failed";
 
-
-            showStatus(
-                "Unable to submit your request: " +
-                error.message,
-                "status-error"
-            );
+            alert(error.message);
 
         }
-
-
-        requestLive.disabled =
-            false;
-
-        requestLive.textContent =
-            "🎥 Submit Live Request";
 
     }
 );
 
 
-/* =========================
-   LOAD MY REQUESTS
-========================= */
+// ===============================
+// JOIN LIVE
+// ===============================
 
-async function loadMyRequests(){
+joinLive.addEventListener(
+    "click",
+    async () => {
 
-    myRequests.innerHTML = `
-        <div class="loading">
-            Loading your requests...
-        </div>
-    `;
+        try {
 
-
-    const {
-        data,
-        error
-    } =
-    await supabase
-
-        .from("live_streams")
-
-        .select(`
-            id,
-            title,
-            preacher,
-            description,
-            stream_url,
-            status,
-            approved,
-            created_at,
-            started_at,
-            ended_at
-        `)
-
-        .eq(
-            "user_id",
-            currentUser.id
-        )
-
-        .order(
-            "created_at",
-            {
-                ascending:false
-            }
-        );
-
-
-    if(error){
-
-        console.error(
-            "MY LIVE REQUESTS ERROR:",
-            error
-        );
-
-        myRequests.innerHTML = `
-            <div class="error-message">
-                Unable to load your requests.
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    if(
-        !data ||
-        data.length === 0
-    ){
-
-        myRequests.innerHTML = `
-            <div class="empty-state">
-
-                You haven't submitted
-                a Live request yet.
-
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    myRequests.innerHTML = "";
-
-
-    data.forEach(
-        request => {
-
-            const card =
-                document.createElement(
-                    "div"
+            const roomName =
+                prompt(
+                    "Enter the Live room name:"
                 );
 
-            card.className =
-                "request-card";
+
+            if (!roomName) return;
 
 
-            let statusClass =
-                "status-pending";
-
-
-            if(
-                request.status ===
-                "live"
-            ){
-
-                statusClass =
-                    "status-live";
-
-            }
-            else if(
-                request.status ===
-                "ended"
-            ){
-
-                statusClass =
-                    "status-ended";
-
-            }
-            else if(
-                request.status ===
-                "rejected"
-            ){
-
-                statusClass =
-                    "status-rejected";
-
-            }
-
-
-            card.innerHTML = `
-
-                <div class="request-header">
-
-                    <strong>
-                        ${escapeHTML(
-                            request.title
-                        )}
-                    </strong>
-
-                    <span
-                        class="request-status ${statusClass}"
-                    >
-                        ${escapeHTML(
-                            request.status
-                        )}
-                    </span>
-
-                </div>
-
-                <p>
-                    ${escapeHTML(
-                        request.description
-                    )}
-                </p>
-
-                <small>
-                    Submitted:
-                    ${new Date(
-                        request.created_at
-                    ).toLocaleString()}
-                </small>
-
-            `;
-
-
-            myRequests.appendChild(
-                card
+            await connectToRoom(
+                roomName,
+                false
             );
 
+
+            joinLive.disabled = true;
+            startLive.disabled = true;
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            statusText.textContent =
+                "Unable to join";
+
+            alert(error.message);
+
         }
-    );
-
-}
-
-
-/* =========================
-   START
-========================= */
-
-(async function(){
-
-    const loggedIn =
-        await checkLogin();
-
-
-    if(!loggedIn){
-
-        return;
 
     }
+);
 
 
-    await loadLiveBroadcasts();
+// ===============================
+// END LIVE
+// ===============================
 
-    await loadMyRequests();
+endLive.addEventListener(
+    "click",
+    async () => {
 
-})();
+        if (!room) return;
+
+
+        await room.disconnect();
+
+
+        room = null;
+
+        isBroadcaster = false;
+
+        currentRoomName = null;
+
+
+        statusText.textContent =
+            "Live ended";
+
+
+        startLive.disabled = false;
+        joinLive.disabled = false;
+
+    }
+);
