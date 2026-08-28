@@ -2,213 +2,94 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Prudence 2 | Live Gospel</title>
 
-<link
-    rel="stylesheet"
-    href="live.css"
->
+<link rel="stylesheet" href="live.css">
 
-<script
-    type="module"
-    src="live.js"
-    defer
-></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+<script type="module" src="live.js" defer></script>
 
 </head>
 
-
 <body>
 
-
 <header>
+    <div class="brand">✝ Prudence 2</div>
 
-    <div class="brand">
-        ✝ Prudence 2
-    </div>
+    <h1>Live Gospel Broadcasting</h1>
 
-    <h1>
-        🔴 Live Gospel
-    </h1>
-
-    <p>
-        Share the Gospel and fellowship together.
-    </p>
-
+    <p>Preach the Gospel of our Lord Jesus Christ.</p>
 </header>
 
 
 <main class="container">
 
+    <section class="broadcast">
 
-    <!-- =========================
-         LIVE NOW
-    ========================== -->
+        <h2 id="status">Ready</h2>
 
-    <section class="section-card">
+        <div id="videoContainer">
 
-        <div class="section-heading">
-
-            <div>
-
-                <h2>
-                    🔴 Live Now
-                </h2>
-
-                <p>
-                    Watch approved live broadcasts.
-                </p>
-
-            </div>
+            <video
+                id="liveVideo"
+                autoplay
+                playsinline
+                muted>
+            </video>
 
         </div>
 
 
-        <div
-            id="liveList"
-            class="live-list"
-        >
+        <div class="buttons">
 
-            <div class="loading">
-                Loading live broadcasts...
-            </div>
+            <button id="startLive">
+                Start Live
+            </button>
+
+            <button id="joinLive">
+                Join Live
+            </button>
+
+            <button id="endLive">
+                End Live
+            </button>
 
         </div>
 
     </section>
 
 
+    <section class="chat">
 
-    <!-- =========================
-         REQUEST TO GO LIVE
-    ========================== -->
+        <h2>Live Comments</h2>
 
-    <section class="section-card">
+        <div id="comments">
 
-        <h2>
-            🎥 Request to Go Live
-        </h2>
+            <p>No comments yet.</p>
 
-        <p class="section-description">
-            Want to share a Gospel message?
-            Submit your broadcast for approval.
-        </p>
+        </div>
 
 
-        <form id="liveRequestForm">
-
-
-            <label for="title">
-                Broadcast Title
-            </label>
+        <form id="commentForm">
 
             <input
                 type="text"
-                id="title"
-                maxlength="150"
-                placeholder="Example: Sunday Gospel Fellowship"
-                required
-            >
+                id="commentInput"
+                placeholder="Write a comment..."
+                required>
 
-
-            <label for="preacher">
-                Preacher / Host
-            </label>
-
-            <input
-                type="text"
-                id="preacher"
-                maxlength="100"
-                placeholder="Name of preacher or host"
-                required
-            >
-
-
-            <label for="description">
-                Description
-            </label>
-
-            <textarea
-                id="description"
-                rows="4"
-                maxlength="1000"
-                placeholder="Tell the community about this broadcast..."
-                required
-            ></textarea>
-
-
-            <label for="streamLink">
-                Stream Link
-            </label>
-
-            <input
-                type="url"
-                id="streamLink"
-                placeholder="https://..."
-            >
-
-            <p class="field-note">
-                You can leave this empty for now if your
-                streaming source is not ready.
-            </p>
-
-
-            <button
-                type="submit"
-                id="requestLive"
-            >
-                🎥 Submit Live Request
+            <button type="submit">
+                Send
             </button>
-
 
         </form>
 
-
-        <div
-            id="requestStatus"
-            class="status-message"
-        ></div>
-
     </section>
-
-
-
-    <!-- =========================
-         MY REQUESTS
-    ========================== -->
-
-    <section class="section-card">
-
-        <h2>
-            📋 My Live Requests
-        </h2>
-
-
-        <div
-            id="myRequests"
-            class="requests-list"
-        >
-
-            <div class="loading">
-                Loading your requests...
-            </div>
-
-        </div>
-
-    </section>
-
 
 </main>
 
-
 </body>
-
 </html>
