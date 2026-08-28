@@ -20,7 +20,7 @@ startLive.addEventListener("click", async () => {
     try {
 
         const response = await fetch(
-            "YOUR_SUPABASE_FUNCTION_URL",
+            "https://mreqwrdkucggwvxvturl.supabase.co/functions/v1/livekit-token",
             {
                 method: "POST",
 
