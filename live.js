@@ -1,3 +1,5 @@
+import supabase from "./supabase.js";
+
 console.log("Prudence 2 LiveKit started");
 
 const startLive = document.getElementById("startLive");
@@ -15,46 +17,102 @@ const SUPABASE_FUNCTION_URL =
 const LIVEKIT_URL =
     "wss://prudence-2-live-00bm3cbr.livekit.cloud";
 
-const ROOM_NAME =
-    "prudence-live-test";
+
+// ======================================
+// GET LOGGED-IN USER
+// ======================================
+
+async function getCurrentUser() {
+
+    const {
+        data,
+        error
+    } = await supabase.auth.getUser();
+
+    if (error || !data.user) {
+
+        window.location.href = "login.html";
+
+        return null;
+    }
+
+    return data.user;
+}
 
 
-// ----------------------------------
+// ======================================
+// GET PROFILE
+// ======================================
+
+async function getProfile(userId) {
+
+    const {
+        data,
+        error
+    } = await supabase
+        .from("profiles")
+        .select("username, public_username")
+        .eq("id", userId)
+        .maybeSingle();
+
+    if (error) {
+
+        console.error(
+            "PROFILE ERROR:",
+            error
+        );
+
+        return null;
+    }
+
+    return data;
+}
+
+
+// ======================================
 // GET LIVEKIT TOKEN
-// ----------------------------------
+// ======================================
 
-async function getToken(participantName, participantIdentity) {
+async function getLiveKitToken(
+    roomName,
+    participantName,
+    participantIdentity,
+    mode
+) {
 
-    const response = await fetch(
-        SUPABASE_FUNCTION_URL,
+    const {
+        data,
+        error
+    } = await supabase.functions.invoke(
+        "livekit-token",
         {
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                roomName: ROOM_NAME,
-                participantName: participantName,
-                participantIdentity: participantIdentity
-            })
+            body: {
+                roomName,
+                participantName,
+                participantIdentity,
+                mode
+            }
         }
     );
 
-    const data = await response.json();
+    if (error) {
 
-    console.log("Token response:", data);
+        console.error(
+            "TOKEN ERROR:",
+            error
+        );
 
-    if (!response.ok) {
         throw new Error(
-            data.error || "Token function failed"
+            error.message ||
+            "Unable to get LiveKit token."
         );
     }
 
-    if (!data.token) {
+    if (!data || !data.token) {
+
         throw new Error(
-            "No LiveKit token received"
+            data?.error ||
+            "No LiveKit token received."
         );
     }
 
@@ -62,19 +120,18 @@ async function getToken(participantName, participantIdentity) {
 }
 
 
-// ----------------------------------
-// DISPLAY LOCAL VIDEO
-// ----------------------------------
+// ======================================
+// SHOW VIDEO
+// ======================================
 
-function showLocalVideo(track) {
+function showVideo(track, muted = false) {
 
-    const video = track.attach();
-
-    video.id = "localLiveVideo";
+    const video =
+        track.attach();
 
     video.autoplay = true;
     video.playsInline = true;
-    video.muted = true;
+    video.muted = muted;
 
     video.style.width = "100%";
     video.style.height = "100%";
@@ -86,77 +143,65 @@ function showLocalVideo(track) {
 }
 
 
-// ----------------------------------
-// DISPLAY REMOTE VIDEO
-// ----------------------------------
-
-function showRemoteVideo(track, participant) {
-
-    console.log(
-        "Remote video from:",
-        participant.identity
-    );
-
-    const video = track.attach();
-
-    video.autoplay = true;
-    video.playsInline = true;
-
-    video.style.width = "100%";
-    video.style.height = "100%";
-    video.style.objectFit = "cover";
-
-    videoContainer.innerHTML = "";
-
-    videoContainer.appendChild(video);
-}
-
-
-// ----------------------------------
+// ======================================
 // CONNECT TO LIVEKIT
-// ----------------------------------
+// ======================================
 
 async function connectToLiveKit(token) {
 
     room = new LivekitClient.Room({
+
         adaptiveStream: true,
+
         dynacast: true
+
     });
 
 
-    // Remote track arrives
+    // Remote video/audio
     room.on(
         LivekitClient.RoomEvent.TrackSubscribed,
-        (track, publication, participant) => {
+        (
+            track,
+            publication,
+            participant
+        ) => {
+
+            console.log(
+                "Remote track:",
+                participant.identity
+            );
 
             if (
-                track.kind === LivekitClient.Track.Kind.Video ||
-                track.kind === LivekitClient.Track.Kind.Audio
+                track.kind ===
+                LivekitClient.Track.Kind.Video
             ) {
 
-                if (
-                    track.kind ===
-                    LivekitClient.Track.Kind.Video
-                ) {
+                showVideo(
+                    track,
+                    false
+                );
 
-                    showRemoteVideo(
-                        track,
-                        participant
-                    );
-
-                } else {
-
-                    const audio =
-                        track.attach();
-
-                    document.body.appendChild(audio);
-                }
             }
+
+
+            if (
+                track.kind ===
+                LivekitClient.Track.Kind.Audio
+            ) {
+
+                const audio =
+                    track.attach();
+
+                document.body.appendChild(
+                    audio
+                );
+            }
+
         }
     );
 
 
-    // Remote track removed
     room.on(
         LivekitClient.RoomEvent.TrackUnsubscribed,
         (track) => {
@@ -167,14 +212,9 @@ async function connectToLiveKit(token) {
     );
 
 
-    // Connection lost
     room.on(
         LivekitClient.RoomEvent.Disconnected,
         () => {
-
-            console.log(
-                "Disconnected from LiveKit"
-            );
 
             statusText.textContent =
                 "Disconnected";
@@ -188,18 +228,12 @@ async function connectToLiveKit(token) {
         token
     );
 
-
-    console.log(
-        "Connected to LiveKit room:",
-        room.name
-    );
-
 }
 
 
-// ----------------------------------
+// ======================================
 // START LIVE
-// ----------------------------------
+// ======================================
 
 startLive.addEventListener(
     "click",
@@ -210,46 +244,76 @@ startLive.addEventListener(
             startLive.disabled = true;
 
             statusText.textContent =
-                "Getting LiveKit token...";
+                "Checking account...";
+
+
+            const user =
+                await getCurrentUser();
+
+
+            if (!user) return;
+
+
+            const profile =
+                await getProfile(
+                    user.id
+                );
+
+
+            const participantName =
+                profile?.public_username ||
+                profile?.username ||
+                user.email ||
+                "Prudence User";
+
+
+            const roomName =
+                "prudence-live-main";
+
+
+            statusText.textContent =
+                "Checking broadcast approval...";
 
 
             const token =
-                await getToken(
-                    "Prudence Broadcaster",
-                    "broadcaster-" +
-                    Date.now()
+                await getLiveKitToken(
+                    roomName,
+                    participantName,
+                    user.id,
+                    "broadcaster"
                 );
 
 
             statusText.textContent =
-                "Connecting to Live..." ;
+                "Connecting to Live...";
 
 
-            await connectToLiveKit(token);
+            await connectToLiveKit(
+                token
+            );
 
 
             statusText.textContent =
-                "Connected — starting camera...";
+                "Starting camera...";
 
 
-            // Turn on camera
-            const cameraPublication =
+            const publication =
                 await room.localParticipant
                     .setCameraEnabled(true);
 
 
-            // Turn on microphone
             await room.localParticipant
                 .setMicrophoneEnabled(true);
 
 
             if (
-                cameraPublication &&
-                cameraPublication.track
+                publication &&
+                publication.track
             ) {
 
-                showLocalVideo(
-                    cameraPublication.track
+                showVideo(
+                    publication.track,
+                    true
                 );
 
             }
@@ -260,8 +324,9 @@ startLive.addEventListener(
 
 
             console.log(
-                "Broadcast started successfully"
+                "Broadcast started."
             );
+
 
         } catch (error) {
 
@@ -270,24 +335,27 @@ startLive.addEventListener(
                 error
             );
 
+
             statusText.textContent =
-                "Error: " + error.message;
+                "Unable to start Live";
+
 
             alert(
-                "Live failed: " +
                 error.message
             );
 
+
             startLive.disabled = false;
+
         }
 
     }
 );
 
 
-// ----------------------------------
+// ======================================
 // JOIN LIVE
-// ----------------------------------
+// ======================================
 
 joinLive.addEventListener(
     "click",
@@ -298,27 +366,58 @@ joinLive.addEventListener(
             joinLive.disabled = true;
 
             statusText.textContent =
-                "Joining Live...";
+                "Checking account...";
 
 
-            const token =
-                await getToken(
-                    "Prudence Viewer",
-                    "viewer-" +
-                    Date.now()
+            const user =
+                await getCurrentUser();
+
+
+            if (!user) return;
+
+
+            const profile =
+                await getProfile(
+                    user.id
                 );
 
 
-            await connectToLiveKit(token);
+            const participantName =
+                profile?.public_username ||
+                profile?.username ||
+                user.email ||
+                "Prudence Viewer";
+
+
+            const roomName =
+                "prudence-live-main";
 
 
             statusText.textContent =
-                "Connected — watching Live";
+                "Getting viewer access...";
 
 
-            console.log(
-                "Joined Live successfully"
+            const token =
+                await getLiveKitToken(
+                    roomName,
+                    participantName,
+                    user.id,
+                    "viewer"
+                );
+
+
+            statusText.textContent =
+                "Joining Live...";
+
+
+            await connectToLiveKit(
+                token
             );
+
+
+            statusText.textContent =
+                "📺 Watching Live";
+
 
         } catch (error) {
 
@@ -327,24 +426,27 @@ joinLive.addEventListener(
                 error
             );
 
+
             statusText.textContent =
-                "Error: " + error.message;
+                "Unable to join Live";
+
 
             alert(
-                "Join Live failed: " +
                 error.message
             );
 
+
             joinLive.disabled = false;
+
         }
 
     }
 );
 
 
-// ----------------------------------
+// ======================================
 // END LIVE
-// ----------------------------------
+// ======================================
 
 endLive.addEventListener(
     "click",
@@ -371,10 +473,6 @@ endLive.addEventListener(
             startLive.disabled = false;
             joinLive.disabled = false;
 
-
-            console.log(
-                "Live ended"
-            );
 
         } catch (error) {
 
