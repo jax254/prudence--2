@@ -7,17 +7,35 @@ const joinLive = document.getElementById("joinLive");
 const endLive = document.getElementById("endLive");
 
 const statusText = document.getElementById("status");
-const liveVideo = document.getElementById("liveVideo");
+const videoElement = document.getElementById("liveVideo");
+
+// Your LiveKit WebSocket URL
+const LIVEKIT_WS_URL = "wss://prudence-2-live-00bm3cbr.livekit.cloud";
+
+// Supabase Edge Function
+const TOKEN_FUNCTION =
+    "https://mreqwrdkucggwvxvturl.supabase.co/functions/v1/livekit-token";
 
 let room = null;
 
-const SUPABASE_FUNCTION_URL =
-    "https://mreqwrdkucggwvxvturl.supabase.co/functions/v1/livekit-token";
 
-const LIVEKIT_WS_URL =
-    "wss://prudence-2-live-00bm3cbr.livekit.cloud
+// --------------------------------------------------
+// GET LOGGED-IN USER
+// --------------------------------------------------
 
-    ";
+async function getCurrentUser() {
+
+    const {
+        data: { user },
+        error
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+        throw new Error("Please log in before using Live.");
+    }
+
+    return user;
+}
 
 
 // --------------------------------------------------
@@ -26,60 +44,64 @@ const LIVEKIT_WS_URL =
 
 async function getLiveKitToken(mode) {
 
+    const user = await getCurrentUser();
+
     const {
-        data: { session },
-        error: sessionError
+        data: { session }
     } = await supabase.auth.getSession();
 
-    if (sessionError) {
-        throw new Error(sessionError.message);
-    }
-
     if (!session) {
-        throw new Error("Please log in first.");
+        throw new Error("Your login session has expired. Please log in again.");
     }
 
-    const user = session.user;
+    const participantIdentity = user.id;
 
     const participantName =
         user.user_metadata?.username ||
         user.email ||
         "Prudence User";
 
-    const participantIdentity = user.id;
+    const response = await fetch(TOKEN_FUNCTION, {
 
-    const response = await fetch(
-        SUPABASE_FUNCTION_URL,
-        {
-            method: "POST",
+        method: "POST",
 
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${session.access_token}`
-            },
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`
+        },
 
-            body: JSON.stringify({
-                roomName: "prudence-live-test",
-                participantName: participantName,
-                participantIdentity: participantIdentity,
-                mode: mode
-            })
-        }
-    );
+        body: JSON.stringify({
+
+            roomName: "prudence-live-main",
+
+            participantName: participantName,
+
+            participantIdentity: participantIdentity,
+
+            mode: mode
+        })
+    });
+
 
     const data = await response.json();
 
     console.log("Token function response:", data);
 
+
     if (!response.ok) {
+
         throw new Error(
-            data.error || "Token function failed"
+            data.error ||
+            `Token function failed (${response.status})`
         );
     }
 
+
     if (!data.token) {
-        throw new Error("No LiveKit token received.");
+
+        throw new Error("No LiveKit token was received.");
     }
+
 
     return data.token;
 }
@@ -91,46 +113,110 @@ async function getLiveKitToken(mode) {
 
 startLive.addEventListener("click", async () => {
 
-    statusText.textContent = "Checking broadcast approval...";
-
     try {
+
+        statusText.textContent = "Checking broadcaster approval...";
 
         const token = await getLiveKitToken("broadcaster");
 
-        console.log("Broadcaster token received.");
+        statusText.textContent = "Connecting to LiveKit...";
 
-        statusText.textContent =
-            "Broadcast approved. Connecting...";
 
-        room = new LivekitClient.Room();
+        // Disconnect previous room
+        if (room) {
+            room.disconnect();
+            room = null;
+        }
 
+
+        room = new LiveKitClient.Room();
+
+
+        // Listen for connection
+        room.on(
+            LiveKitClient.RoomEvent.Connected,
+            () => {
+
+                console.log("Broadcaster connected.");
+
+                statusText.textContent = "LIVE — Broadcasting";
+            }
+        );
+
+
+        // Local camera/microphone
+        room.on(
+            LiveKitClient.RoomEvent.LocalTrackPublished,
+            publication => {
+
+                const track = publication.track;
+
+                if (track) {
+
+                    const element =
+                        track.attach();
+
+                    element.autoplay = true;
+                    element.playsInline = true;
+
+                    if (track.kind === "video") {
+
+                        videoElement.srcObject =
+                            element.srcObject;
+                    }
+                }
+            }
+        );
+
+
+        // Connect
         await room.connect(
             LIVEKIT_WS_URL,
             token
         );
 
-        statusText.textContent =
-            "🔴 LIVE — Broadcasting";
 
-        console.log("Broadcaster connected.");
-
-        const stream =
-            await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
+        // Create camera + microphone
+        const tracks =
+            await LiveKitClient.createLocalTracks({
+                audio: true,
+                video: true
             });
 
-        await room.localParticipant.setCameraEnabled(true);
-        await room.localParticipant.setMicrophoneEnabled(true);
 
-        console.log("Camera and microphone enabled.");
+        // Publish tracks
+        for (const track of tracks) {
+
+            await room.localParticipant.publishTrack(track);
+        }
+
+
+        // Show local video
+        for (const track of tracks) {
+
+            if (track.kind === "video") {
+
+                const element = track.attach();
+
+                element.autoplay = true;
+                element.playsInline = true;
+                element.muted = true;
+
+                videoElement.replaceWith(element);
+
+                element.id = "liveVideo";
+            }
+        }
+
+
+        statusText.textContent = "🔴 LIVE — Broadcasting";
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Start Live error:", error);
 
-        statusText.textContent =
-            "Broadcast unavailable";
+        statusText.textContent = "Ready";
 
         alert(error.message);
     }
@@ -144,56 +230,68 @@ startLive.addEventListener("click", async () => {
 
 joinLive.addEventListener("click", async () => {
 
-    statusText.textContent =
-        "Connecting to live broadcast...";
-
     try {
 
-        const token = await getLiveKitToken("viewer");
+        statusText.textContent = "Joining live...";
 
-        room = new LivekitClient.Room();
 
+        const token =
+            await getLiveKitToken("viewer");
+
+
+        if (room) {
+
+            room.disconnect();
+            room = null;
+        }
+
+
+        room = new LiveKitClient.Room();
+
+
+        // Remote video/audio
         room.on(
-            LivekitClient.RoomEvent.TrackSubscribed,
+            LiveKitClient.RoomEvent.TrackSubscribed,
             (track) => {
+
+                const element = track.attach();
+
+                element.autoplay = true;
+                element.playsInline = true;
 
                 if (track.kind === "video") {
 
-                    const element =
-                        track.attach();
+                    const oldVideo =
+                        document.getElementById("liveVideo");
 
-                    liveVideo.srcObject =
-                        element.srcObject;
+                    if (oldVideo) {
 
-                    liveVideo.play().catch(() => {});
+                        oldVideo.replaceWith(element);
+                    }
+
+                    element.id = "liveVideo";
                 }
 
-                if (track.kind === "audio") {
-
-                    const element =
-                        track.attach();
-
-                    document.body.appendChild(element);
-                }
+                console.log("Remote track received.");
             }
         );
+
 
         await room.connect(
             LIVEKIT_WS_URL,
             token
         );
 
-        statusText.textContent =
-            "🔴 LIVE — Watching";
 
-        console.log("Viewer connected.");
+        statusText.textContent =
+            "🟢 LIVE — Watching";
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Join Live error:", error);
 
-        statusText.textContent =
-            "Unable to join live";
+        statusText.textContent = "Ready";
 
         alert(error.message);
     }
@@ -207,18 +305,34 @@ joinLive.addEventListener("click", async () => {
 
 endLive.addEventListener("click", async () => {
 
-    if (room) {
+    try {
 
-        await room.disconnect();
+        if (room) {
 
-        room = null;
+            room.disconnect();
+
+            room = null;
+        }
+
+
+        const video =
+            document.getElementById("liveVideo");
+
+        if (video) {
+
+            video.srcObject = null;
+        }
+
+
+        statusText.textContent =
+            "Live ended";
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
     }
-
-    liveVideo.srcObject = null;
-
-    statusText.textContent =
-        "Live ended";
-
-    console.log("Live session ended.");
 
 });
