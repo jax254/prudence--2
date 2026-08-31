@@ -15,7 +15,9 @@ const SUPABASE_FUNCTION_URL =
     "https://mreqwrdkucggwvxvturl.supabase.co/functions/v1/livekit-token";
 
 const LIVEKIT_WS_URL =
-    "YOUR_LIVEKIT_WEBSOCKET_URL";
+    "wss://prudence-2-live-00bm3cbr.livekit.cloud
+
+    ";
 
 
 // --------------------------------------------------
