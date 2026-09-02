@@ -1,4 +1,5 @@
 import supabase from "./supabase.js";
+import supabase from "./supabase.js";
 
 console.log("Prudence 2 live.js loaded");
 
@@ -8,7 +9,11 @@ const endLive = document.getElementById("endLive");
 
 const statusText = document.getElementById("status");
 const videoElement = document.getElementById("liveVideo");
+const requestBroadcast =
+    document.getElementById("requestBroadcast");
 
+const broadcastRequestStatus =
+    document.getElementById("broadcastRequestStatus");
 // Your LiveKit WebSocket URL
 const LIVEKIT_WS_URL = "wss://prudence-2-live-00bm3cbr.livekit.cloud";
 
@@ -336,3 +341,115 @@ endLive.addEventListener("click", async () => {
     }
 
 });
+// ==========================================
+// REQUEST TO BROADCAST
+// ==========================================
+
+if (requestBroadcast) {
+
+    requestBroadcast.addEventListener("click", async () => {
+
+        broadcastRequestStatus.textContent =
+            "Submitting request...";
+
+        try {
+
+            // Get currently logged-in user
+            const {
+                data: { user },
+                error: userError
+            } = await supabase.auth.getUser();
+
+            if (userError || !user) {
+
+                broadcastRequestStatus.textContent =
+                    "Please log in first.";
+
+                alert("Please log in before requesting to broadcast.");
+
+                return;
+            }
+
+
+            // Check whether a request already exists
+            const { data: existing, error: checkError } =
+                await supabase
+                    .from("live_broadcasters")
+                    .select("approved")
+                    .eq("user_id", user.id)
+                    .maybeSingle();
+
+
+            if (checkError) {
+                throw checkError;
+            }
+
+
+            // Already approved
+            if (existing?.approved === true) {
+
+                broadcastRequestStatus.textContent =
+                    "You are already approved to broadcast.";
+
+                alert("You are already approved to broadcast.");
+
+                return;
+            }
+
+
+            // Request already submitted
+            if (existing) {
+
+                broadcastRequestStatus.textContent =
+                    "Your broadcast request is awaiting admin approval.";
+
+                alert(
+                    "Your request has already been submitted and is awaiting admin approval."
+                );
+
+                return;
+            }
+
+
+            // Create new request
+            const { error: insertError } =
+                await supabase
+                    .from("live_broadcasters")
+                    .insert({
+                        user_id: user.id,
+                        approved: false
+                    });
+
+
+            if (insertError) {
+                throw insertError;
+            }
+
+
+            broadcastRequestStatus.textContent =
+                "Request submitted. Please wait for admin approval.";
+
+            alert(
+                "Broadcast request submitted successfully! An admin must approve you before you can start a live broadcast."
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Broadcast request error:",
+                error
+            );
+
+            broadcastRequestStatus.textContent =
+                "Request failed: " + error.message;
+
+            alert(
+                "Request failed: " + error.message
+            );
+
+        }
+
+    });
+
+                }
