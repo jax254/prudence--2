@@ -1,887 +1,304 @@
 import supabase from "./supabase.js";
 
+const requestsContainer =
+  document.getElementById("requestsContainer");
 
-/* =========================
-   ELEMENTS
-========================= */
-
-const pendingList =
-    document.getElementById("pendingList");
-
-const liveList =
-    document.getElementById("liveList");
-
-const historyList =
-    document.getElementById("historyList");
-
-const pendingCount =
-    document.getElementById("pendingCount");
-
-const liveCount =
-    document.getElementById("liveCount");
+const statusText =
+  document.getElementById("status");
 
 const refreshBtn =
-    document.getElementById("refreshBtn");
+  document.getElementById("refreshBtn");
 
 const backBtn =
-    document.getElementById("backBtn");
+  document.getElementById("backBtn");
 
 
-let currentUser = null;
+async function checkAdmin() {
+  const {
+    data: { user },
+    error
+  } = await supabase.auth.getUser();
 
+  if (error || !user) {
+    window.location.href = "login.html";
+    return null;
+  }
 
-/* =========================
-   HTML ESCAPE
-========================= */
+  const { data: profile, error: profileError } =
+    await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-function escapeHTML(text){
+  if (profileError) {
+    console.error(profileError);
+    alert("Could not verify your admin account.");
+    return null;
+  }
 
-    const div =
-        document.createElement("div");
+  if (
+    profile.role !== "admin" &&
+    profile.role !== "superadmin"
+  ) {
+    alert("You do not have permission to access this page.");
+    window.location.href = "dashboard.html";
+    return null;
+  }
 
-    div.textContent =
-        text || "";
-
-    return div.innerHTML;
-
+  return user;
 }
 
 
-/* =========================
-   CHECK ADMIN
-========================= */
+async function loadRequests() {
+  const user = await checkAdmin();
 
-async function checkAdmin(){
+  if (!user) return;
 
-    const {
-        data,
-        error
-    } =
-    await supabase.auth.getUser();
+  statusText.textContent = "Loading requests...";
+  requestsContainer.innerHTML = "";
 
+  const {
+    data: requests,
+    error
+  } = await supabase
+    .from("live_broadcasters")
+    .select(`
+      id,
+      user_id,
+      approved,
+      approved_at,
+      approved_by,
+      created_at,
+      profiles (
+        username,
+        public_username,
+        prudence_id,
+        email,
+        admission_number
+      )
+    `)
+    .eq("approved", false)
+    .order("created_at", {
+      ascending: false
+    });
 
-    if(
-        error ||
-        !data.user
-    ){
+  if (error) {
+    console.error("Load requests error:", error);
 
-        window.location.href =
-            "login.html";
+    statusText.textContent =
+      "❌ Failed to load requests: " +
+      error.message;
 
-        return false;
+    return;
+  }
 
-    }
+  if (!requests || requests.length === 0) {
+    statusText.textContent =
+      "✅ No pending broadcast requests.";
 
+    return;
+  }
 
-    currentUser =
-        data.user;
+  statusText.textContent =
+    `⏳ ${requests.length} pending broadcast request(s)`;
 
+  requests.forEach(request => {
+    const profile = request.profiles;
 
-    const {
-        data:profile,
-        error:profileError
-    } =
-    await supabase
+    const username =
+      profile?.public_username ||
+      profile?.username ||
+      "Unknown User";
 
-        .from("profiles")
+    const prudenceId =
+      profile?.prudence_id ||
+      "Not available";
 
-        .select("role")
+    const admission =
+      profile?.admission_number ||
+      "Not available";
 
-        .eq(
-            "id",
-            currentUser.id
-        )
+    const email =
+      profile?.email ||
+      "Not available";
 
-        .single();
+    const date = request.created_at
+      ? new Date(request.created_at)
+          .toLocaleString()
+      : "Unknown";
 
+    const card =
+      document.createElement("div");
 
-    if(
-        profileError ||
-        !profile
-    ){
+    card.className = "request-card";
 
-        alert(
-            "Unable to verify administrator account."
-        );
+    card.innerHTML = `
+      <h3>📡 ${username}</h3>
 
-        window.location.href =
-            "dashboard.html";
+      <p class="request-info">
+        <strong>Prudence ID:</strong>
+        ${prudenceId}
+      </p>
 
-        return false;
+      <p class="request-info">
+        <strong>Admission Number:</strong>
+        ${admission}
+      </p>
 
-    }
+      <p class="request-info">
+        <strong>Email:</strong>
+        ${email}
+      </p>
 
+      <p class="request-info">
+        <strong>Requested:</strong>
+        ${date}
+      </p>
 
-    const allowedRoles = [
-        "admin",
-        "newsroom",
-        "superadmin"
-    ];
+      <div class="actions">
 
+        <button
+          class="approve-btn"
+          data-id="${request.id}"
+        >
+          ✅ Approve
+        </button>
 
-    if(
-        !allowedRoles.includes(
-            profile.role
-        )
-    ){
+        <button
+          class="reject-btn"
+          data-id="${request.id}"
+        >
+          ❌ Reject
+        </button>
 
-        alert(
-            "You are not authorized to manage Live broadcasts."
-        );
+      </div>
+    `;
 
-        window.location.href =
-            "dashboard.html";
+    requestsContainer.appendChild(card);
+  });
 
-        return false;
+  document
+    .querySelectorAll(".approve-btn")
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => approveRequest(button.dataset.id)
+      );
+    });
 
-    }
-
-
-    return true;
-
+  document
+    .querySelectorAll(".reject-btn")
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => rejectRequest(button.dataset.id)
+      );
+    });
 }
 
 
-/* =========================
-   LOAD PENDING
-========================= */
-
-async function loadPending(){
-
-    const {
-        data,
-        error
-    } =
-    await supabase
-
-        .from("live_streams")
-
-        .select("*")
-
-        .eq(
-            "status",
-            "pending"
-        )
-
-        .order(
-            "created_at",
-            {
-                ascending:false
-            }
-        );
-
-
-    if(error){
-
-        console.error(error);
-
-        pendingList.innerHTML = `
-            <div class="error-message">
-                ${escapeHTML(
-                    error.message
-                )}
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    pendingCount.textContent =
-        data?.length || 0;
-
-
-    if(
-        !data ||
-        data.length === 0
-    ){
-
-        pendingList.innerHTML = `
-            <div class="empty-state">
-                No pending Live requests.
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    pendingList.innerHTML = "";
-
-
-    data.forEach(
-        item => {
-
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-            card.className =
-                "live-card";
-
-
-            card.innerHTML = `
-
-                <span class="pending-badge">
-                    🟡 PENDING
-                </span>
-
-                <h3>
-                    ${escapeHTML(
-                        item.title
-                    )}
-                </h3>
-
-                <p>
-                    <strong>Preacher / Host:</strong>
-                    ${escapeHTML(
-                        item.preacher
-                    )}
-                </p>
-
-                <p>
-                    ${escapeHTML(
-                        item.description
-                    )}
-                </p>
-
-                <p class="requester">
-                    User ID:
-                    ${escapeHTML(
-                        item.user_id
-                    )}
-                </p>
-
-                ${
-                    item.stream_url
-                    ?
-                    `
-                    <div class="stream-link">
-                        Stream:
-                        ${escapeHTML(
-                            item.stream_url
-                        )}
-                    </div>
-                    `
-                    :
-                    `
-                    <p class="requester">
-                        No stream link provided.
-                    </p>
-                    `
-                }
-
-                <div class="actions">
-
-                    <button
-                        class="approve-btn"
-                        data-id="${item.id}"
-                    >
-                        ✅ Approve
-                    </button>
-
-                    <button
-                        class="reject-btn"
-                        data-id="${item.id}"
-                    >
-                        ❌ Reject
-                    </button>
-
-                </div>
-
-            `;
-
-
-            pendingList.appendChild(
-                card
-            );
-
-        }
-    );
-
-
-    pendingList
-        .querySelectorAll(
-            ".approve-btn"
-        )
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => approveLive(
-                        button.dataset.id
-                    )
-                );
-
-            }
-        );
-
-
-    pendingList
-        .querySelectorAll(
-            ".reject-btn"
-        )
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => rejectLive(
-                        button.dataset.id
-                    )
-                );
-
-            }
-        );
-
-}
-
-
-/* =========================
-   APPROVE
-========================= */
-
-async function approveLive(id){
-
-    const confirmed =
-        confirm(
-            "Approve this Live broadcast?"
-        );
-
-
-    if(!confirmed){
-
-        return;
-
-    }
-
-
-    const {
-        error
-    } =
-    await supabase
-
-        .from("live_streams")
-
-        .update({
-
-            approved:true,
-
-            status:"live",
-
-            started_at:
-                new Date().toISOString()
-
-        })
-
-        .eq(
-            "id",
-            id
-        );
-
-
-    if(error){
-
-        console.error(error);
-
-        alert(
-            "Unable to approve Live: " +
-            error.message
-        );
-
-        return;
-
-    }
-
+async function approveRequest(requestId) {
+
+  const user = await checkAdmin();
+
+  if (!user) return;
+
+  const confirmed = confirm(
+    "Approve this user for live broadcasting?"
+  );
+
+  if (!confirmed) return;
+
+  const {
+    error
+  } = await supabase
+    .from("live_broadcasters")
+    .update({
+      approved: true,
+      approved_at: new Date().toISOString(),
+      approved_by: user.id
+    })
+    .eq("id", requestId);
+
+  if (error) {
+    console.error(error);
 
     alert(
-        "Live broadcast approved."
+      "Approval failed: " +
+      error.message
     );
 
+    return;
+  }
 
-    await loadAll();
+  alert(
+    "✅ User approved for live broadcasting."
+  );
 
+  loadRequests();
 }
 
 
-/* =========================
-   REJECT
-========================= */
+async function rejectRequest(requestId) {
 
-async function rejectLive(id){
+  const user = await checkAdmin();
 
-    const confirmed =
-        confirm(
-            "Reject this Live broadcast?"
-        );
+  if (!user) return;
 
+  const confirmed = confirm(
+    "Reject this broadcast request?"
+  );
 
-    if(!confirmed){
+  if (!confirmed) return;
 
-        return;
+  /*
+   * For now, rejection means the request
+   * remains unapproved.
+   *
+   * We will add a proper rejected status
+   * and rejection notification later.
+   */
 
-    }
+  const {
+    error
+  } = await supabase
+    .from("live_broadcasters")
+    .delete()
+    .eq("id", requestId);
 
-
-    const {
-        error
-    } =
-    await supabase
-
-        .from("live_streams")
-
-        .update({
-
-            approved:false,
-
-            status:"rejected"
-
-        })
-
-        .eq(
-            "id",
-            id
-        );
-
-
-    if(error){
-
-        console.error(error);
-
-        alert(
-            "Unable to reject Live: " +
-            error.message
-        );
-
-        return;
-
-    }
-
+  if (error) {
+    console.error(error);
 
     alert(
-        "Live broadcast rejected."
+      "Rejection failed: " +
+      error.message
     );
 
+    return;
+  }
 
-    await loadAll();
+  alert(
+    "❌ Broadcast request rejected."
+  );
 
+  loadRequests();
 }
 
-
-/* =========================
-   LOAD LIVE NOW
-========================= */
-
-async function loadLive(){
-
-    const {
-        data,
-        error
-    } =
-    await supabase
-
-        .from("live_streams")
-
-        .select("*")
-
-        .eq(
-            "status",
-            "live"
-        )
-
-        .eq(
-            "approved",
-            true
-        )
-
-        .order(
-            "started_at",
-            {
-                ascending:false
-            }
-        );
-
-
-    if(error){
-
-        console.error(error);
-
-        liveList.innerHTML = `
-            <div class="error-message">
-                ${escapeHTML(
-                    error.message
-                )}
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    liveCount.textContent =
-        data?.length || 0;
-
-
-    if(
-        !data ||
-        data.length === 0
-    ){
-
-        liveList.innerHTML = `
-            <div class="empty-state">
-                No broadcasts are currently live.
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    liveList.innerHTML = "";
-
-
-    data.forEach(
-        item => {
-
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-            card.className =
-                "live-card";
-
-
-            card.innerHTML = `
-
-                <span class="live-badge">
-                    🔴 LIVE NOW
-                </span>
-
-                <h3>
-                    ${escapeHTML(
-                        item.title
-                    )}
-                </h3>
-
-                <p>
-                    <strong>Preacher / Host:</strong>
-                    ${escapeHTML(
-                        item.preacher
-                    )}
-                </p>
-
-                <p>
-                    ${escapeHTML(
-                        item.description
-                    )}
-                </p>
-
-                <div class="actions">
-
-                    <button
-                        class="end-btn"
-                        data-id="${item.id}"
-                    >
-                        ⏹️ End Live
-                    </button>
-
-                </div>
-
-            `;
-
-
-            liveList.appendChild(
-                card
-            );
-
-        }
-    );
-
-
-    liveList
-        .querySelectorAll(
-            ".end-btn"
-        )
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => endLive(
-                        button.dataset.id
-                    )
-                );
-
-            }
-        );
-
-}
-
-
-/* =========================
-   END LIVE
-========================= */
-
-async function endLive(id){
-
-    const confirmed =
-        confirm(
-            "End this Live broadcast?"
-        );
-
-
-    if(!confirmed){
-
-        return;
-
-    }
-
-
-    const {
-        error
-    } =
-    await supabase
-
-        .from("live_streams")
-
-        .update({
-
-            status:"ended",
-
-            ended_at:
-                new Date().toISOString()
-
-        })
-
-        .eq(
-            "id",
-            id
-        );
-
-
-    if(error){
-
-        console.error(error);
-
-        alert(
-            "Unable to end Live: " +
-            error.message
-        );
-
-        return;
-
-    }
-
-
-    alert(
-        "Live broadcast ended."
-    );
-
-
-    await loadAll();
-
-}
-
-
-/* =========================
-   LOAD HISTORY
-========================= */
-
-async function loadHistory(){
-
-    const {
-        data,
-        error
-    } =
-    await supabase
-
-        .from("live_streams")
-
-        .select("*")
-
-        .in(
-            "status",
-            [
-                "ended",
-                "rejected"
-            ]
-        )
-
-        .order(
-            "created_at",
-            {
-                ascending:false
-            }
-        )
-
-        .limit(20);
-
-
-    if(error){
-
-        console.error(error);
-
-        historyList.innerHTML = `
-            <div class="error-message">
-                ${escapeHTML(
-                    error.message
-                )}
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    if(
-        !data ||
-        data.length === 0
-    ){
-
-        historyList.innerHTML = `
-            <div class="empty-state">
-                No recent decisions.
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    historyList.innerHTML = "";
-
-
-    data.forEach(
-        item => {
-
-            const badge =
-                item.status === "rejected"
-                ?
-                "rejected-badge"
-                :
-                "ended-badge";
-
-
-            const label =
-                item.status === "rejected"
-                ?
-                "❌ REJECTED"
-                :
-                "⏹️ ENDED";
-
-
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-            card.className =
-                "live-card";
-
-
-            card.innerHTML = `
-
-                <span class="${badge}">
-                    ${label}
-                </span>
-
-                <h3>
-                    ${escapeHTML(
-                        item.title
-                    )}
-                </h3>
-
-                <p>
-                    <strong>
-                        Preacher / Host:
-                    </strong>
-
-                    ${escapeHTML(
-                        item.preacher
-                    )}
-                </p>
-
-                <p>
-                    ${escapeHTML(
-                        item.description
-                    )}
-                </p>
-
-            `;
-
-
-            historyList.appendChild(
-                card
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================
-   LOAD EVERYTHING
-========================= */
-
-async function loadAll(){
-
-    await loadPending();
-
-    await loadLive();
-
-    await loadHistory();
-
-}
-
-
-/* =========================
-   BUTTONS
-========================= */
 
 refreshBtn.addEventListener(
-    "click",
-    loadAll
+  "click",
+  loadRequests
 );
 
 
 backBtn.addEventListener(
-    "click",
-    () => {
-
-        window.location.href =
-            "admin-dashboard.html";
-
-    }
+  "click",
+  () => {
+    window.location.href =
+      "admin-dashboard.html";
+  }
 );
 
 
-/* =========================
-   START
-========================= */
-
-(async function(){
-
-    const authorized =
-        await checkAdmin();
-
-
-    if(!authorized){
-
-        return;
-
-    }
-
-
-    await loadAll();
-
-})();
+loadRequests();
