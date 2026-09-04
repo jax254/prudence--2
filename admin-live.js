@@ -67,6 +67,7 @@ async function loadRequests() {
       id,
       user_id,
       approved,
+      status,
       approved_at,
       approved_by,
       created_at,
@@ -78,7 +79,7 @@ async function loadRequests() {
         admission_number
       )
     `)
-    .eq("approved", false)
+    .eq("status", "pending")
     .order("created_at", {
       ascending: false
     });
@@ -200,9 +201,9 @@ async function loadRequests() {
 
 async function approveRequest(requestId) {
 
-  const user = await checkAdmin();
+  const admin = await checkAdmin();
 
-  if (!user) return;
+  if (!admin) return;
 
   const confirmed = confirm(
     "Approve this user for live broadcasting?"
@@ -211,30 +212,74 @@ async function approveRequest(requestId) {
   if (!confirmed) return;
 
   const {
-    error
+    data: request,
+    error: requestError
   } = await supabase
     .from("live_broadcasters")
-    .update({
-      approved: true,
-      approved_at: new Date().toISOString(),
-      approved_by: user.id
-    })
-    .eq("id", requestId);
+    .select("user_id")
+    .eq("id", requestId)
+    .single();
 
-  if (error) {
-    console.error(error);
+  if (requestError || !request) {
+    console.error(requestError);
 
     alert(
-      "Approval failed: " +
-      error.message
+      "Could not find the broadcast request."
     );
 
     return;
   }
 
-  alert(
-    "✅ User approved for live broadcasting."
-  );
+  const {
+    error: updateError
+  } = await supabase
+    .from("live_broadcasters")
+    .update({
+      approved: true,
+      status: "approved",
+      approved_at: new Date().toISOString(),
+      approved_by: admin.id
+    })
+    .eq("id", requestId);
+
+  if (updateError) {
+    console.error(updateError);
+
+    alert(
+      "Approval failed: " +
+      updateError.message
+    );
+
+    return;
+  }
+
+  const {
+    error: notificationError
+  } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: request.user_id,
+      title: "📡 Broadcast Request Approved",
+      message:
+        "Your request to broadcast live on Prudence 2 has been approved. You can now start a live broadcast.",
+      type: "live_approval",
+      is_read: false
+    });
+
+  if (notificationError) {
+    console.error(
+      "Notification error:",
+      notificationError
+    );
+
+    alert(
+      "User approved, but the notification could not be sent."
+    );
+  } else {
+    alert(
+      "✅ User approved and notification sent."
+    );
+  }
 
   loadRequests();
 }
@@ -242,9 +287,9 @@ async function approveRequest(requestId) {
 
 async function rejectRequest(requestId) {
 
-  const user = await checkAdmin();
+  const admin = await checkAdmin();
 
-  if (!user) return;
+  if (!admin) return;
 
   const confirmed = confirm(
     "Reject this broadcast request?"
@@ -252,35 +297,75 @@ async function rejectRequest(requestId) {
 
   if (!confirmed) return;
 
-  /*
-   * For now, rejection means the request
-   * remains unapproved.
-   *
-   * We will add a proper rejected status
-   * and rejection notification later.
-   */
-
   const {
-    error
+    data: request,
+    error: requestError
   } = await supabase
     .from("live_broadcasters")
-    .delete()
-    .eq("id", requestId);
+    .select("user_id")
+    .eq("id", requestId)
+    .single();
 
-  if (error) {
-    console.error(error);
+  if (requestError || !request) {
+    console.error(requestError);
 
     alert(
-      "Rejection failed: " +
-      error.message
+      "Could not find the broadcast request."
     );
 
     return;
   }
 
-  alert(
-    "❌ Broadcast request rejected."
-  );
+  const {
+    error: updateError
+  } = await supabase
+    .from("live_broadcasters")
+    .update({
+      approved: false,
+      status: "rejected",
+      approved_at: null,
+      approved_by: null
+    })
+    .eq("id", requestId);
+
+  if (updateError) {
+    console.error(updateError);
+
+    alert(
+      "Rejection failed: " +
+      updateError.message
+    );
+
+    return;
+  }
+
+  const {
+    error: notificationError
+  } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: request.user_id,
+      title: "❌ Broadcast Request Rejected",
+      message:
+        "Your request to broadcast live on Prudence 2 was not approved at this time.",
+      type: "live_rejection",
+      is_read: false
+    });
+
+  if (notificationError) {
+    console.error(
+      "Notification error:",
+      notificationError
+    );
+
+    alert(
+      "Request rejected, but the notification could not be sent."
+    );
+  } else {
+    alert(
+      "❌ Request rejected and notification sent."
+    );
+  }
 
   loadRequests();
 }
