@@ -154,7 +154,7 @@ async function loadRequests() {
     `⏳ ${requests.length} pending broadcast request(s)`;
 
   requests.forEach(request => {
-    const profile = request.profiles;
+    const profile = profileMap[request.user_id];
 
     const username =
       profile?.public_username ||
