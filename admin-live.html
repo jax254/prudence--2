@@ -1,203 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
+  <title>Prudence 2 | Live Broadcast Requests</title>
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
-
-<title>Prudence 2 | Live Management</title>
-
-<link
-    rel="stylesheet"
-    href="admin-live.css"
->
-
-<script
-    type="module"
-    src="admin-live.js"
-    defer
-></script>
-
+  <link rel="stylesheet" href="admin-live.css">
+  <script type="module" src="admin-live.js" defer></script>
 </head>
-
 
 <body>
 
+  <header class="admin-header">
+    <h1>📡 Live Broadcast Requests</h1>
+    <p>Review and approve users who want to broadcast live.</p>
+  </header>
 
-<header>
+  <main class="container">
 
-    <div class="brand">
-        ✝ PRUDENCE 2
+    <div class="top-bar">
+      <button id="backBtn">← Admin Dashboard</button>
+      <button id="refreshBtn">🔄 Refresh</button>
     </div>
 
-    <h1>
-        🔴 LIVE MANAGEMENT
-    </h1>
+    <p id="status">Loading requests...</p>
 
-    <p>
-        Manage community Gospel broadcasts
-    </p>
-
-</header>
-
-
-<main class="container">
-
-
-    <div class="top-actions">
-
-        <button
-            type="button"
-            id="backBtn"
-        >
-            ← Back to Admin Dashboard
-        </button>
-
-        <button
-            type="button"
-            id="refreshBtn"
-        >
-            🔄 Refresh
-        </button>
-
-    </div>
-
-
-    <!-- =========================
-         PENDING
-    ========================== -->
-
-    <section class="panel">
-
-        <div class="panel-heading">
-
-            <div>
-
-                <h2>
-                    🟡 Pending Requests
-                </h2>
-
-                <p>
-                    Live broadcasts waiting for approval.
-                </p>
-
-            </div>
-
-            <span
-                id="pendingCount"
-                class="count"
-            >
-                0
-            </span>
-
-        </div>
-
-
-        <div
-            id="pendingList"
-            class="live-list"
-        >
-
-            <div class="loading">
-                Loading pending requests...
-            </div>
-
-        </div>
-
+    <section id="requestsContainer">
+      <!-- Requests will appear here -->
     </section>
 
-
-
-    <!-- =========================
-         LIVE NOW
-    ========================== -->
-
-    <section class="panel">
-
-        <div class="panel-heading">
-
-            <div>
-
-                <h2>
-                    🔴 Live Now
-                </h2>
-
-                <p>
-                    Currently active broadcasts.
-                </p>
-
-            </div>
-
-            <span
-                id="liveCount"
-                class="count"
-            >
-                0
-            </span>
-
-        </div>
-
-
-        <div
-            id="liveList"
-            class="live-list"
-        >
-
-            <div class="loading">
-                Loading live broadcasts...
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================
-         ENDED / REJECTED
-    ========================== -->
-
-    <section class="panel">
-
-        <div class="panel-heading">
-
-            <div>
-
-                <h2>
-                    📋 Recent Decisions
-                </h2>
-
-                <p>
-                    Recently ended or rejected broadcasts.
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div
-            id="historyList"
-            class="live-list"
-        >
-
-            <div class="loading">
-                Loading history...
-            </div>
-
-        </div>
-
-    </section>
-
-
-</main>
-
+  </main>
 
 </body>
-
 </html>
