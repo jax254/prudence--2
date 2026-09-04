@@ -58,7 +58,7 @@ async function loadRequests() {
   statusText.textContent = "Loading requests...";
   requestsContainer.innerHTML = "";
 
-  const {
+    const {
     data: requests,
     error
   } = await supabase
@@ -70,19 +70,68 @@ async function loadRequests() {
       status,
       approved_at,
       approved_by,
-      created_at,
-      profiles (
-        username,
-        public_username,
-        prudence_id,
-        email,
-        admission_number
-      )
+      created_at
     `)
     .eq("status", "pending")
     .order("created_at", {
       ascending: false
     });
+
+  if (error) {
+    console.error("Load requests error:", error);
+
+    statusText.textContent =
+      "❌ Failed to load requests: " +
+      error.message;
+
+    return;
+  }
+
+  if (!requests || requests.length === 0) {
+    statusText.textContent =
+      "✅ No pending broadcast requests.";
+
+    return;
+  }
+
+  // Get the profiles separately
+  const userIds = requests.map(
+    request => request.user_id
+  );
+
+  const {
+    data: profiles,
+    error: profilesError
+  } = await supabase
+    .from("profiles")
+    .select(`
+      id,
+      username,
+      public_username,
+      prudence_id,
+      email,
+      admission_number
+    `)
+    .in("id", userIds);
+
+  if (profilesError) {
+    console.error(
+      "Profiles loading error:",
+      profilesError
+    );
+
+    statusText.textContent =
+      "❌ Could not load user profiles: " +
+      profilesError.message;
+
+    return;
+  }
+
+  const profileMap = {};
+
+  (profiles || []).forEach(profile => {
+    profileMap[profile.id] = profile;
+  });
 
   if (error) {
     console.error("Load requests error:", error);
