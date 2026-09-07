@@ -24,12 +24,14 @@ async function checkAdmin() {
     return null;
   }
 
-  const { data: profile, error: profileError } =
-    await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+  const {
+    data: profile,
+    error: profileError
+  } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
   if (profileError) {
     console.error(profileError);
@@ -51,20 +53,23 @@ async function checkAdmin() {
 
 
 async function loadRequests() {
-  const user = await checkAdmin();
 
-  if (!user) return;
+  const admin = await checkAdmin();
 
-  statusText.textContent = "Loading requests...";
+  if (!admin) return;
+
+  statusText.textContent =
+    "Loading requests...";
+
   requestsContainer.innerHTML = "";
 
-    const {
+
+  const {
     data: requests,
     error
   } = await supabase
     .from("live_broadcasters")
     .select(`
-      id,
       user_id,
       approved,
       status,
@@ -77,8 +82,13 @@ async function loadRequests() {
       ascending: false
     });
 
+
   if (error) {
-    console.error("Load requests error:", error);
+
+    console.error(
+      "Load requests error:",
+      error
+    );
 
     statusText.textContent =
       "❌ Failed to load requests: " +
@@ -87,17 +97,25 @@ async function loadRequests() {
     return;
   }
 
+
   if (!requests || requests.length === 0) {
+
     statusText.textContent =
       "✅ No pending broadcast requests.";
 
     return;
   }
 
-  // Get the profiles separately
-  const userIds = requests.map(
-    request => request.user_id
-  );
+
+  // Load profiles separately because
+  // live_broadcasters has no declared
+  // relationship with profiles.
+
+  const userIds =
+    requests.map(
+      request => request.user_id
+    );
+
 
   const {
     data: profiles,
@@ -114,7 +132,9 @@ async function loadRequests() {
     `)
     .in("id", userIds);
 
+
   if (profilesError) {
+
     console.error(
       "Profiles loading error:",
       profilesError
@@ -127,63 +147,67 @@ async function loadRequests() {
     return;
   }
 
+
   const profileMap = {};
 
+
   (profiles || []).forEach(profile => {
-    profileMap[profile.id] = profile;
+
+    profileMap[profile.id] =
+      profile;
+
   });
 
-  if (error) {
-    console.error("Load requests error:", error);
-
-    statusText.textContent =
-      "❌ Failed to load requests: " +
-      error.message;
-
-    return;
-  }
-
-  if (!requests || requests.length === 0) {
-    statusText.textContent =
-      "✅ No pending broadcast requests.";
-
-    return;
-  }
 
   statusText.textContent =
     `⏳ ${requests.length} pending broadcast request(s)`;
 
+
   requests.forEach(request => {
-    const profile = profileMap[request.user_id];
+
+    const profile =
+      profileMap[request.user_id];
+
 
     const username =
       profile?.public_username ||
       profile?.username ||
       "Unknown User";
 
+
     const prudenceId =
       profile?.prudence_id ||
       "Not available";
+
 
     const admission =
       profile?.admission_number ||
       "Not available";
 
+
     const email =
       profile?.email ||
       "Not available";
 
-    const date = request.created_at
-      ? new Date(request.created_at)
-          .toLocaleString()
-      : "Unknown";
+
+    const date =
+      request.created_at
+        ? new Date(
+            request.created_at
+          ).toLocaleString()
+        : "Unknown";
+
 
     const card =
       document.createElement("div");
 
-    card.className = "request-card";
+
+    card.className =
+      "request-card";
+
 
     card.innerHTML = `
+
       <h3>📡 ${username}</h3>
 
       <p class="request-info">
@@ -210,163 +234,166 @@ async function loadRequests() {
 
         <button
           class="approve-btn"
-          data-id="${request.id}"
+          data-user-id="${request.user_id}"
         >
           ✅ Approve
         </button>
 
         <button
           class="reject-btn"
-          data-id="${request.id}"
+          data-user-id="${request.user_id}"
         >
           ❌ Reject
         </button>
 
       </div>
+
     `;
 
+
     requestsContainer.appendChild(card);
+
   });
+
 
   document
     .querySelectorAll(".approve-btn")
     .forEach(button => {
+
       button.addEventListener(
         "click",
-        () => approveRequest(button.dataset.id)
+        () =>
+          approveRequest(
+            button.dataset.userId
+          )
       );
+
     });
+
 
   document
     .querySelectorAll(".reject-btn")
     .forEach(button => {
+
       button.addEventListener(
         "click",
-        () => rejectRequest(button.dataset.id)
+        () =>
+          rejectRequest(
+            button.dataset.userId
+          )
       );
+
     });
+
 }
 
 
-async function approveRequest(requestId) {
+async function approveRequest(userId) {
 
-  const admin = await checkAdmin();
+  const admin =
+    await checkAdmin();
 
   if (!admin) return;
 
-  const confirmed = confirm(
-    "Approve this user for live broadcasting?"
-  );
+
+  const confirmed =
+    confirm(
+      "Approve this user for live broadcasting?"
+    );
+
 
   if (!confirmed) return;
 
-  const {
-    data: request,
-    error: requestError
-  } = await supabase
-    .from("live_broadcasters")
-    .select("user_id")
-    .eq("id", requestId)
-    .single();
-
-  if (requestError || !request) {
-    console.error(requestError);
-
-    alert(
-      "Could not find the broadcast request."
-    );
-
-    return;
-  }
 
   const {
-    error: updateError
+    error
   } = await supabase
     .from("live_broadcasters")
     .update({
       approved: true,
       status: "approved",
-      approved_at: new Date().toISOString(),
+      approved_at:
+        new Date().toISOString(),
       approved_by: admin.id
     })
-    .eq("id", requestId);
+    .eq("user_id", userId);
 
-  if (updateError) {
-    console.error(updateError);
+
+  if (error) {
+
+    console.error(error);
 
     alert(
       "Approval failed: " +
-      updateError.message
+      error.message
     );
 
     return;
   }
+
+
+  // Send notification
 
   const {
     error: notificationError
   } = await supabase
     .from("notifications")
     .insert({
-      user_id: request.user_id,
-      title: "📡 Broadcast Request Approved",
+      user_id: userId,
+      title:
+        "📡 Broadcast Request Approved",
       message:
         "Your request to broadcast live on Prudence 2 has been approved. You can now start a live broadcast.",
-      type: "live_approval",
+      type:
+        "live_approval",
       is_read: false
     });
 
+
   if (notificationError) {
+
     console.error(
       "Notification error:",
       notificationError
     );
 
     alert(
-      "User approved, but the notification could not be sent."
+      "✅ User approved, but the notification could not be sent."
     );
+
   } else {
+
     alert(
       "✅ User approved and notification sent."
     );
+
   }
 
+
   loadRequests();
+
 }
 
 
-async function rejectRequest(requestId) {
+async function rejectRequest(userId) {
 
-  const admin = await checkAdmin();
+  const admin =
+    await checkAdmin();
 
   if (!admin) return;
 
-  const confirmed = confirm(
-    "Reject this broadcast request?"
-  );
+
+  const confirmed =
+    confirm(
+      "Reject this broadcast request?"
+    );
+
 
   if (!confirmed) return;
 
-  const {
-    data: request,
-    error: requestError
-  } = await supabase
-    .from("live_broadcasters")
-    .select("user_id")
-    .eq("id", requestId)
-    .single();
-
-  if (requestError || !request) {
-    console.error(requestError);
-
-    alert(
-      "Could not find the broadcast request."
-    );
-
-    return;
-  }
 
   const {
-    error: updateError
+    error
   } = await supabase
     .from("live_broadcasters")
     .update({
@@ -375,48 +402,62 @@ async function rejectRequest(requestId) {
       approved_at: null,
       approved_by: null
     })
-    .eq("id", requestId);
+    .eq("user_id", userId);
 
-  if (updateError) {
-    console.error(updateError);
+
+  if (error) {
+
+    console.error(error);
 
     alert(
       "Rejection failed: " +
-      updateError.message
+      error.message
     );
 
     return;
   }
+
+
+  // Send notification
 
   const {
     error: notificationError
   } = await supabase
     .from("notifications")
     .insert({
-      user_id: request.user_id,
-      title: "❌ Broadcast Request Rejected",
+      user_id: userId,
+      title:
+        "❌ Broadcast Request Rejected",
       message:
         "Your request to broadcast live on Prudence 2 was not approved at this time.",
-      type: "live_rejection",
+      type:
+        "live_rejection",
       is_read: false
     });
 
+
   if (notificationError) {
+
     console.error(
       "Notification error:",
       notificationError
     );
 
     alert(
-      "Request rejected, but the notification could not be sent."
+      "❌ Request rejected, but the notification could not be sent."
     );
+
   } else {
+
     alert(
       "❌ Request rejected and notification sent."
     );
+
   }
 
+
   loadRequests();
+
 }
 
 
@@ -429,8 +470,10 @@ refreshBtn.addEventListener(
 backBtn.addEventListener(
   "click",
   () => {
+
     window.location.href =
       "admin-dashboard.html";
+
   }
 );
 
