@@ -130,12 +130,12 @@ startLive.addEventListener("click", async () => {
         }
 
 
-        room = new LiveKitClient.Room();
+        room = new LivekitClient.Room();
 
 
         // Listen for connection
         room.on(
-            LiveKitClient.RoomEvent.Connected,
+            LivekitClient.RoomEvent.Connected,
             () => {
 
                 console.log("Broadcaster connected.");
@@ -147,7 +147,7 @@ startLive.addEventListener("click", async () => {
 
         // Local camera/microphone
         room.on(
-            LiveKitClient.RoomEvent.LocalTrackPublished,
+            LivekitClient.RoomEvent.LocalTrackPublished,
             publication => {
 
                 const track = publication.track;
@@ -179,7 +179,7 @@ startLive.addEventListener("click", async () => {
 
         // Create camera + microphone
         const tracks =
-            await LiveKitClient.createLocalTracks({
+            await LivekitClient.createLocalTracks({
                 audio: true,
                 video: true
             });
@@ -247,12 +247,12 @@ joinLive.addEventListener("click", async () => {
         }
 
 
-        room = new LiveKitClient.Room();
+        room = new LivekitClient.Room();
 
 
         // Remote video/audio
         room.on(
-            LiveKitClient.RoomEvent.TrackSubscribed,
+            LivekitClient.RoomEvent.TrackSubscribed,
             (track) => {
 
                 const element = track.attach();
