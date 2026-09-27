@@ -1,12 +1,8 @@
 import supabase from "./supabase.js";
-import supabase from "./supabase.js";
-
 console.log("Prudence 2 live.js loaded");
-
 const startLive = document.getElementById("startLive");
 const joinLive = document.getElementById("joinLive");
 const endLive = document.getElementById("endLive");
-
 const statusText = document.getElementById("status");
 const videoElement = document.getElementById("liveVideo");
 const requestBroadcast =
