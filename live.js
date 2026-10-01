@@ -449,3 +449,378 @@ if (requestBroadcast) {
     });
 
                 }
+// ==========================================
+// LIVE COMMENTS
+// ==========================================
+
+const commentForm = document.getElementById("commentForm");
+const commentInput = document.getElementById("commentInput");
+const commentsContainer = document.getElementById("comments");
+
+const LIVE_ROOM_NAME = "prudence-live-main";
+
+
+// --------------------------------------------------
+// ESCAPE HTML
+// --------------------------------------------------
+
+function escapeHTML(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+
+// --------------------------------------------------
+// GET USER NAME
+// --------------------------------------------------
+
+async function getCommentUserName(userId) {
+
+    const { data, error } = await supabase
+        .from("profiles")
+        .select("username, public_username")
+        .eq("id", userId)
+        .maybeSingle();
+
+    if (error) {
+        console.error("Profile error:", error);
+        return "Prudence User";
+    }
+
+    return (
+        data?.public_username ||
+        data?.username ||
+        "Prudence User"
+    );
+}
+
+
+// --------------------------------------------------
+// RENDER ONE COMMENT
+// --------------------------------------------------
+
+async function renderComment(comment) {
+
+    const username =
+        await getCommentUserName(comment.user_id);
+
+    const currentUser =
+        await supabase.auth.getUser();
+
+    const currentUserId =
+        currentUser.data?.user?.id;
+
+    const commentElement =
+        document.createElement("div");
+
+    commentElement.className = "live-comment";
+
+    commentElement.dataset.commentId =
+        comment.id;
+
+    const date =
+        new Date(comment.created_at)
+            .toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+    commentElement.innerHTML = `
+        <div class="comment-content">
+            <strong>${escapeHTML(username)}</strong>
+
+            <span class="comment-time">
+                ${escapeHTML(date)}
+            </span>
+
+            <p>${escapeHTML(comment.message)}</p>
+        </div>
+
+        ${
+            currentUserId === comment.user_id
+            ? `
+                <button
+                    class="delete-comment"
+                    data-id="${comment.id}">
+                    🗑️
+                </button>
+            `
+            : ""
+        }
+    `;
+
+    commentsContainer.appendChild(commentElement);
+}
+
+
+// --------------------------------------------------
+// LOAD EXISTING COMMENTS
+// --------------------------------------------------
+
+async function loadLiveComments() {
+
+    commentsContainer.innerHTML =
+        "<p>Loading comments...</p>";
+
+    const { data, error } = await supabase
+        .from("live_comments")
+        .select("*")
+        .eq("room_name", LIVE_ROOM_NAME)
+        .order("created_at", {
+            ascending: true
+        });
+
+    if (error) {
+
+        console.error(
+            "Load comments error:",
+            error
+        );
+
+        commentsContainer.innerHTML =
+            "<p>Unable to load comments.</p>";
+
+        return;
+    }
+
+    commentsContainer.innerHTML = "";
+
+    if (!data || data.length === 0) {
+
+        commentsContainer.innerHTML =
+            "<p id='noComments'>No comments yet.</p>";
+
+        return;
+    }
+
+    for (const comment of data) {
+
+        await renderComment(comment);
+    }
+}
+
+
+// --------------------------------------------------
+// SEND COMMENT
+// --------------------------------------------------
+
+if (commentForm) {
+
+    commentForm.addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+            const message =
+                commentInput.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            if (message.length > 500) {
+
+                alert(
+                    "Comment cannot be longer than 500 characters."
+                );
+
+                return;
+            }
+
+            const {
+                data: { user },
+                error: userError
+            } = await supabase.auth.getUser();
+
+            if (userError || !user) {
+
+                alert(
+                    "Please log in before commenting."
+                );
+
+                return;
+            }
+
+            const sendButton =
+                commentForm.querySelector("button");
+
+            sendButton.disabled = true;
+
+            const { error } =
+                await supabase
+                    .from("live_comments")
+                    .insert({
+                        user_id: user.id,
+                        room_name: LIVE_ROOM_NAME,
+                        message: message
+                    });
+
+            sendButton.disabled = false;
+
+            if (error) {
+
+                console.error(
+                    "Send comment error:",
+                    error
+                );
+
+                alert(
+                    "Could not send comment: " +
+                    error.message
+                );
+
+                return;
+            }
+
+            commentInput.value = "";
+        }
+    );
+}
+
+
+// --------------------------------------------------
+// DELETE COMMENT
+// --------------------------------------------------
+
+if (commentsContainer) {
+
+    commentsContainer.addEventListener(
+        "click",
+        async (event) => {
+
+            const button =
+                event.target.closest(
+                    ".delete-comment"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            const commentId =
+                button.dataset.id;
+
+            if (!commentId) {
+                return;
+            }
+
+            const confirmed =
+                confirm(
+                    "Delete this comment?"
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            const { error } =
+                await supabase
+                    .from("live_comments")
+                    .delete()
+                    .eq("id", commentId);
+
+            if (error) {
+
+                console.error(
+                    "Delete comment error:",
+                    error
+                );
+
+                alert(
+                    "Could not delete comment: " +
+                    error.message
+                );
+
+                return;
+            }
+
+            const element =
+                document.querySelector(
+                    `[data-comment-id="${commentId}"]`
+                );
+
+            if (element) {
+                element.remove();
+            }
+
+            if (
+                commentsContainer.children.length === 0
+            ) {
+
+                commentsContainer.innerHTML =
+                    "<p id='noComments'>No comments yet.</p>";
+            }
+        }
+    );
+}
+
+
+// --------------------------------------------------
+// REALTIME COMMENTS
+// --------------------------------------------------
+
+const commentsChannel =
+    supabase
+        .channel("live-comments-channel")
+
+        .on(
+            "postgres_changes",
+            {
+                event: "INSERT",
+                schema: "public",
+                table: "live_comments",
+                filter:
+                    `room_name=eq.${LIVE_ROOM_NAME}`
+            },
+            async (payload) => {
+
+                console.log(
+                    "New live comment:",
+                    payload.new
+                );
+
+                const noComments =
+                    document.getElementById(
+                        "noComments"
+                    );
+
+                if (noComments) {
+                    noComments.remove();
+                }
+
+                await renderComment(
+                    payload.new
+                );
+            }
+        )
+
+        .on(
+            "postgres_changes",
+            {
+                event: "DELETE",
+                schema: "public",
+                table: "live_comments"
+            },
+            (payload) => {
+
+                const element =
+                    document.querySelector(
+                        `[data-comment-id="${payload.old.id}"]`
+                    );
+
+                if (element) {
+                    element.remove();
+                }
+            }
+        )
+
+        .subscribe();
+
+
+// --------------------------------------------------
+// INITIAL LOAD
+// --------------------------------------------------
+
+loadLiveComments();
